@@ -42,3 +42,27 @@
 * [HTTP/2](day-01/README.md#http2)
 * [HTTP/3 (QUIC)](day-01/README.md#http3-quic)
 </details>
+
+
+
+
+# Book de Cases e Exercícios Livres 
+
+
+| Case | Nível | Link |
+|------|-------|------|
+| DDD - Core Banking | Basico | [Link](/cases/BASICO_DDD_CORE_BANKING.md) |
+| DDD - Banco da Federação Galática | Avançado | [Link](/cases/AVANCADO_DDD_BANCO_FEDERACAO_GALATICA.md) |
+| DDD - FoodTech | Basico / Intermediário | [Link](/cases/BASICO_DDD_FOODTECH.md) |
+| Case e Catálogo de Marketplace | Basico | [Link](/cases/BASICO_CATALOGO.md) | 
+| Checkout de Livraria | Basico | [Link](/cases/BASICO_CHECKOUT_LIVRARIA.md) |
+| Encurtador de Links | Basico | [Link](/cases/BASICO_ENCURTADOR_DE_LINKS.md) |
+| FoodTech | Intermediário | [Link](/cases/INTERMEDIARIO_DELIVERY.md) |
+| Orquestrador de Notificações Omnichannel para E-commerce | Intermediário | [Link](/cases/INTERMEDIARIO_OMNI_CHANNEL.md) |
+| Case de Consistência com SAGA Pattern | Intermediário | [Link](/cases/INTERMEDIARIO_SAGA.md) |
+| Case de Ledger REST | Avançado | [Link](/cases/AVANCADO_LEDGER_REST.md) |
+| Gestão de Pacotes e Beneficios | Avançado | [Link](/cases/AVANCADO_PACOTES_BENEFICIOS.md) |
+| Adaptação de Apostilas | Avançado | [Link](/cases/AVANCADO_RENDERIZACAO_APOSTILAS.md) |
+| Sistema de Contestação de Compras | Intermediário | [Link](/cases/INTERMEDIARIO_CONTESTACAO_COMPRAS.md) |
+| Sistema de Gestão de Pontos | Intermediário | [Link](/cases/INTERMEDIARIO_SISTEMA_DE_PONTOS.md) | 
+| Sistema de Votação de Reality Shows | Intermediário | [Link](/cases/INTERMEDIARIO_VOTACAO.md) |
