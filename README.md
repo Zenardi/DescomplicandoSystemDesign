@@ -43,7 +43,34 @@
 * [HTTP/3 (QUIC)](day-01/README.md#http3-quic)
 </details>
 
+<details>
+<summary>DAY-02 - Storage, RAID e Sistemas de Arquivos</summary>
 
+- [System Design - Storage, RAID e Sistemas de Arquivos](day-02/README.md#system-design---storage-raid-e-sistemas-de-arquivos)
+- [Definindo Storage e Armazenamento](day-02/README.md#definindo-storage-e-armazenamento)
+- [Dimensões em Storage](day-02/README.md#dimensões-em-storage)
+  - [Throughput em Storage](day-02/README.md#throughput-em-storage)
+  - [Bandwidth em Storage](day-02/README.md#bandwidth-em-storage)
+  - [I/O e IOPS em Storage](day-02/README.md#io-e-iops-em-storage)
+- [Tipos e Modelos de Storage](day-02/README.md#tipos-e-modelos-de-storage)
+  - [DAS - Direct-Attached Storage](day-02/README.md#das---direct-attached-storage)
+  - [NAS - Network Attached Storage](day-02/README.md#nas---network-attached-storage)
+  - [Block Storage](day-02/README.md#block-storage)
+  - [File Storage](day-02/README.md#file-storage)
+  - [Object Storage](day-02/README.md#object-storage)
+- [RAID - Redundant Array of Independent Disks](day-02/README.md#raid---redundant-array-of-independent-disks)
+  - [RAID 0 (Striping)](day-02/README.md#raid-0-striping)
+  - [RAID 1 (Mirroring)](day-02/README.md#raid-1-mirroring)
+  - [RAID 5 (Striping com Paridade Distribuída)](day-02/README.md#raid-5-striping-com-paridade-distribuída)
+  - [RAID 6 (Striping com Dupla Paridade)](day-02/README.md#raid-6-striping-com-dupla-paridade)
+  - [RAID 10 (Combinação de RAID 1 com RAID 0)](day-02/README.md#raid-10-combinação-de-raid-1-com-raid-0)
+</details>
+
+# Materiais
+| Aula | Slides | 
+| --- | --- |
+| Protocolos de Rede | [Slides](./day-01/01%20-%20System%20Design%20-%20Protocolos%20de%20Rede.pdf) |
+| Raid e Storage     | [Slides](./day-02/02%20-%20System%20Design%20-%20Raid%20e%20Storage.pdf) |
 
 
 # Book de Cases e Exercícios Livres 
