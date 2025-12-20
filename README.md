@@ -5,8 +5,8 @@
 <summary>DAY-01 - Protocolos de Rede</summary>
 
 * [System Design - Protocolos e Comunicação de Rede](day-01/README.md#system-design---protocolos-e-comunicação-de-rede)
-* [Modelo OSI](day-01/README.mdday-01/README.md#modelo-osi)
-   * [Camada 1: Física](day-01/README.mdday-01/README.md#camada-1-física)
+* [Modelo OSI](day-01/README.md#modelo-osi)
+   * [Camada 1: Física](day-01/README.md#camada-1-física)
    * [Camada 2: Enlace](day-01/README.md#camada-2-enlace)
    * [Camada 3: Rede](day-01/README.md#camada-3-rede)
    * [Camada 4: Transporte](day-01/README.md#camada-4-transporte)
