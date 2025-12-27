@@ -66,11 +66,42 @@
   - [RAID 10 (Combinação de RAID 1 com RAID 0)](day-02/README.md#raid-10-combinação-de-raid-1-com-raid-0)
 </details>
 
+<details>
+<summary>DAY-03 - Teorema CAP, ACID, BASE e Bancos de Dados Distribuídos</summary>
+
+- [System Design - Teorema CAP, ACID, BASE e Bancos de Dados Distribuídos](day-03/README.md#system-design---teorema-cap-acid-base-e-bancos-de-dados-distribuídos)
+- [O Teorema CAP](day-03/README.md#o-teorema-cap)
+- [ACID e BASE, os trade-offs entre SQL e NoSQL](day-03/README.md#acid-e-base-os-trade-offs-entre-sql-e-nosql)
+- [Modelo ACID - Atomicity, Consistency, Isolation, Durability](day-03/README.md#modelo-acid---atomicity-consistency-isolation-durability)
+  - [Atomicidade](day-03/README.md#atomicidade)
+  - [Consistência](day-03/README.md#consistência)
+  - [Isolamento](day-03/README.md#isolamento)
+  - [Durabilidade](day-03/README.md#durabilidade)
+- [Modelo BASE - Basically Available, Soft State, Eventual Consistency](day-03/README.md#modelo-base---basically-available-soft-state-eventual-consistency)
+  - [Basicamente Disponível](day-03/README.md#basicamente-disponível)
+  - [Soft State](day-03/README.md#soft-state)
+  - [Eventualmente Consistente](day-03/README.md#eventualmente-consistente)
+- [Explicação dos Componentes do CAP](day-03/README.md#explicação-dos-componentes-do-cap)
+  - [Consistency / Consistência (C)](day-03/README.md#consistency--consistência-c)
+  - [Availability / Disponibilidade (A)](day-03/README.md#availability--disponibilidade-a)
+  - [Partition Tolerance / Tolerância a Partições (P)](day-03/README.md#partition-tolerance--tolerância-a-partições-p)
+  - [O que é uma Partição de Rede?](day-03/README.md#o-que-é-uma-partição-de-rede)
+- [As combinações do Teorema: “Escolha 2”](day-03/README.md#as-combinações-do-teorema-escolha-2)
+  - [CP (Consistência e Tolerância a Partições)](day-03/README.md#cp-consistência-e-tolerância-a-partições)
+  - [AP (Disponibilidade e Tolerância a Partições)](day-03/README.md#ap-disponibilidade-e-tolerância-a-partições)
+  - [CA (Consistência e Disponibilidade)](day-03/README.md#ca-consistência-e-disponibilidade)
+- [Tabela de Flavors (CAP)](day-03/README.md#tabela-de-flavors-cap)
+- [O que mudou depois da concepção do CAP?](day-03/README.md#o-que-mudou-depois-da-concepção-do-cap)
+- [Referências](day-03/README.md#referências)
+
+</details>
+
 # Materiais
 | Aula | Slides | 
 | --- | --- |
 | Protocolos de Rede | [Slides](./day-01/01%20-%20System%20Design%20-%20Protocolos%20de%20Rede.pdf) |
 | Raid e Storage     | [Slides](./day-02/02%20-%20System%20Design%20-%20Raid%20e%20Storage.pdf) |
+| Teorema CAP, Database ACID e BASE     | [Slides](./day-03/03%20-%20System%20Design%20-%20Teorema%20CAP.pdf) |
 
 
 # Book de Cases e Exercícios Livres 
