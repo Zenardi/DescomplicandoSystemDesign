@@ -1,5 +1,5 @@
 # Descomplicando System Design
-
+![main-header](./images/main-header.png)
 
 <details>
 <summary>DAY-01 - Protocolos de Rede</summary>
