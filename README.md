@@ -92,6 +92,15 @@
   - [CA (Consistência e Disponibilidade)](day-03/README.md#ca-consistência-e-disponibilidade)
 - [Tabela de Flavors (CAP)](day-03/README.md#tabela-de-flavors-cap)
 - [O que mudou depois da concepção do CAP?](day-03/README.md#o-que-mudou-depois-da-concepção-do-cap)
+- [Teorema PACELC](day-03/README.md#teorema-pacelc)
+- [O Teorema PACELC](day-03/README.md#o-teorema-pacelc)
+  - [Teorema PACELC vs Teorema CAP](day-03/README.md#teorema-pacelc-vs-teorema-cap)
+- [Aplicações do PACELC](day-03/README.md#aplicações-do-pacelc)
+  - [PA/EL (On Partition, Availability; Else, Latency)](day-03/README.md#pael-on-partition-availability-else-latency)
+  - [PC/EL (On Partition, Consistency; Else, Latency)](day-03/README.md#pcel-on-partition-consistency-else-latency)
+  - [PA/EC (On Partition, Availability; Else, Consistency)](day-03/README.md#paec-on-partition-availability-else-consistency)
+  - [PC/EC (On Partition, Consistency; Else, Consistency)](day-03/README.md#pcec-on-partition-consistency-else-consistency)
+  - [Comparações do PACELC](day-03/README.md#comparações-do-pacelc)
 - [Referências](day-03/README.md#referências)
 
 </details>
@@ -101,7 +110,7 @@
 | --- | --- |
 | Protocolos de Rede | [Slides](./day-01/01%20-%20System%20Design%20-%20Protocolos%20de%20Rede.pdf) |
 | Raid e Storage     | [Slides](./day-02/02%20-%20System%20Design%20-%20Raid%20e%20Storage.pdf) |
-| Teorema CAP, Database ACID e BASE     | [Slides](./day-03/03%20-%20System%20Design%20-%20Teorema%20CAP.pdf) |
+| Teorema CAP, Database ACID, BASE e Teorema PACELC | [Slides](./day-03/03%20-%20System%20Design%20-%20Teorema%20CAP.pdf) |
 
 
 # Book de Cases e Exercícios Livres 
