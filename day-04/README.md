@@ -20,9 +20,9 @@
   - [Page Size (Tamanho da Página)](#page-size-tamanho-da-página)
   - [Indexação Colunar](#indexação-colunar)
   - [LSM-Trees (Log-Structured Merge-Tree)](#lsm-trees-log-structured-merge-tree)
-- [Indexação B‑Tree (Árvores B)](#indexação-btree-árvores-b)
-- [Indexação por Hashing](#indexação-por-hashing)
-- [Índices Invertidos](#índices-invertidos)
+  - [Indexação B‑Tree (Árvores B)](#indexação-btree-árvores-b)
+  - [Indexação por Hashing](#indexação-por-hashing)
+  - [Índices Invertidos](#índices-invertidos)
 - [Arquitetura](#arquitetura)
   - [Cenários Transacionais](#cenários-transacionais)
   - [Cenários de Write‑Intensive](#cenários-de-writeintensive)
@@ -253,14 +253,14 @@ As LSM‑Trees funcionam organizando as operações de escrita em estruturas de 
 
 Para realizar operações de leitura, a engine primeiro consulta as memtables mais recentes e, em seguida, percorre os sstables em ordem de atualização, combinando os resultados conforme necessário. Esse modelo garante que a versão mais atual do dado seja retornada, mesmo que exista em diferentes níveis de armazenamento. A compactação periódica reúne sstables sobrepostos em um único arquivo, aplica a eliminação de tombstones e otimiza índices, reduzindo o número de arquivos a serem lidos. Dessa forma, as LSM‑Trees equilibram alta performance de escrita com leituras consistentes, ao custo de um processo de manutenção (merge) que ocorre em segundo plano para consolidar os dados e manter a estrutura enxuta.
 
-# Indexação B‑Tree (Árvores B)
+## Indexação B‑Tree (Árvores B)
 A B‑Tree (ou Árvore B) é uma estrutura de dados autobalanceada, projetada para gerenciar grandes volumes de informações armazenados em storage e volumes. Uma B‑Tree é uma árvore multi‑way, onde cada nó pode conter várias chaves e múltiplos ponteiros para outros nós. Essa característica permite que a árvore seja mais larga e menos profunda, otimizando o acesso a dados em disco, ao contrário de implementações de árvores binárias que podem ter alta profundidade.
 
 Os dados são armazenados de forma ordenada dentro dos nós, permitindo buscas, escritas, atualizações e deleções em tempo logarítmico. O armazenamento em B‑Tree é construído para possibilitar que cada nó que contém uma parcela do dado seja alocado perfeitamente em um bloco de disco. Isso minimiza a quantidade de operações de I/O, que costumam ser os maiores custos em bancos de dados de grande porte.
 
 Quando você busca uma chave, o sistema carrega apenas os poucos blocos de disco necessários para percorrer o caminho do nó raiz até o nó onde a chave ou o ponteiro para o dado está localizado. Essa estratégia permite que, mesmo em tabelas gigantescas, as buscas sejam rápidas e com poucas operações.
 
-# Indexação por Hashing
+## Indexação por Hashing
 A indexação baseada em hashing é uma técnica que permite localizar itens e valores em uma tabela através de valores exatos, ou exact-matches. Ao contrário de estruturas como as B‑trees (ou Árvores B+), que são otimizadas para buscas de intervalo (range queries) e minimizam operações de I/O de disco através de saltos logarítmicos, a indexação por hashing é projetada para buscas diretas e instantâneas.
 
 Três conceitos fundamentais para a aplicação desse tipo de indexação são as funções hash, as tabelas hash e os buckets. Uma função hash é responsável por providenciar uma forma determinística e consistente de converter um dado (a “chave”) em um endereço numérico. Ou seja, aplicando a função hash sobre uma string como hash("fidelis"), ela resultaria em um identificador numérico para esse dado, como por exemplo 10. Se essa operação for repetida um milhão de vezes com a mesma entrada, o resultado deverá ser sempre 10. Esse valor numérico identifica o bucket específico na tabela hash onde o dado será armazenado ou procurado.
@@ -273,7 +273,7 @@ Em um contexto de resolução de colisões por encadeamento separado, um bucket 
 
 A busca pelo valor de uma chave específica também segue essa lógica. Quando precisamos recuperar o valor associado a uma chave, a mesma função hash é aplicada à chave, e o valor hash resultante aponta diretamente para o bucket exato onde o dado está armazenado. Isso possibilita que a engine do banco de dados recupere o dado de forma quase instantânea, realizando apenas uma breve travessia na pequena lista de dados localizada naquele bucket (no caso de colisões), sem a necessidade de múltiplas operações de leitura em disco.
 
-# Índices Invertidos
+## Índices Invertidos
 Os Índices Invertidos, ou Inverted Indexes, são estruturas de dados de busca que permitem encontrar documentos completos através de termos de busca específicos e dinâmicos, possibilitando executar processos de “full‑text search” em grandes volumes de dados. Ao invés das estruturas convencionais que mapeiam um documento ou entidade para um valor ou termo, um índice invertido faz o trabalho oposto: ele mapeia termos, palavras ou tokens para os respectivos documentos onde aparecem, permitindo buscas em textos e valores longos por meio de termos simples. Essa técnica é característica de bancos orientados a documento, como Elasticsearch e Apache Solr, mas também pode ser implementada em bancos relacionais que possuam features de full‑text search, como PostgreSQL, SQL Server e Oracle.
 
 ![](./images/inverted-index.png)
