@@ -105,13 +105,49 @@
 
 </details>
 
+<details>
+<summary>DAY-04 - Databases, Modelos de Dados e Indexação</summary>
+
+- [Databases, Modelos de Dados e Indexação](#databases-modelos-de-dados-e-indexação)
+- [Definindo um Banco de Dados](#definindo-um-banco-de-dados)
+- [Tipos de Bancos de Dados](#tipos-de-bancos-de-dados)
+  - [Bancos de Dados Relacionais SQL](#bancos-de-dados-relacionais-sql)
+  - [Banco de Dados Não-Relacionais NoSQL](#banco-de-dados-não-relacionais-nosql)
+  - [Bancos de Dados NewSQL](#bancos-de-dados-newsql)
+  - [Bancos de Dados em Memória](#bancos-de-dados-em-memória)
+  - [Time-Series Databases](#time-series-databases)
+- [Níveis de Consistência](#níveis-de-consistência)
+  - [Consistência Forte](#consistência-forte)
+  - [Consistência Eventual](#consistência-eventual)
+- [Modelos de Dados](#modelos-de-dados)
+  - [Modelos de Tuplas (Row‑Oriented)](#modelos-de-tuplas-roworiented)
+  - [Modelos de Documentos](#modelos-de-documentos)
+  - [Modelos Colunares (Column-Oriented)](#modelos-colunares-column-oriented)
+  - [Modelos de Coluna Larga (Wide-Column)](#modelos-de-coluna-larga-wide-column)
+  - [Modelos Key‑Value (Chave‑Valor)](#modelos-keyvalue-chavevalor)
+  - [Modelos Baseados em Grafos](#modelos-baseados-em-grafos)
+- [Armazenamento e Indexação](#armazenamento-e-indexação)
+  - [Page Size (Tamanho da Página)](#page-size-tamanho-da-página)
+  - [Indexação Colunar](#indexação-colunar)
+  - [LSM-Trees (Log-Structured Merge-Tree)](#lsm-trees-log-structured-merge-tree)
+- [Indexação B‑Tree (Árvores B)](#indexação-btree-árvores-b)
+- [Indexação por Hashing](#indexação-por-hashing)
+- [Índices Invertidos](#índices-invertidos)
+- [Arquitetura](#arquitetura)
+  - [Cenários Transacionais](#cenários-transacionais)
+  - [Cenários de Write‑Intensive](#cenários-de-writeintensive)
+  - [Cenários de Read‑Intensive](#cenários-de-readintensive)
+- [Referências](#referências)
+
+</details>
+
 # Materiais
 | Aula | Slides | 
 | --- | --- |
 | Protocolos de Rede | [Slides](./day-01/01%20-%20System%20Design%20-%20Protocolos%20de%20Rede.pdf) |
 | Raid e Storage     | [Slides](./day-02/02%20-%20System%20Design%20-%20Raid%20e%20Storage.pdf) |
 | Teorema CAP, Database ACID, BASE e Teorema PACELC | [Slides](./day-03/03%20-%20System%20Design%20-%20Teorema%20CAP.pdf) |
-
+| Databases, Modelos de Dados e Indexação | [Slides](./day-04/04%20-%20System%20Design%20-%20Databases.pdf) |
 
 # Book de Cases e Exercícios Livres 
 
