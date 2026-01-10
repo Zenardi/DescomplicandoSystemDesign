@@ -144,7 +144,7 @@
 <details>
 <summary>DAY-05 - Estratégias de Cache</summary>
 
-- [Cache](day-05/README.md#cache)
+- [Estratégias de Cache](day-05/README.md#estratégias-de-cache)
 - [Definindo Cache](day-05/README.md#definindo-cache)
 - [Princípios Básicos de Cache](day-05/README.md#princípios-básicos-de-cache)
   - [Consistência de Dados](day-05/README.md#consistência-de-dados)
