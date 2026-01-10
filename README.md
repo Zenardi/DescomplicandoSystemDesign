@@ -141,6 +141,34 @@
 
 </details>
 
+<details>
+<summary>DAY-05 - Estratégias de Cache</summary>
+
+- [Cache](day-05/README.md#cache)
+- [Definindo Cache](day-05/README.md#definindo-cache)
+- [Princípios Básicos de Cache](day-05/README.md#princípios-básicos-de-cache)
+  - [Consistência de Dados](day-05/README.md#consistência-de-dados)
+  - [Time to Live (TTL)](day-05/README.md#time-to-live-ttl)
+  - [Políticas de Evicção e Substituição](day-05/README.md#políticas-de-evicção-e-substituição)
+  - [Invalidação de Itens em Cache](day-05/README.md#invalidação-de-itens-em-cache)
+  - [Eventos de Hit Rate, Cache Hit e Cache Miss](day-05/README.md#eventos-de-hit-rate-cache-hit-e-cache-miss)
+    - [Cache Hit](day-05/README.md#cache-hit)
+    - [Cache Miss](day-05/README.md#cache-miss)
+    - [Hit Rate - Taxa de Acertos](day-05/README.md#hit-rate---taxa-de-acertos)
+- [Implementações de Cache](day-05/README.md#implementações-de-cache)
+  - [Cache em Memória (Hashmap)](day-05/README.md#cache-em-memória-hashmap)
+  - [Caching em Sistemas Distribuídos](day-05/README.md#caching-em-sistemas-distribuídos)
+  - [Cache em Bancos de Dados e Camadas de Dados](day-05/README.md#cache-em-bancos-de-dados-e-camadas-de-dados)
+  - [Cache-Aside (Lazy Loading)](day-05/README.md#cache-aside-lazy-loading)
+  - [Write-Through (Escrita Dupla)](day-05/README.md#write-through-escrita-dupla)
+  - [Write-Behind (Lazy Writing)](day-05/README.md#write-behind-lazy-writing)
+  - [Cache de Conteúdo Distribuído (CDN Cache)](day-05/README.md#cache-de-conteúdo-distribuído-cdn-cache)
+    - [Primeiro Acesso](day-05/README.md#primeiro-acesso)
+    - [Segundo Acesso](day-05/README.md#segundo-acesso)
+- [Referencias](day-05/README.md#referencias)
+
+</details>
+
 # Materiais
 | Aula | Slides | 
 | --- | --- |
@@ -148,6 +176,7 @@
 | Raid e Storage     | [Slides](./day-02/02%20-%20System%20Design%20-%20Raid%20e%20Storage.pdf) |
 | Teorema CAP, Database ACID, BASE e Teorema PACELC | [Slides](./day-03/03%20-%20System%20Design%20-%20Teorema%20CAP.pdf) |
 | Databases, Modelos de Dados e Indexação | [Slides](./day-04/04%20-%20System%20Design%20-%20Databases.pdf) |
+| Estratégias de Cache | [Slides](./day-05/05%20-%20System%20Design%20-%20Cache.pdf) |
 
 # Book de Cases e Exercícios Livres 
 
