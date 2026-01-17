@@ -169,6 +169,22 @@
 
 </details>
 
+<details>
+<summary>DAY-06 - Monolitos, Microserviços e Domínios</summary>
+
+- [System Design - Microsserviços, Monolitos e Domínios](day-06/README.md#system-design---microsserviços-monolitos-e-domínios)
+- [Arquitetura Monolítica](day-06/README.md#arquitetura-monolítica)
+  - [Vantagens de uma Arquitetura Monolítica](day-06/README.md#vantagens-de-uma-arquitetura-monolítica)
+  - [Desvantagens de uma Arquitetura Monolítica](day-06/README.md#desvantagens-de-uma-arquitetura-monolítica)
+- [Arquitetura de Microsserviços](day-06/README.md#arquitetura-de-microsserviços)
+  - [Vantagens de uma Arquitetura de Microsserviços](day-06/README.md#vantagens-de-uma-arquitetura-de-microsserviços)
+  - [Desvantagens de uma Arquitetura de Microsserviços](day-06/README.md#desvantagens-de-uma-arquitetura-de-microsserviços)
+- [Domínios e Design](day-06/README.md#domínios-e-design)
+- [Lei de Conway na arquitetura de sistemas](day-06/README.md#lei-de-conway-na-arquitetura-de-sistemas)
+- [Referências](day-06/README.md#referências)
+
+</details>
+
 # Materiais
 | Aula | Slides | 
 | --- | --- |
@@ -177,6 +193,7 @@
 | Teorema CAP, Database ACID, BASE e Teorema PACELC | [Slides](./day-03/03%20-%20System%20Design%20-%20Teorema%20CAP.pdf) |
 | Databases, Modelos de Dados e Indexação | [Slides](./day-04/04%20-%20System%20Design%20-%20Databases.pdf) |
 | Estratégias de Cache | [Slides](./day-05/05%20-%20System%20Design%20-%20Cache.pdf) |
+| Monolitos, Microserviços e Domínios | [Slides](./day-06/06%20-%20System%20Design%20-%20Microserviços%20e%20Monolitos.pdf) |
 
 # Book de Cases e Exercícios Livres 
 
