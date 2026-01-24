@@ -1,42 +1,41 @@
 - [System Design - Load Balancers e Proxies Reversos](#system-design---load-balancers-e-proxies-reversos)
-- [O Problema da Falta de Balanceamento de Carga](#o-problema-da-falta-de-balanceamento-de-carga)
-  - [Resolvendo problemas com balanceamento de carga](#resolvendo-problemas-com-balanceamento-de-carga)
+    - [O Problema da Falta de Balanceamento de Carga](#o-problema-da-falta-de-balanceamento-de-carga)
+    - [Resolvendo problemas com balanceamento de carga](#resolvendo-problemas-com-balanceamento-de-carga)
 - [Fundamentos de Balanceadores de Carga](#fundamentos-de-balanceadores-de-carga)
-- [Proxy Reverso vs Load Balancer](#proxy-reverso-vs-load-balancer)
+  - [Proxy Reverso vs Load Balancer](#proxy-reverso-vs-load-balancer)
+  - [O Papel do Load Balancer](#o-papel-do-load-balancer)
 - [Algoritmos de Balanceamento de Carga](#algoritmos-de-balanceamento-de-carga)
   - [Round Robin](#round-robin)
     - [Limitações do Round Robin](#limitações-do-round-robin)
-  - [Exemplo de um Algoritmo de Round Robin](#exemplo-de-um-algoritmo-de-round-robin)
+    - [Exemplo de um Algoritmo de Round Robin](#exemplo-de-um-algoritmo-de-round-robin)
   - [Least Request](#least-request)
     - [Limitações do Least Request](#limitações-do-least-request)
-  - [Exemplo de Implementação](#exemplo-de-implementação)
+    - [Exemplo de Implementação](#exemplo-de-implementação)
   - [Least Connection](#least-connection)
     - [Limitações do Least Connection](#limitações-do-least-connection)
   - [Least Outstanding Requests (LOR)](#least-outstanding-requests-lor)
     - [Limitações do Least Outstanding Requests](#limitações-do-least-outstanding-requests)
   - [IP Hash Balancing](#ip-hash-balancing)
     - [Limitações ao Implementar a Técnica de IP Hashing](#limitações-ao-implementar-a-técnica-de-ip-hashing)
-  - [Exemplo de Implementação](#exemplo-de-implementação-1)
+    - [Exemplo de Implementação](#exemplo-de-implementação-1)
   - [Maglev](#maglev)
-  - [Limitações do Maglev](#limitações-do-maglev)
+    - [Limitações do Maglev](#limitações-do-maglev)
   - [Random Load Balancing](#random-load-balancing)
-  - [Limitações do Random](#limitações-do-random)
+    - [Limitações do Random](#limitações-do-random)
 - [Load Balancing e Camada OSI](#load-balancing-e-camada-osi)
-- [Load Balancers em Layer 4 (Transporte)](#load-balancers-em-layer-4-transporte)
-- [Load Balancers em Layer 7 (Aplicação)](#load-balancers-em-layer-7-aplicação)
-  - [Implementações e Tecnologias](#implementações-e-tecnologias)
-  - [Envoy Proxy](#envoy-proxy)
-  - [Nginx](#nginx)
-  - [HAProxy](#haproxy)
-  - [Traefik](#traefik)
-  - [Kubernetes Ingress Controllers](#kubernetes-ingress-controllers)
-  - [Cloud Load Balancers](#cloud-load-balancers)
+  - [Load Balancers em Layer 4 (Transporte)](#load-balancers-em-layer-4-transporte)
+  - [Load Balancers em Layer 7 (Aplicação)](#load-balancers-em-layer-7-aplicação)
+- [Implementações e Tecnologias](#implementações-e-tecnologias)
+    - [Envoy Proxy](#envoy-proxy)
+    - [Nginx](#nginx)
+    - [HAProxy](#haproxy)
+    - [Traefik](#traefik)
+    - [Kubernetes Ingress Controllers](#kubernetes-ingress-controllers)
+      - [Cloud Load Balancers](#cloud-load-balancers)
 - [Referencias](#referencias)
 
 
 # System Design - Load Balancers e Proxies Reversos
-
-![header](./images/header.png)
 
 Este é o terceiro artigo da série sobre System Design. Hoje, vamos dar um deep dive em um tópico interessante e frequentemente subestimado: os Balanceadores de Carga e os Proxies Reversos.
 
@@ -46,9 +45,9 @@ Este texto foi concebido para ser útil e informativo para todos os níveis de c
 
 Vamos iniciar desenhando um cenário do “mundo real” que exemplifica a necessidade e a eficácia de um balanceador de carga.
 
+### O Problema da Falta de Balanceamento de Carga
 
-# O Problema da Falta de Balanceamento de Carga
-![](./images/falta-balanceamento.png)
+![sem load balancing](images/no-balance.png)
 
 Imagine um pequeno supermercado em seu bairro, lotado em um horário de pico. Este estabelecimento conta apenas com um caixa para atender todos os clientes presentes. Podemos observar o seguinte cenário:
 
@@ -62,9 +61,9 @@ Se, por alguma razão, esse caixa falhar ou se quebrar, toda a operação do mer
 
 Este exemplo ilustra os desafios de um ambiente sem balanceamento de carga, ajudando a compreender que tipos de problemas essa abordagem se propõe a solucionar.
 
-## Resolvendo problemas com balanceamento de carga
+### Resolvendo problemas com balanceamento de carga
 
-![](./images/mercado.png)
+![com load balancing](images/com-balance.png)
 
 Agora para entender o funcionamento e diferencial de um balanceamento de carga, imagine que o dono desse mercadinho fez um investimento e comprou mais alguns caixas e contratou mais alguns atendentes para acelerar a fila de espera.
 
@@ -79,18 +78,9 @@ Esta abordagem não só agiliza o atendimento, aumentando a eficiência do estab
 Esse cenário exemplifica o funcionamento do balanceamento de carga no seu dia a dia, agora podemos entrar em termos técnicos do funcionamento e aplicações de balanceadores de carga.
 
 # Fundamentos de Balanceadores de Carga
-Um Load Balancer, antes de qualquer coisa, é um pattern de rede. É um padrão arquitetural para a gestão de tráfego de rede em ambientes com múltiplos servidores, tais como datacenters privados, nuvens públicas e aplicações web distribuídas. Sua função principal é distribuir as requisições de entrada entre vários hosts de maneira eficiente e estratégica, otimizando o uso dos recursos, aprimorando os tempos de resposta, reduzindo a carga em cada servidor e assegurando a disponibilidade do serviço, mesmo em caso de falhas em algum dos hosts do pool. Existem várias estratégias de balanceamento de carga que possuem diferenças entre si, vamos abordar essas nuâncias no tópico de Algoritmos de Balanceamento de Carga.
 
-Do ponto de vista da resiliência, o load balancer desempenha um papel importante, evitando que qualquer servidor individual do pool se torne um ponto único de falha.
+## Proxy Reverso vs Load Balancer
 
-As aplicações de um balanceador de carga são diversas, abrangendo desde hardwares de rede até softwares especializados que operam em determinadas camadas de rede, distribuindo a carga entre hosts que operam no mesmo protocolo do balanceador.
-
-Além da distribuição de tráfego, muitos balanceadores de carga oferecem funcionalidades adicionais. Eles podem permitir customizações na camada 7 da rede, como roteamento específico baseado em basepaths, querystrings, headers e IPs de origem. Uma função comum em softwares e dispositivos de balanceamento de carga é o offload de certificados SSL/TLS, removendo essa carga de processamento das aplicações individuais do pool.
-
-![](./images/lb.png)
-
-
-# Proxy Reverso vs Load Balancer
 Um Proxy Reverso, ou Reverse Proxy, atua como um intermediário para requisições destinadas a um ou mais servidores internos. Ele recebe as requisições dos clientes e as encaminha para o servidor apropriado. Após o servidor processar a requisição, o proxy reverso retorna a resposta do servidor ao cliente original.
 
 > Mas, não é isso que um Load Balancer faz?
@@ -103,7 +93,7 @@ Um Load Balancer também é apropriado em ambientes com escalabilidade horizonta
 
 Comparado ao proxy reverso, que pode atuar como uma camada intermediária simples entre cliente e servidor, aplicando regras de roteamento, realizando offload de SSL/TLS e implementando cache.
 
-![](./images/proxy-reverso.png)
+![Proxy Reverso](images/proxy-reverso.png)
 
 Enquanto o Load Balancer é utilizado quando existem vários hosts da mesma aplicação, o Proxy Reverso pode ser aplicado em uma relação de 1:1. É comum um servidor expor sua aplicação por trás de um Proxy Reverso, responsável pela gestão de pools de conexões, limites de upload, tipos de conteúdo, restrições, segurança e cacheamento. Um exemplo é o uso de Sidecars de Envoy no Kubernetes, a stack Nginx com PHP FPM, ou servidores Web rodando NodeJS, Java com Spring, Golang, entre outros, posicionados atrás de um proxy reverso para gerir as requisições.
 
@@ -113,19 +103,31 @@ Soluções modernas de balanceamento de carga muitas vezes podem desempenhar tan
 
 Para concluirmos esse tópico, vale ressaltar que, tanto load balancers quando proxies reversos são patterns de rede, inclusive sendo viabilizado pelas mesmas tecnologias. Como por exemplo, o Envoy Proxy ou Nginx podem aparecer implementando responsabilidade de proxy reversos de 1:1 como sidecars em service meshes de mercado quanto em balanceadores de carga.
 
+## O Papel do Load Balancer
 
+Um Load Balancer, antes de qualquer coisa, é um pattern de rede. É um padrão arquitetural para a gestão de tráfego de rede em ambientes com múltiplos servidores, tais como datacenters privados, nuvens públicas e aplicações web distribuídas.
+
+Sua função principal é distribuir as requisições de entrada entre vários hosts de maneira eficiente e estratégica, otimizando o uso dos recursos, aprimorando os tempos de resposta, reduzindo a carga em cada servidor e assegurando a disponibilidade do serviço, mesmo em caso de falhas em algum dos hosts do pool. Existem várias estratégias de balanceamento de carga que possuem diferenças entre si, vamos abordar essas nuâncias no tópico de Algoritmos de Balanceamento de Carga.
+
+Do ponto de vista da resiliência, o load balancer desempenha um papel importante, evitando que qualquer servidor individual do pool se torne um ponto único de falha.
+
+As aplicações de um balanceador de carga são diversas, abrangendo desde hardwares de rede até softwares especializados que operam em determinadas camadas de rede, distribuindo a carga entre hosts que operam no mesmo protocolo do balanceador.
+
+Além da distribuição de tráfego, muitos balanceadores de carga oferecem funcionalidades adicionais. Eles podem permitir customizações na camada 7 da rede, como roteamento específico baseado em basepaths, querystrings, headers e IPs de origem. Uma função comum em softwares e dispositivos de balanceamento de carga é o offload de certificados SSL/TLS, removendo essa carga de processamento das aplicações individuais do pool.
+
+![GIF Load Balancer](images/load-balancer.gif)
 
 # Algoritmos de Balanceamento de Carga
+
 Existem diversas abordagens quando se trata de balanceamento de carga, cada uma com suas especificidades e adequações a diferentes cenários. Alguns algoritmos podem oferecer melhor performance e eficiência em determinadas situações, enquanto em outros contextos podem não ser a escolha ideal.
 
 Compreender os tipos de algoritmos de balanceamento disponíveis e as problemáticas que cada um deles visa resolver é fundamental. Igualmente importante é saber onde cada um se encaixa melhor e onde sua utilização pode não ser recomendada.
 
-A seguir, apresentarei alguns dos algoritmos de balanceamento de carga que considero mais relevantes para o entendimento do tema. Existem muitos outros que não estão listados aqui, mas você pode encontrar material adicional no final deste artigo para explorar mais sobre o assunto.
-
 ## Round Robin
-Round Robin é um dos algoritmos mais utilizados em balanceamento de carga, com o objetivo de distribuir a carga de maneira uniforme e cíclica entre os servidores disponíveis. Originalmente concebido para o escalonamento de processos a nível de CPU, baseia-se na variável quantum, que define o tempo dedicado pela CPU a cada processo na fila. Essa abordagem previne o problema de Starvation ou também conhecido como Inanição, fenômeno que ocorre quando um processo nunca é executado por conta de processos com prioridade maior. O Round Robin trabalha assegurando uma rotatividade cíclica e equitativa dos processos. Compreender esse conceito no contexto do escalonamento de processos é essencial para entender sua aplicação em balanceadores de carga.
 
-No âmbito do balanceamento de carga, o Round Robin é empregado para distribuir uniformemente as requisições de rede ou o tráfego entre um grupo de servidores. Cada nova requisição é direcionada ao próximo servidor na fila, seguindo ou não a lógica do quantum.
+Round Robin é um dos algoritmos mais utilizados em balanceamento de carga, com o objetivo de distribuir a carga de maneira uniforme e cíclica entre os servidores disponíveis. Originalmente concebido para o escalonamento de processos a nível de CPU, baseia-se na variável `quantum`, que define o tempo dedicado pela CPU a cada processo na fila. Essa abordagem previne o problema de `Starvation` ou também conhecido como `Inanição`, fenômeno que ocorre quando um processo nunca é executado por conta de processos com prioridade maior. O Round Robin trabalha assegurando uma rotatividade cíclica e equitativa dos processos. Compreender esse conceito no contexto do escalonamento de processos é essencial para entender sua aplicação em balanceadores de carga.
+
+No âmbito do balanceamento de carga, o Round Robin é empregado para distribuir uniformemente as requisições de rede ou o tráfego entre um grupo de servidores. Cada nova requisição é direcionada ao próximo servidor na fila, seguindo ou não a lógica do `quantum`.
 
 O principal objetivo é assegurar que nenhum servidor seja desproporcionalmente sobrecarregado com requisições, enquanto outros permanecem subutilizados. O Round Robin é valorizado tanto no balanceamento de carga entre servidores quanto no escalonamento de CPU por sua simplicidade e abordagem justa, que distribui trabalho ou recursos de forma equânime, evitando a sobrecarga de um único recurso.
 
@@ -134,349 +136,151 @@ Sua natureza cíclica faz com que o algoritmo seja particularmente eficaz em amb
 Analogamente, em um supermercado, o Round Robin seria como direcionar os clientes para cada caixa em sequência, um após o outro, independentemente do tamanho da fila de cada um.
 
 ### Limitações do Round Robin
+
 Uma crítica frequente ao método Round Robin é que, apesar de distribuir requisições de forma igualitária entre os hosts, ele não leva em conta que nem todas as requisições demandam o mesmo nível de processamento. Isso pode levar a ineficiências, especialmente se os servidores envolvidos possuírem capacidades variadas.
 
 Na prática, em aplicações web, alguns requests podem exigir mais recursos computacionais do que outros. Por exemplo, uma requisição para salvar um pedido de compra pode acabar competindo no mesmo host com uma requisição que gera um relatório de fechamento contábil da empresa. Isso pode resultar em uma resposta mais lenta para a solicitação, devido à saturação desigual dos hosts.
 
-Outra desvantagem do Round Robin se manifesta em balanceadores que adotam a variável de tempo quantum. Em cenários onde workloads experimentam picos de carga repentina dentro do breve intervalo do quantum, todas essas requisições podem ser direcionadas para o mesmo host. Isso pode sobrecarregar temporariamente um servidor específico, enquanto os outros permanecem subutilizados.
+Outra desvantagem do Round Robin se manifesta em balanceadores que adotam a variável de tempo `quantum`. Em cenários onde workloads experimentam picos de carga repentina dentro do breve intervalo do `quantum`, todas essas requisições podem ser direcionadas para o mesmo host. Isso pode sobrecarregar temporariamente um servidor específico, enquanto os outros permanecem subutilizados.
 
-## Exemplo de um Algoritmo de Round Robin
+### Exemplo de um Algoritmo de Round Robin
 
 ```go
 package main
-
 import (
-	"fmt"
-	"sync"
-	"time"
+    "fmt"
+    "sync"
+    "time"
 )
 
 // Abstração de um Mecanismo de Round Robin
 type RoundRobin struct {
-	hosts        []string      // Lista de Hosts disponíveis para balanceamento
-	index        int           // Index de controle
-	mutex        sync.Mutex    // Mutex para lock do index
-	quantum      time.Duration // Variável de Tempo "Quantum"
-	ultimoAcesso time.Time     // TImestamp do ultimo acesso para calcular a diferença do Quantum para troca de hosts
+    hosts       []string // Lista de Hosts disponíveis para balanceamento
+    index       int      // Index de controle
+    mutex       sync.Mutex // Mutex para lock do index
+    quantum     time.Duration // Variável de Tempo "Quantum" e ultimo acesso...
 }
-
-// Retorna o host ativo no momento
-func (rb *RoundRobin) getHost() string {
-
-	// Trava e destrava a seleção de hosts
-	rb.mutex.Lock()
-	defer rb.mutex.Unlock()
-
-	// Verifica se o timestamp atual é menor do que o ultimo somado com o quantum
-	// Caso seja isso significa que o host no index ainda é o ativo
-	if time.Now().Before(rb.ultimoAcesso.Add(rb.quantum)) {
-		return rb.hosts[rb.index]
-	}
-
-	// Caso o timestamp seja maior, atualiza o ultimo acesso e avança para o proximo host
-	rb.ultimoAcesso = time.Now()
-	rb.index = (rb.index + 1) % len(rb.hosts)
-
-	return rb.hosts[rb.index]
-}
-
-func main() {
-	// Variável de tempo em milisegundos pra escolha de hosts
-	var quantum int = 300
-
-	// Lista de hosts disponíveis
-	hosts := []string{
-		"http://host1.com",
-		"http://host2.com",
-		"http://host3.com",
-	}
-
-	// Inicia o mecanismo de Round Robin
-	roundRobin := RoundRobin{
-		hosts:        hosts,
-		quantum:      time.Millisecond * time.Duration(quantum),
-		ultimoAcesso: time.Now(),
-	}
-
-	// Simula 20 Requests
-	for i := 0; i < 20; i++ {
-		host := roundRobin.getHost()
-		fmt.Printf("Requisição %d direcionada para: %s\n", i+1, host)
-		time.Sleep(200 * time.Millisecond)
-	}
-}
-
-```
----
-
-```shell
-❯ go run main.go
-Requisição 1 direcionada para: http://host1.com
-Requisição 2 direcionada para: http://host1.com
-Requisição 3 direcionada para: http://host2.com
-Requisição 4 direcionada para: http://host2.com
-Requisição 5 direcionada para: http://host3.com
-Requisição 6 direcionada para: http://host3.com
-Requisição 7 direcionada para: http://host1.com
-Requisição 8 direcionada para: http://host1.com
-Requisição 9 direcionada para: http://host2.com
-Requisição 10 direcionada para: http://host2.com
-Requisição 11 direcionada para: http://host3.com
-Requisição 12 direcionada para: http://host3.com
-Requisição 13 direcionada para: http://host1.com
-Requisição 14 direcionada para: http://host1.com
-Requisição 15 direcionada para: http://host2.com
-Requisição 16 direcionada para: http://host2.com
-Requisição 17 direcionada para: http://host3.com
-Requisição 18 direcionada para: http://host3.com
-Requisição 19 direcionada para: http://host1.com
-Requisição 20 direcionada para: http://host1.com
 ```
 
 [Go Playground - Round Robin](https://go.dev/play/p/sUrhELXqIJW)
 
 ## Least Request
-O algoritmo Least Request é uma abordagem de balanceamento de carga simples, porém eficiente, que direciona a requisição atual para o servidor que processou o menor número de requisições até aquele momento. Este método utiliza um contador associado a cada host ativo, que incrementa individualmente à medida que as requisições são distribuídas. Para escolher o próximo host, o algoritmo prioriza aquele com o menor contador dentre as opções disponíveis. Dependendo da implementação, este contador pode ser reiniciado após um período específico, tornando-o escalável em ambientes com escalabilidade horizontal.
 
-![](./images/least-request.png)
+O algoritmo Least Request é uma abordagem de balanceamento de carga simples, porém eficiente, que direciona a requisição atual para o servidor que processou o menor número de requisições até aquele momento. Este método utiliza um contador associado a cada host ativo, que incrementa individualmente à medida que as requisições são distribuídas.
 
-O objetivo do Least Request é garantir uma distribuição equitativa de carga baseada na frequência com que as requisições são atendidas, ao invés de focar na duração ou complexidade delas. Isso o torna uma opção vantajosa para cenários com requisições uniformes e curtas. Um exemplo seria um microserviço com poucas rotas, mas de alta performance, como um serviço de consulta de usuários que recebe um id e retorna o recurso rapidamente.
+Para escolher o próximo host, o algoritmo prioriza aquele com o menor contador dentre as opções disponíveis. Dependendo da implementação, este contador pode ser reiniciado após um período específico, tornando-o escalável em ambientes com escalabilidade horizontal.
+
+![Least Request](images/least-request.drawio.png)
+
+O objetivo do Least Request é garantir uma distribuição equitativa de carga baseada na frequência com que as requisições são atendidas, ao invés de focar na duração ou complexidade delas. Isso o torna uma opção vantajosa para cenários com requisições uniformes e curtas. Um exemplo seria um microserviço com poucas rotas, mas de alta performance, como um serviço de consulta de usuários que recebe um `id` e retorna o recurso rapidamente.
 
 Analogamente, no supermercado, seria como direcionar os clientes para o caixa com a menor fila, buscando uma distribuição mais equilibrada.
 
 ### Limitações do Least Request
+
 Embora o Least Request aborde a uniformidade das requisições, ele ainda pode enfrentar problemas de desbalanceamento em ambientes com requisições muito diversificadas e de durações variadas. Assim como o Round Robin, ele não considera a saturação dos hosts, o que pode tornar a simples contagem de requisições insuficiente para representar a real distribuição de carga.
 
-![alt text](./images/limitacoes-leat-request.png)
+![Least Request Fail](images/least-request-fail.drawio.png)
 
-## Exemplo de Implementação
 Implementações que não possuem um mecanismo para “zerar” o contador de requisições podem se tornar problemáticas em ambientes com escalabilidade horizontal. Uma má implementação desse algoritmo pode resultar em uma “negação de serviço” involuntária para novos hosts que entram no pool do balanceador.
 
+### Exemplo de Implementação
 
 ```go
 package main
-
 import (
-	"fmt"
-	"sync"
-	"time"
+    "fmt"
+    "sync"
+    "time"
 )
 
 // Abstração de um Mecanismo Least Request
 type LeastRequest struct {
-	hosts    []string   // Lista de Hosts disponíveis para balanceamento
-	requests []int      // Contagem de requisições ativas para cada host
-	mutex    sync.Mutex // Mutex para operações thread-safe
+    hosts    []string // Lista de Hosts disponíveis para balanceamento
+    requests []int    // Contagem de requisições ativas para cada host
+    mutex    sync.Mutex // Mutex para operações thread-safe
 }
-
-// Inicializa um novo balanceador Least Request
-func NewLeastRequest(hosts []string) *LeastRequest {
-	return &LeastRequest{
-		hosts:    hosts,
-		requests: make([]int, len(hosts)),
-	}
-}
-
-// Retorna o host com o menor número de requisições ativas
-func (lr *LeastRequest) getHost() string {
-	lr.mutex.Lock()
-	defer lr.mutex.Unlock()
-
-	minIndex := 0
-	minRequests := lr.requests[0]
-
-	// Encontra o host com o menor número de requisições ativas
-	for i, reqs := range lr.requests {
-		if reqs < minRequests {
-			minIndex = i
-			minRequests = reqs
-		}
-	}
-
-	// Incrementa a contagem de requisições para o host selecionado
-	lr.requests[minIndex]++
-
-	return lr.hosts[minIndex]
-}
-
-func main() {
-	// Lista de hosts disponíveis
-	hosts := []string{
-		"http://host1.com",
-		"http://host2.com",
-		"http://host3.com",
-	}
-
-	// Inicia o mecanismo Least Request
-	leastRequest := NewLeastRequest(hosts)
-
-	// Simula 30 Requests
-	for i := 0; i < 30; i++ {
-		host := leastRequest.getHost()
-		fmt.Printf("Requisição %d direcionada para: %s\n", i+1, host)
-	}
-
-	// Simula um pequeno delay para permitir que as goroutines terminem
-	time.Sleep(5 * time.Second)
-
-	fmt.Println("Distribuição de requisições executadas:", leastRequest.requests)
-}
-```
-
----
-
-```shell
-Requisição 1 direcionada para: http://host1.com
-Requisição 2 direcionada para: http://host2.com
-Requisição 3 direcionada para: http://host3.com
-Requisição 4 direcionada para: http://host1.com
-Requisição 5 direcionada para: http://host2.com
-// ...
-Requisição 21 direcionada para: http://host3.com
-Requisição 22 direcionada para: http://host1.com
-Requisição 23 direcionada para: http://host2.com
-Requisição 24 direcionada para: http://host3.com
-Requisição 25 direcionada para: http://host1.com
-Requisição 26 direcionada para: http://host2.com
-Requisição 27 direcionada para: http://host3.com
-Requisição 28 direcionada para: http://host1.com
-Requisição 29 direcionada para: http://host2.com
-Requisição 30 direcionada para: http://host3.com
-Distribuição de requisições executadas: [10 10 10]
 ```
 
 ## Least Connection
+
 Os algoritmos de Least Connection representam técnicas mais sofisticadas de balanceamento de carga, utilizadas para distribuir requisições de forma inteligente entre os hosts do pool de um balanceador. Ao contrário do Round Robin e Least Request, que visam distribuir requisições uniformemente sem considerar o estado atual dos servidores, essa abordagem tenta levar em conta a carga de trabalho de cada servidor.
 
-![alt text](./images/least-connection.png)
+![Least Connection](images/least-connection.drawio.png)
 
 O método Least Connection direciona a solicitação atual para o servidor com o menor número de conexões ativas no momento. Uma “conexão ativa” se refere a uma sessão ou interação em andamento entre cliente e servidor, independentemente de a requisição já ter sido processada, como em casos de implementações que suportam keep alive, web sockets, GRPC persistentes, etc.
 
 Por exemplo, se um host está gerenciando 5 conexões ativas e outro apenas 3, a próxima requisição será direcionada para o host com 3 conexões, mesmo que essas possam ser tarefas de menor demanda.
 
 ### Limitações do Least Connection
+
 Uma desvantagem menos crítica, mas ainda relevante, é que tanto o Least Connection quanto algoritmos semelhantes são mais complexos de implementar em comparação à simplicidade do Round Robin. No entanto, essa complexidade pode ser facilmente superada ao se utilizar tecnologias que já suportam esses cenários.
 
 O Least Connection se concentra no número de conexões ativas, sem avaliar a carga de cada uma delas. Isso pode levar à sobrecarga de servidores que lidam com conexões mais exigentes, um problema semelhante ao observado nas opções anteriores. Além disso, a necessidade de gerenciar essas conexões pode consumir recursos significativos do balanceador.
 
 Servidores com muitas conexões de longa duração, como as mantidas por keep alive, podem aparentar estar menos ocupados do que realmente estão. Isso cria um potencial para ineficiências na distribuição de carga, levando a um desbalanceamento.
 
-
 ## Least Outstanding Requests (LOR)
+
 O Least Outstanding Requests (LOR) é um algoritmo de balanceamento de carga muito sofisticado que aborda o principal problema encontrado nos algoritmos anteriores: a saturação dos hosts. Há uma uma diferença sutíl entre o LOR e o Least Connection. Enquanto o Least Connection foca em gerenciar conexões ativas (independente de estarem em uso ou não), o LOR considera o número de requisições pendentes em cada host. Uma “requisição pendente” é aquela que foi iniciada, mas ainda não concluída, seja ou não parte de uma conexão ativa contínua. Isso torna o LOR mais eficiente do que o Least Connection na identificação de hosts com maior carga de processamento, mais conexões em espera, e tempos de resposta mais longos.
 
 Em resumo, enquanto o Least Connection considera “quantas conexões” estão ativas, o LOR foca em “quantas requisições” ainda estão sendo processadas.
 
-![](./images/lor.png)
+![LOR](images/lor.drawio.png)
 
 O LOR busca equilibrar a carga de trabalho, direcionando novas requisições para os hosts com menos requisições pendentes. Dessa forma, ele visa garantir que todos os servidores mantenham um volume de trabalho semelhante e gerenciável, concentrando-se na possível saturação em vez da quantidade de requisições. Isso o torna uma opção eficaz em ambientes onde as requisições podem ter tempos de resposta variáveis e imprevisíveis.
 
 ### Limitações do Least Outstanding Requests
+
 O LOR exige monitoramento contínuo e detalhado do estado das requisições em cada servidor. Essa necessidade aumenta a complexidade da implementação e exige mais recursos computacionais para manter o acompanhamento em tempo real, especialmente em sistemas distribuídos.
 
 Essa complexidade pode impactar negativamente no desempenho do balanceador, principalmente em situações de variação repentina de carga de trabalho. Além disso, determinar com precisão quando uma requisição é concluída pode ser um desafio significativo.
 
 ## IP Hash Balancing
+
 O algoritmo de IP Hash é uma técnica de balanceamento de carga frequentemente empregada em componentes de rede, mas sua lógica também pode ser aplicada em diversos outros tipos de algoritmos de balanceamento em aplicações. É particularmente útil para manter a persistência da sessão em aplicações web.
 
 Algoritmos baseados em IP Hash criam um hash consistente a partir do endereço IP do cliente para determinar para qual host as requisições ou pacotes de rede serão direcionados.
 
-![alt text](./images/ip-hashing.png)
+![IP Hash](images/ip-hash.drawio.png)
 
 O processo de hashing do IP do cliente sempre resulta no mesmo hash, o que significa que as requisições de um cliente específico serão consistentemente encaminhadas para o mesmo host de destino, contanto que este esteja disponível.
 
 Essa técnica é utilizada em diversos outros algoritmos, como o Maglev que será discutido posteriormente. Ela se mostra eficaz em workloads onde é necessário manter um tipo de “sessão”, em situações que exigem que as requisições sejam resolvidas em uma certa ordem de dependência, facilitadas por caching, ou que necessitem sumarizar chunks de dados ou executar operações de persistência de maneira contínua.
 
 ### Limitações ao Implementar a Técnica de IP Hashing
+
 O IP Hashing é menos eficaz quando os usuários estão atrás de NATs ou proxies, situação em que muitos podem compartilhar o mesmo endereço IP público. Além disso, pode resultar em uma distribuição desigual de carga entre os servidores, especialmente se a base de usuários não estiver distribuída uniformemente em termos de endereços IP. Como alternativa a isso a lógica de IP Hash pode se extender a outros valores vindos de headers, URL’s e etc.
 
-![alt text](./images/ip-hashing-limits.png)
+![IP Hash Error](images/ip-hash-error.drawio.png)
 
-
-## Exemplo de Implementação
+### Exemplo de Implementação
 
 ```go
 package main
-
 import (
-	"crypto/md5"
-	"encoding/binary"
-	"fmt"
+    "crypto/md5"
+    "encoding/binary"
+    "fmt"
 )
-
 // Abstração de um Mecanismo IP Hashing
 type IPHashBalancer struct {
-	hosts []string
+    hosts []string
 }
-
 func NewIPHashBalancer(hosts []string) *IPHashBalancer {
-	return &IPHashBalancer{hosts: hosts}
+    return &IPHashBalancer{hosts: hosts}
 }
-
 // Retorna o host com base no hash do endereço IP do cliente
 func (ipb *IPHashBalancer) getHost(clientIP string) string {
-	// Calcula o hash MD5 do endereço IP
-	// Qualquer outro mecanismo de hashing pode ser utilizado
-	hasher := md5.New()
-	hasher.Write([]byte(clientIP))
-	hashBytes := hasher.Sum(nil)
-
-	// Calcula o index a partir dos 4 primeiros bytes do hash
-	// Transformamos ele em um Integer para facilitar o exemplo
-	// O resultado é um índice entre 0 e len(ipb.hosts) - 1
-    // que são os índices válidos para a nossa slice de hosts.
-	hashIndex := binary.BigEndian.Uint32(hashBytes[:4]) % uint32(len(ipb.hosts))
-	return ipb.hosts[hashIndex]
+    // Calcula o hash MD5...
 }
-
-func main() {
-	hosts := []string{"http://host1.com", "http://host2.com", "http://host3.com"}
-	ipHashBalancer := NewIPHashBalancer(hosts)
-
-	// Define uma lista de IP's fakes
-	clientIPs := []string{
-		"192.168.1.1", "10.0.0.2", "10.0.0.3",
-		"172.16.1.1", "172.16.1.2", "192.168.2.1", "192.168.2.2",
-	}
-
-	// Simula 20 Requisições
-	for i := 0; i < 20; i++ {
-		clientIP := clientIPs[i%len(clientIPs)]
-		host := ipHashBalancer.getHost(clientIP)
-		fmt.Printf("Requisição %d do IP %s direcionada para: %s\n", i+1, clientIP, host)
-	}
-}
-```
-
----
-
-```shell
-Requisição 1 do IP 192.168.1.1 direcionada para: http://host1.com
-Requisição 2 do IP 10.0.0.2 direcionada para: http://host1.com
-Requisição 3 do IP 10.0.0.3 direcionada para: http://host2.com
-Requisição 4 do IP 172.16.1.1 direcionada para: http://host3.com
-Requisição 5 do IP 172.16.1.2 direcionada para: http://host3.com
-Requisição 6 do IP 192.168.2.1 direcionada para: http://host3.com
-Requisição 7 do IP 192.168.2.2 direcionada para: http://host2.com
-Requisição 8 do IP 192.168.1.1 direcionada para: http://host1.com
-Requisição 9 do IP 10.0.0.2 direcionada para: http://host1.com
-Requisição 10 do IP 10.0.0.3 direcionada para: http://host2.com
-Requisição 11 do IP 172.16.1.1 direcionada para: http://host3.com
-Requisição 12 do IP 172.16.1.2 direcionada para: http://host3.com
-Requisição 13 do IP 192.168.2.1 direcionada para: http://host3.com
-Requisição 14 do IP 192.168.2.2 direcionada para: http://host2.com
-Requisição 15 do IP 192.168.1.1 direcionada para: http://host1.com
-Requisição 16 do IP 10.0.0.2 direcionada para: http://host1.com
-Requisição 17 do IP 10.0.0.3 direcionada para: http://host2.com
-Requisição 18 do IP 172.16.1.1 direcionada para: http://host3.com
-Requisição 19 do IP 172.16.1.2 direcionada para: http://host3.com
-Requisição 20 do IP 192.168.2.1 direcionada para: http://host3.com
 ```
 
 ## Maglev
+
 O Maglev é um algoritmo desenvolvido pela Google e representa uma técnica avançada de balanceamento de carga, ideal para sistemas complexos de computação distribuída. Apesar de ser uma inovação relativamente recente, ainda não é amplamente utilizado fora de certos contextos.
 
-Este algoritmo distribui as requisições de clientes para um conjunto de servidores de maneira que cada cliente seja consistentemente encaminhado para o mesmo servidor, desde que este esteja disponível. Isso é realizado através do uso de tabelas de hash consistentes que mapeiam clientes para servidores de forma determinística, mas equilibrada, assim tendo familiaridade com o que foi discutido em IP Hash,
+Este algoritmo distribui as requisições de clientes para um conjunto de servidores de maneira que cada cliente seja consistentemente encaminhado para o mesmo servidor, desde que este esteja disponível. Isso é realizado através do uso de tabelas de hash consistentes que mapeiam clientes para servidores de forma determinística, mas equilibrada, assim tendo familiaridade com o que foi discutido em IP Hash.
 
 O Maglev tem como objetivo garantir uma distribuição consistente das requisições, priorizando o cache de dados e a manutenção da sessão do usuário. Ele oferece uma noção de “persistência”, o que pode gerar desafios de escalabilidade em comparação com outras opções de balanceamento de carga. Isso ocorre porque os cenários de aplicação do Maglev são distintos dos encontrados em um balanceamento stateless entre várias réplicas de uma API REST, por exemplo.
 
@@ -484,10 +288,12 @@ O objetivo principal do Maglev é assegurar uma mínima flutuação no mapeament
 
 Esse algoritmo é especialmente adequado para balanceamento entre datacenters, ingestão de dados e outros cenários que exigem continuidade e persistência entre as requisições. Também é aplicável em soluções multi-tenant, onde a segregação do ambiente é feita com base no IP de origem do cliente.
 
-## Limitações do Maglev
+### Limitações do Maglev
+
 O Maglev, embora eficiente para balanceamento de carga em grandes sistemas e ambientes de data center, enfrenta desafios ao lidar com mudanças rápidas no pool de hosts, como em ambientes com escalabilidade horizontal. Além disso, muitas vezes requer hardware e software específicos para operar em seu pleno potencial.
 
 ## Random Load Balancing
+
 Dentre todos os algoritmos apresentados, o Random pode ser considerado o mais simples, embora seja um dos menos utilizados. Diferentemente de outros métodos, como Round Robin ou Least Connections, este algoritmo não leva em conta o estado atual ou a carga de trabalho dos servidores ao tomar decisões. Ele simplesmente seleciona um host aleatoriamente do pool de servidores para encaminhar a requisição.
 
 O balanceador de carga mantém uma lista de todos os servidores disponíveis, e quando uma requisição chega, ele escolhe um servidor de maneira aleatória. Esse processo é geralmente realizado por meio de um gerador de números aleatórios para selecionar um índice na lista de servidores.
@@ -496,108 +302,62 @@ Sua implementação é extremamente simples, não requerendo estado ou monitoram
 
 É mais frequentemente utilizado em cenários onde a carga de trabalho é leve ou uniformemente distribuída, e em ambientes que priorizam a escalabilidade rápida e fácil. Em outros contextos, o uso deste método é geralmente desaconselhado.
 
-## Limitações do Random
+### Limitações do Random
+
 A natureza aleatória do algoritmo pode resultar em uma distribuição desigual da carga, especialmente quando o número de requisições é baixo. Isso pode levar tanto à sobrecarga inesperada de alguns servidores quanto à subutilização de outros recursos.
 
 ```go
 package main
-
 import (
-	"fmt"
-	"math/rand"
-	"sync"
-	"time"
+    "fmt"
+    "math/rand"
+    "sync"
+    "time"
 )
-
 // Abstração de um Mecanismo Random
 type RandomBalancer struct {
-	hosts  []string // Lista de Hosts disponíveis para balanceamento
-	mutex  sync.Mutex
-	random *rand.Rand // Gerador de números aleatórios
+    hosts []string // Lista de Hosts disponíveis para balanceamento
+    mutex sync.Mutex
+    random *rand.Rand // Gerador de números aleatórios
 }
-
 // Inicializa um novo balanceador Random
 func NewRandomBalancer(hosts []string) *RandomBalancer {
-	src := rand.NewSource(time.Now().UnixNano())
-	return &RandomBalancer{
-		hosts:  hosts,
-		random: rand.New(src),
-	}
+    src := rand.NewSource(time.Now().UnixNano())
+    return &RandomBalancer{...}
 }
-
-// Retorna um host aleatório
-func (r *RandomBalancer) getHost() string {
-	r.mutex.Lock()
-	defer r.mutex.Unlock()
-
-	// Simplesmente calcula um número aleatório entre 0 e o len(r.hosts)
-	randomIndex := r.random.Intn(len(r.hosts))
-	return r.hosts[randomIndex]
-}
-
-func main() {
-	// Lista de hosts disponíveis
-	hosts := []string{
-		"http://host1.com",
-		"http://host2.com",
-		"http://host3.com",
-	}
-
-	// Inicia o mecanismo Random
-	randomBalancer := NewRandomBalancer(hosts)
-
-	// Simula 10 requisições
-	for i := 0; i < 10; i++ {
-		host := randomBalancer.getHost()
-		fmt.Printf("Requisição %d direcionada para: %s\n", i+1, host)
-	}
-}
-```
-
----
-
-```sh
-❯ go run main.go
-Requisição 1 direcionada para: http://host2.com
-Requisição 2 direcionada para: http://host3.com
-Requisição 3 direcionada para: http://host2.com
-Requisição 4 direcionada para: http://host3.com
-Requisição 5 direcionada para: http://host3.com
-Requisição 6 direcionada para: http://host3.com
-Requisição 7 direcionada para: http://host2.com
-Requisição 8 direcionada para: http://host1.com
-Requisição 9 direcionada para: http://host1.com
-Requisição 10 direcionada para: http://host2.com
 ```
 
 # Load Balancing e Camada OSI
+
 Quando olhamos para a atuação dos balanceadores de carga dentro da arquitetura de solução, podemos fazer um cruzamento direto com o modelo OSI. Existem diversas implementações de balanceadores de carga que podem atuar em diferentes camadas do modelo, oferecendo vantagens e desvantagens específicas. Essas características devem ser cuidadosamente consideradas de acordo com as necessidades de exposição da aplicação, levando em conta a forma como os backends são acessados e qual tipo de protocolo está sendo utilizado.
 
-![](./images/lb-camada-osi.png)
+![OSI](images/osi-lb.drawio.png)
 
-Neste contexto, vamos abordar dois cenários principais que estão mais próximos do design de sistemas: **Layer 4 (Transporte) e Layer 7 (Aplicação)**.
+Neste contexto, vamos abordar dois cenários principais que estão mais próximos do design de sistemas: Layer 4 (Transporte) e Layer 7 (Aplicação).
 
-# Load Balancers em Layer 4 (Transporte)
+## Load Balancers em Layer 4 (Transporte)
+
 Quando falamos de implementações de balanceadores em Layer 4, estamos nos referindo à camada de transporte do modelo OSI, responsável por protocolos como TCP e UDP. Diferente do balanceamento em Layer 7, que entende a aplicação e pode aplicar regras de roteamento baseadas em URLs, headers ou conteúdo, em Layer 4 o balanceador não possui a capacidade de interpretar o payload e nem os demais protocolos criados acima do que se refere ao TCP/IP, podendo lidar apenas com pacotes e destinos. Ele trabalha apenas com endereços IP e portas, encaminhando o tráfego de forma transparente e sem muitas customizações e implementações de algoritmos complexos de distribuição.
 
 Essa característica o torna extremamente rápido e eficiente, com latência altamente otimizada quando comparado as implementações em outras camadas, já que não há necessidade de processar o conteúdo da requisição, apenas encaminhá-los para o devido destino. Por isso, Load Balancers de Layer 4 são bastante utilizados em cenários onde a performance e throughput são requisitos prioritários.
 
-Sua principal desvantagem, ou tradeoff, é a falta de granularidade e customizações de roteamento. Diferente das demais camadas. ele não tem capacidade de interpretar protocolos e realizar roteamentos granulares em base em headers, query strings, paths e afins.
+Sua principal desvantagem, ou tradeoff, é a falta de granularidade e customizações de roteamento. Diferente das demais camadas. ele não tem capacidade de interpretar protocolos e realizar roteamentos granulares em base em `headers`, `query strings`, `paths` e afins.
 
-# Load Balancers em Layer 7 (Aplicação)
+## Load Balancers em Layer 7 (Aplicação)
+
 Já quando estamos falando em balanceadores que trabalham em Layer 7, entramos na camada de aplicação do modelo OSI, implementações que lidam diretamente com protocolos mais complexos como HTTP, gRPC e WebSocket. Diferente das aplicações Layer 4, o balanceador aqui entende o conteúdo da requisição e pode aplicar decisões de roteamento mais granulares e complexas, levando em conta regras com base em URLs, headers, body ou querystrings, além de oferecer recursos como SSL/TLS offloading (retirando a carga de processamento e troca de certificados de criptografia do servidor), permitindo viabilizar cache de respostas e até compressão do payload para performance e redução de latência.
 
 Em um cenário distribuído de microserviços, podemos utilizar balanceadores layer 7 para encaminhar direfentes requisições para diferentes microserviços baseados em paths, hosts ou demais headers.
 
 Em comparativo, podemos dizer que balanceadores Layer 7 focam em inteligencia e flexibilidade de roteamento, dando suporte para algoritmos de balanceamento mais complexos, enquanto os balanceadores Layer 4 focam em velocidade e eficiencia de tráfego.
 
+# Implementações e Tecnologias
 
-
-## Implementações e Tecnologias
 Fazendo um rapido apanhado de tecnologias de mercado para que seja possível associar a teoria com a prática, abaixo se encontra uma lista de tecnologias que podem ser considerados proxies reversos, balanceadores e até assumindo os dois papéis.
 
-## Envoy Proxy
-![](./images/envoy.png)
+### Envoy Proxy
+
+![Envoy Logo](images/envoy-logo.png)
 
 O Envoy Proxy é um proxy construído para suportar altos volumes, de alto desempenho, e que precisem de alta confiabilidade e escalabiliade utilizando pouquíssimo recurso computacional. O Envoy é projetado para aplicações Cloud Native e arquiteturas baseadas em microserviços. Criado pela Lyft e agora um projeto da Cloud Native Computing Foundation, o Envoy é uma solução de código aberto que ganhou popularidade por sua flexibilidade para o gerenciamento de tráfego de rede, e por ser fácilmente extensível para vários cenários.
 
@@ -609,9 +369,9 @@ O Envoy trabalha como Proxy de Layer 7 na camada de Aplicação para HTTP, gRPC 
 
 Ele possui suporte a vários algoritmos de balanceamento de carga apresentados no texto e também a monitoramento avançado para praticamente todas as funcionalidades.
 
-## Nginx
+### Nginx
 
-![](./images/nginx.png)
+![Nginx Logo](images/nginx-logo.png)
 
 O Nginx é um servidor web e proxy reverso de alto desempenho, conhecido por sua estabilidade, rico conjunto de recursos, configuração simples e baixo consumo de recursos. Originalmente criado por Igor Sysoev em 2002, o Nginx rapidamente se tornou uma escolha muito moderna e bem vinda entre os aplicações de baixo, médio e alto tráfego por sua eficiência e escalabilidade.
 
@@ -621,38 +381,44 @@ Além de ser um servidor web, o Nginx funciona eficientemente como proxy reverso
 
 Sua capacidade de funcionar tanto como um servidor web quanto como um proxy reverso e balanceador de carga o torna uma ferramenta extremamente versátil em qualquer stack de tecnologia moderna.
 
-## HAProxy
-![](./images/ha-proxy.png)
+### HAProxy
+
+![HAProxy Logo](images/haproxy-logo.png)
 
 O HAProxy é um dos balanceadores de carga e proxies reversos mais populares e confiáveis, amplamente reconhecido por sua alta eficiência, robustez e flexibilidade. Desenvolvido por Willy Tarreau em 2000, ele é uma solução open-source que se destaca em ambientes de alto tráfego e é frequentemente usado para melhorar a performance e a confiabilidade de sites e aplicações, sendo a principal alternativa para o Nginx em alguns cenários.
 
 Oferece algoritmos sofisticados de balanceamento de carga, como Round Robin, Least Connections e Source IP Hash que abordamos por aqui, permitindo uma distribuição eficiente do tráfego em vários tipos de cenários, podendo atuar como um proxy reverso para HTTP e TCP, oferecendo recursos como SSL/TLS offloading, HTTP/2 support e WebSockets.
 
-## Traefik
-![](./images/traefik.png)
+### Traefik
+
+![Traefik Logo](images/traefik-logo.png)
 
 O Traefik é um moderno proxy reverso e balanceador de carga HTTP de código aberto, conhecido por sua simplicidade de configuração e capacidade de se integrar automaticamente a serviços em ambientes de containerização, como Docker e Kubernetes. Lançado em 2015, o Traefik rapidamente ganhou popularidade na comunidade de DevOps e Cloud devido à sua facilidade de uso. Além do HTTP e HTTPS, o Traefik também suporta outros protocolos, como TCP e UDP.
 
-O Traefik detecta automaticamente as alterações na configuração dos serviços, como quando containers são iniciados ou parados em ambientes como Docker ou Kubernetes, e ajusta as rotas de tráfego em tempo real sem necessidade de downtime. Essa funcionalidade de atualização dinamica é talvez um dos principais motivos de adoção do mesmo para cumprir papel de proxys reversos e balanceamento de carga.
+O Traefik detecta automaticamente as alterações na configuração dos serviços, como quando containers são iniciados ou parados em ambientes como Docker ou Kubernetes, e ajusta as rotas de tráfego em tempo real sem necessidade de downtime.
 
-## Kubernetes Ingress Controllers
-![](./images/k8s-ingress.png)
+Essa funcionalidade de atualização dinamica é talvez um dos principais motivos de adoção do mesmo para cumprir papel de proxys reversos e balanceamento de carga.
+
+### Kubernetes Ingress Controllers
+
+![Kubernetes Ingress Controllers](images/kubernetes-ingress-controller.png)
 
 Kubernetes Ingress Controllers são componentes importantíssimos em clusters Kubernetes, oferecendo uma forma eficiente e padronizada de gerenciar o acesso externo às aplicações rodando em um cluster. Eles atuam como um ponto de entrada para o tráfego TCP, HTTP e HTTPS, permitindo a definição de regras de roteamento para distribuir o tráfego para diferentes serviços dentro do cluster, cumprindo um papel de Load Balancer externo de várias formas.
 
-Existem uma variedade de implementações, incluindo Nginx, HAProxy, Traefik, Service Meshes, Envoy e outros, cada um com suas características e benefícios específicos que devem ser avaliados caso a caso. .
+Existem uma variedade de implementações, incluindo Nginx, HAProxy, Traefik, Service Meshes, Envoy e outros, cada um com suas características e benefícios específicos que devem ser avaliados caso a caso.
 
 Ambos permitem de alguma forma a definição de regras de roteamento, SSL/TLS offloading e outras configurações em um único recurso, facilitando o gerenciamento e a manutenção.
 
 Eles não apenas simplificam o gerenciamento de tráfego, mas também oferecem recursos avançados que são fundamentais para a segurança, desempenho e escalabilidade das aplicações em um ou mais clusters.
 
-## Cloud Load Balancers
+#### Cloud Load Balancers
 
-![](./images/cloud-lb.png)
+![Cloud Public](images/cloud-public.png)
 
 Os Load Balancers oferecidos pelos principais provedores de nuvem, como AWS (Amazon Web Services), Google Cloud Platform (GCP) e Microsoft Azure, são soluções altamente escaláveis e especificamente projetadas para operar eficientemente nas respectivas plataformas de nuvem. Eles oferecem suporte a uma ampla gama de integrações com outros serviços fornecidos pelas mesmas plataformas, incluindo segurança, monitoramento, escalabilidade e auditoria.
 
 A maioria dos provedores de nuvem disponibiliza mais de um tipo de serviço de balanceamento de carga, cada um com características únicas para atender eficientemente a diferentes tipos de arquiteturas. Esses serviços geralmente suportam balanceamento de carga na Camada 7 (HTTP/HTTPS), bem como opções dedicadas à Camada 4 (TCP/UDP), oferecendo funcionalidades personalizáveis como roteamento avançado, segurança aprimorada, resiliência, circuit breaking, verificação de saúde dos hosts, entre outras.
+
 
 # Referencias
 - [Load balancing in cloud computing: A big picture](https://www.sciencedirect.com/science/article/pii/S1319157817303361)
@@ -682,4 +448,3 @@ A maioria dos provedores de nuvem disponibiliza mais de um tipo de serviço de b
 - [Kubernetes Networking: Load Balancing Techniques and Algorithms](https://romanglushach.medium.com/kubernetes-networking-load-balancing-techniques-and-algorithms-5da85c5c7253)
 
 - [Customizing Load Balancing Algorithms in HAProxy](https://mhsamsal.wordpress.com/2021/10/14/customizing-load-balancing-algorithms-in-haproxy/)
-
