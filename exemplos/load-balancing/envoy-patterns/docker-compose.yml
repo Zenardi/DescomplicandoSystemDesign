@@ -1,0 +1,145 @@
+version: '3.8'
+
+services:
+  # Backend Application
+  backend-app-1:
+    build: ./app
+    container_name: backend-app-1
+    environment:
+      - SERVICE_NAME=backend-app-1
+      - PORT=3000
+    networks:
+      - envoy-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  backend-app-2:
+    build: ./app
+    container_name: backend-app-2
+    environment:
+      - SERVICE_NAME=backend-app-2
+      - PORT=3000
+    networks:
+      - envoy-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  backend-app-3:
+    build: ./app
+    container_name: backend-app-3
+    environment:
+      - SERVICE_NAME=backend-app-3
+      - PORT=3000
+    networks:
+      - envoy-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+
+  # Reverse Proxy 1 - Envoy como Proxy Reverso
+  reverse-proxy-1:
+    image: envoyproxy/envoy:v1.27-latest
+    container_name: reverse-proxy-1
+    ports:
+      - "8081:8080"
+      - "9901:9901"
+    volumes:
+      - ./envoy-configs/reverse-proxy-1.yaml:/etc/envoy/envoy.yaml
+    depends_on:
+      - backend-app-1
+    networks:
+      - envoy-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9901/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  # Reverse Proxy 2 - Envoy como Proxy Reverso
+  reverse-proxy-2:
+    image: envoyproxy/envoy:v1.27-latest
+    container_name: reverse-proxy-2
+    ports:
+      - "8082:8080"
+      - "9902:9902"
+    volumes:
+      - ./envoy-configs/reverse-proxy-2.yaml:/etc/envoy/envoy.yaml
+    depends_on:
+      - backend-app-2
+    networks:
+      - envoy-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9902/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  # Reverse Proxy 3 - Envoy como Proxy Reverso
+  reverse-proxy-3:
+    image: envoyproxy/envoy:v1.27-latest
+    container_name: reverse-proxy-3
+    ports:
+      - "8083:8080"
+      - "9903:9903"
+    volumes:
+      - ./envoy-configs/reverse-proxy-3.yaml:/etc/envoy/envoy.yaml
+    depends_on:
+      - backend-app-3
+    networks:
+      - envoy-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9903/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  # Load Balancer - Envoy como Load Balancer
+  load-balancer:
+    image: envoyproxy/envoy:v1.27-latest
+    container_name: load-balancer
+    ports:
+      - "80:80"     # Porta principal para tráfego
+      - "9900:9900" # Admin interface do Load Balancer
+    volumes:
+      - ./envoy-configs/load-balancer.yaml:/etc/envoy/envoy.yaml
+    depends_on:
+      - reverse-proxy-1
+      - reverse-proxy-2
+      - reverse-proxy-3
+    networks:
+      - envoy-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9900/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+networks:
+  envoy-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

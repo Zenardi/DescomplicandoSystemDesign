@@ -1,0 +1,68 @@
+services:
+  pg:
+    image: postgres:16-alpine
+    container_name: pg
+    environment:
+      POSTGRES_DB: exemplo
+      POSTGRES_USER: cap_user
+      POSTGRES_PASSWORD: cap_password
+    ports: ["5432:5432"]
+    volumes:
+      - ./postgres/01_schema_seed.sql:/docker-entrypoint-initdb.d/01_schema_seed.sql:ro
+
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: clickhouse
+    ports: ["8123:8123", "9000:9000"]
+    environment:
+      CLICKHOUSE_PASSWORD: toor
+    volumes:
+      - ./clickhouse/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+  mongo:
+    image: mongo:8-noble
+    container_name: mongo
+    ports: ["27017:27017"]
+    environment:
+      MONGO_INITDB_DATABASE: loja
+    volumes:
+      - ./mongo/init.js:/docker-entrypoint-initdb.d/init.js:ro
+
+  cassandra:
+    image: cassandra:4.1
+    container_name: cassandra
+    ports: ["9042:9042"]
+    environment:
+      MAX_HEAP_SIZE: 512M
+      HEAP_NEWSIZE: 128M
+    volumes:
+      - ./cassandra/init.cql:/seed/init.cql:ro
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+    restart: no
+    environment:
+      REDIS_FLAVOR: ephemeral
+
+  neo4j:
+    image: neo4j:5-community
+    container_name: neo4j
+    environment:
+      NEO4J_AUTH: none
+    ports: ["7474:7474", "7687:7687"]
+    volumes:
+      - ./neo4j/seed.cypher:/seed/seed.cypher:ro
+
+  es:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.2
+    container_name: es
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"

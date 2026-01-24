@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:latest
+    container_name: cap-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - cap_network
+    restart: no
+    environment:
+      REDIS_FLAVOR: ephemeral
+
+  postgresql:
+    image: postgres:latest
+    container_name: cap-postgresql
+    environment:
+      POSTGRES_DB: exemplo
+      POSTGRES_USER: cap_user
+      POSTGRES_PASSWORD: cap_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - cap_network
+    restart: always
+
+  mongodb:
+    image: mongo:latest
+    container_name: cap-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - cap_network
+    restart: always
+
+volumes:
+  postgres_data:
+  mongodb_data:
+
+networks:
+  cap_network:
+    driver: bridge

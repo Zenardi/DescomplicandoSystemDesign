@@ -1,0 +1,102 @@
+admin:
+  address:
+    socket_address:
+      address: 0.0.0.0
+      port_value: 9900
+
+static_resources:
+  listeners:
+  - name: listener_0
+    address:
+      socket_address:
+        address: 0.0.0.0
+        port_value: 80
+    filter_chains:
+    - filters:
+      - name: envoy.filters.network.http_connection_manager
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+          stat_prefix: ingress_http
+          access_log:
+          - name: envoy.access_loggers.stdout
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog
+              log_format:
+                text_format: |
+                  [LOAD-BALANCER] [%START_TIME%] "%REQ(:METHOD)% %REQ(X-ENVOY-ORIGINAL-PATH?:PATH)% %PROTOCOL%"
+                  %RESPONSE_CODE% %RESPONSE_FLAGS% %BYTES_RECEIVED% %BYTES_SENT%
+                  %DURATION% %RESP(X-ENVOY-UPSTREAM-SERVICE-TIME)% "%REQ(X-FORWARDED-FOR)%"
+                  "%REQ(USER-AGENT)%" "%REQ(X-REQUEST-ID)%" "%REQ(:AUTHORITY)%" "%UPSTREAM_HOST%"
+          http_filters:
+          - name: envoy.filters.http.router
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+          route_config:
+            name: local_route
+            virtual_hosts:
+            - name: load_balancer_service
+              domains: ["*"]
+              routes:
+              - match:
+                  prefix: "/"
+                route:
+                  cluster: reverse_proxy_cluster
+                  timeout: 30s
+                response_headers_to_add:
+                - header:
+                    key: "X-Load-Balancer"
+                    value: "envoy-lb"
+                - header:
+                    key: "X-Pattern"
+                    value: "Load-Balancer"
+
+  clusters:
+  - name: reverse_proxy_cluster
+    connect_timeout: 30s
+    type: STRICT_DNS
+    dns_lookup_family: V4_ONLY
+    # Algoritmo de Balanceamento de Carga
+    lb_policy: ROUND_ROBIN
+    
+    round_robin_lb_config:
+      slow_start_config:
+        slow_start_window: 60s
+
+    # Configuração de Weighted Round Robin - controla o "quantum"
+    # Cada endpoint receberá requisições proporcionais ao seu peso
+    load_assignment:
+      cluster_name: reverse_proxy_cluster
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: reverse-proxy-1
+                port_value: 8080
+          # Peso 1: receberá 1 requisições a cada ciclo
+          load_balancing_weight: 1
+        - endpoint:
+            address:
+              socket_address:
+                address: reverse-proxy-2
+                port_value: 8080
+          # Peso 1: receberá 1 requisições a cada ciclo  
+          load_balancing_weight: 1
+        - endpoint:
+            address:
+              socket_address:
+                address: reverse-proxy-3
+                port_value: 8080
+          # Peso 1: receberá 1 requisição a cada ciclo
+          load_balancing_weight: 1
+    
+    health_checks:
+    - timeout: 1s
+      interval: 10s
+      unhealthy_threshold: 3
+      healthy_threshold: 2
+      http_health_check:
+        path: "/health"
+        expected_statuses:
+        - start: 200
+          end: 299

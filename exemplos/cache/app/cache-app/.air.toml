@@ -1,0 +1,39 @@
+# .air.toml
+
+# Diretório raiz da aplicação
+root = "."
+tmp_dir = "tmp"
+
+[build]
+# comando para compilar seu app (ajuste se mudar o path do main)
+cmd = "go build -o ./tmp/main ./cmd/server"
+# binário resultante que será rodado
+bin = "tmp/main"
+# extensões que o Air vai observar
+include_ext = ["go"]
+# diretórios a serem ignorados
+exclude_dir = ["vendor", "tmp", ".git"]
+# atraso (em ms) antes de rebuild (evita múltiplos triggers rápidos)
+delay = 1000
+# atraso para matar o processo após rebuild
+kill_delay = 500
+# parar execução se build falhar
+stop_on_error = true
+# enviar SIGINT ao invés de SIGKILL
+send_interrupt = true
+
+[log]
+# log com timestamp
+time = true
+# cor principal dos logs
+color_main = "magenta"
+
+[color]
+main = "magenta"
+watcher = "cyan"
+build = "yellow"
+runner = "green"
+app = "white"
+
+[misc]
+clean_on_exit = true
