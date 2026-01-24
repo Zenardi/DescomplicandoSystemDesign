@@ -185,6 +185,46 @@
 
 </details>
 
+<details>
+<summary>DAY-07 - Load Balancers e Proxies Reversos</summary>
+
+- [System Design - Load Balancers e Proxies Reversos](day-07/README.md#system-design---load-balancers-e-proxies-reversos)
+- [O Problema da Falta de Balanceamento de Carga](day-07/README.md#o-problema-da-falta-de-balanceamento-de-carga)
+  - [Resolvendo problemas com balanceamento de carga](day-07/README.md#resolvendo-problemas-com-balanceamento-de-carga)
+- [Fundamentos de Balanceadores de Carga](day-07/README.md#fundamentos-de-balanceadores-de-carga)
+- [Proxy Reverso vs Load Balancer](day-07/README.md#proxy-reverso-vs-load-balancer)
+- [Algoritmos de Balanceamento de Carga](day-07/README.md#algoritmos-de-balanceamento-de-carga)
+  - [Round Robin](day-07/README.md#round-robin)
+    - [Limitações do Round Robin](day-07/README.md#limitações-do-round-robin)
+  - [Exemplo de um Algoritmo de Round Robin](day-07/README.md#exemplo-de-um-algoritmo-de-round-robin)
+  - [Least Request](day-07/README.md#least-request)
+    - [Limitações do Least Request](day-07/README.md#limitações-do-least-request)
+  - [Exemplo de Implementação](day-07/README.md#exemplo-de-implementação)
+  - [Least Connection](day-07/README.md#least-connection)
+    - [Limitações do Least Connection](day-07/README.md#limitações-do-least-connection)
+  - [Least Outstanding Requests (LOR)](day-07/README.md#least-outstanding-requests-lor)
+    - [Limitações do Least Outstanding Requests](day-07/README.md#limitações-do-least-outstanding-requests)
+  - [IP Hash Balancing](day-07/README.md#ip-hash-balancing)
+    - [Limitações ao Implementar a Técnica de IP Hashing](day-07/README.md#limitações-ao-implementar-a-técnica-de-ip-hashing)
+  - [Exemplo de Implementação](day-07/README.md#exemplo-de-implementação-1)
+  - [Maglev](day-07/README.md#maglev)
+  - [Limitações do Maglev](day-07/README.md#limitações-do-maglev)
+  - [Random Load Balancing](day-07/README.md#random-load-balancing)
+  - [Limitações do Random](day-07/README.md#limitações-do-random)
+- [Load Balancing e Camada OSI](day-07/README.md#load-balancing-e-camada-osi)
+- [Load Balancers em Layer 4 (Transporte)](day-07/README.md#load-balancers-em-layer-4-transporte)
+- [Load Balancers em Layer 7 (Aplicação)](day-07/README.md#load-balancers-em-layer-7-aplicação)
+  - [Implementações e Tecnologias](day-07/README.md#implementações-e-tecnologias)
+  - [Envoy Proxy](day-07/README.md#envoy-proxy)
+  - [Nginx](day-07/README.md#nginx)
+  - [HAProxy](day-07/README.md#haproxy)
+  - [Traefik](day-07/README.md#traefik)
+  - [Kubernetes Ingress Controllers](day-07/README.md#kubernetes-ingress-controllers)
+  - [Cloud Load Balancers](day-07/README.md#cloud-load-balancers)
+- [Referencias](day-07/README.md#referencias)
+
+</details>
+
 # Materiais
 | Aula | Slides | 
 | --- | --- |
@@ -194,6 +234,7 @@
 | Databases, Modelos de Dados e Indexação | [Slides](./day-04/04%20-%20System%20Design%20-%20Databases.pdf) |
 | Estratégias de Cache | [Slides](./day-05/05%20-%20System%20Design%20-%20Cache.pdf) |
 | Monolitos, Microserviços e Domínios | [Slides](./day-06/06%20-%20System%20Design%20-%20Microserviços%20e%20Monolitos.pdf) |
+| Load Balancers e Proxies Reversos | [Slides](./day-07/07%20-%20System%20Design%20-%20Load%20Balancers%20e%20Proxies%20Reversos.pdf) |
 
 # Book de Cases e Exercícios Livres 
 
