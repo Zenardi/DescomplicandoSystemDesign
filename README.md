@@ -226,6 +226,27 @@
 
 </details>
 
+<details>
+<summary>DAY-08 - API Gateways</summary>
+
+- [System Design - API Gateways](day-08/README.md#system-design---api-gateways)
+- [Definindo API Gateways](day-08/README.md#definindo-api-gateways)
+  - [O problema que os API Gateways resolvem?](day-08/README.md#o-problema-que-os-api-gateways-resolvem)
+- [API Gateways em Arquiteturas de Microserviços](day-08/README.md#api-gateways-em-arquiteturas-de-microserviços)
+- [API Gateways e Load Balancers](day-08/README.md#api-gateways-e-load-balancers)
+- [Componentes e Arquitetura de um API Gateway](day-08/README.md#componentes-e-arquitetura-de-um-api-gateway)
+  - [Roteamento de Requisições](day-08/README.md#roteamento-de-requisições)
+  - [Autenticação e Autorização](day-08/README.md#autenticação-e-autorização)
+  - [Limitação de Taxa (Rate Limiting) e Throttling](day-08/README.md#limitação-de-taxa-rate-limiting-e-throttling)
+    - [Rate Limit](day-08/README.md#rate-limit)
+    - [Throttling](day-08/README.md#throttling)
+    - [Token Bucket](day-08/README.md#token-bucket)
+    - [Leaky Buckets](day-08/README.md#leaky-buckets)
+  - [Gerenciamento de APIs e Versionamento](day-08/README.md#gerenciamento-de-apis-e-versionamento)
+    - [Referências](day-08/README.md#referências)
+
+</details>
+
 # Materiais
 | Aula | Slides | 
 | --- | --- |
@@ -236,6 +257,7 @@
 | Estratégias de Cache | [Slides](./day-05/05%20-%20System%20Design%20-%20Cache.pdf) |
 | Monolitos, Microserviços e Domínios | [Slides](./day-06/06%20-%20System%20Design%20-%20Microserviços%20e%20Monolitos.pdf) |
 | Load Balancers e Proxies Reversos | [Slides](./day-07/07%20-%20System%20Design%20-%20Load%20Balancers%20e%20Proxies%20Reversos.pdf) |
+| API Gateways | [Slides](./day-08/08%20-%20System%20Design%20-%20API%20Gateways.pdf) |
 
 # Book de Cases e Exercícios Livres 
 
