@@ -372,6 +372,72 @@
 
 </details>
 
+<details>
+<summary>DAY-13 - Protocolos de Comunicação Assincronos</summary>
+
+- [System Design - Mensageria, Eventos, Streaming e Arquitetura Assincrona](day-13/README.md#system-design---mensageria-eventos-streaming-e-arquitetura-assincrona)
+  - [Mensagens e Eventos](day-13/README.md#mensagens-e-eventos)
+    - [Definindo Mensageria](day-13/README.md#definindo-mensageria)
+    - [Definindo Eventos](day-13/README.md#definindo-eventos)
+  - [Eventos vs Mensagens](day-13/README.md#eventos-vs-mensagens)
+    - [Eventos São Mensagens](day-13/README.md#eventos-são-mensagens)
+  - [Conceitos e Padrões](day-13/README.md#conceitos-e-padrões)
+    - [FIFO e Queues - First In First Out](day-13/README.md#fifo-e-queues---first-in-first-out)
+        - [Output:](day-13/README.md#output)
+    - [LIFO e Stacks - Last In First Out](day-13/README.md#lifo-e-stacks---last-in-first-out)
+        - [Output:](day-13/README.md#output-1)
+    - [Fanout](day-13/README.md#fanout)
+    - [DLQ - Dead Letter Queues](day-13/README.md#dlq---dead-letter-queues)
+    - [Processamento em Batch](day-13/README.md#processamento-em-batch)
+  - [Protocolos e Arquiteturas Event-Driven](day-13/README.md#protocolos-e-arquiteturas-event-driven)
+    - [Streaming e Reatividade](day-13/README.md#streaming-e-reatividade)
+    - [Reatividade e Arquiteturas Event-Driven](day-13/README.md#reatividade-e-arquiteturas-event-driven)
+  - [Kafka e Event Streaming](day-13/README.md#kafka-e-event-streaming)
+    - [Clusters e Brokers](day-13/README.md#clusters-e-brokers)
+    - [Tópicos](day-13/README.md#tópicos)
+    - [Partições](day-13/README.md#partições)
+    - [Fatores de Replicação](day-13/README.md#fatores-de-replicação)
+    - [Producers](day-13/README.md#producers)
+        - [Exemplo de Produtor](day-13/README.md#exemplo-de-produtor)
+    - [Consumers e Consumer Groups](day-13/README.md#consumers-e-consumer-groups)
+        - [Exemplo de um consumidor](day-13/README.md#exemplo-de-um-consumidor)
+        - [Output](day-13/README.md#output-2)
+  - [Protocolos e Arquiteturas de Message-Driven](day-13/README.md#protocolos-e-arquiteturas-de-message-driven)
+    - [MQTT (Message Queuing Telemetry Transport)](day-13/README.md#mqtt-message-queuing-telemetry-transport)
+    - [MQTT Default Subscription](day-13/README.md#mqtt-default-subscription)
+    - [MQTT Shared Subscription](day-13/README.md#mqtt-shared-subscription)
+  - [AMQP (Advanced Message Queuing Protocol)](day-13/README.md#amqp-advanced-message-queuing-protocol)
+    - [Brokers](day-13/README.md#brokers)
+    - [Channels](day-13/README.md#channels)
+    - [Queues](day-13/README.md#queues)
+    - [Producers](day-13/README.md#producers-1)
+    - [Consumers](day-13/README.md#consumers)
+    - [Exchanges e Binding Keys](day-13/README.md#exchanges-e-binding-keys)
+    - [Tipos de Exchanges](day-13/README.md#tipos-de-exchanges)
+      - [Direct Exchange](day-13/README.md#direct-exchange)
+        - [Setup e Binding no Modo Direct](day-13/README.md#setup-e-binding-no-modo-direct)
+        - [Producer no Modo Direct](day-13/README.md#producer-no-modo-direct)
+        - [Output](day-13/README.md#output-3)
+        - [Consumer no Modo Direct](day-13/README.md#consumer-no-modo-direct)
+        - [Output](day-13/README.md#output-4)
+      - [Topic Exchange](day-13/README.md#topic-exchange)
+        - [Setup e Binding no Topic](day-13/README.md#setup-e-binding-no-topic)
+        - [Producer no Modo Topic](day-13/README.md#producer-no-modo-topic)
+        - [Output - Produtor](day-13/README.md#output---produtor)
+        - [Output - Consumidor Default](day-13/README.md#output---consumidor-default)
+        - [Output - Consumidor Prioritario](day-13/README.md#output---consumidor-prioritario)
+        - [Output - Consumidor Lake](day-13/README.md#output---consumidor-lake)
+      - [Fanout Exchange](day-13/README.md#fanout-exchange)
+        - [Setup no Fanout](day-13/README.md#setup-no-fanout)
+        - [Producer no Fanout](day-13/README.md#producer-no-fanout)
+        - [Output - Produtor](day-13/README.md#output---produtor-1)
+        - [Output - Consumidor Cobranca](day-13/README.md#output---consumidor-cobranca)
+        - [Output - Consumidor Logistica](day-13/README.md#output---consumidor-logistica)
+        - [Output - Consumidor Estoque](day-13/README.md#output---consumidor-estoque)
+- [Referências](day-13/README.md#referências)
+
+</details>
+
 
 # Materiais
 | Aula | Slides | 
@@ -388,7 +454,7 @@
 | Service Mesh | [Slides](./day-10/10%20-%20System%20Design%20-%20Service%20Mesh.pdf) |
 | Conceitos de Concorrência e Paralelismo | [Slides](./day-11/11%20-%20System%20Design%20-%20Concorrencia%20a%20Paralelismo.pdf) |
 | Padrões de Comunicação Síncronos | [Slides](./day-12/12%20-%20System%20Design%20-%20Comunicação%20Sincrona.pdf) |
-
+| Protocolos de Comunicação Assincronos | [Slides](./day-13/13%20-%20System%20Design%20-%20Comunicação%20Assincrona.pdf) |
 
 
 # Book de Cases e Exercícios Livres 
