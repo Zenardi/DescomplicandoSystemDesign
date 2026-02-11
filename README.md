@@ -1,6 +1,15 @@
 # Descomplicando System Design
 ![main-header](./images/main-header.png)
 
+- [Descomplicando System Design](#descomplicando-system-design)
+- [Conteúdo](#conteúdo)
+- [Materiais](#materiais)
+- [Book de Cases e Exercícios Livres](#book-de-cases-e-exercícios-livres)
+  - [Cases Resolvidos](#cases-resolvidos)
+
+
+# Conteúdo
+
 <details>
 <summary>DAY-01 - Protocolos de Rede</summary>
 
@@ -263,6 +272,105 @@
 
 </details>
 
+<details>
+<summary>DAY-10 - Service Mesh</summary>
+
+- [System Design - Service Mesh](day-10/README.md#system-design---service-mesh)
+- [Definindo Service Mesh](day-10/README.md#definindo-service-mesh)
+- [Componentes de um Service Mesh](day-10/README.md#componentes-de-um-service-mesh)
+  - [Control Plane (Camada de Controle)](day-10/README.md#control-plane-camada-de-controle)
+  - [Data Plane (Camada de Execução)](day-10/README.md#data-plane-camada-de-execução)
+- [Modelos de Service Mesh](day-10/README.md#modelos-de-service-mesh)
+  - [Modelo Client e Server](day-10/README.md#modelo-client-e-server)
+  - [Sidecars](day-10/README.md#sidecars)
+  - [Sidecarless / Proxyless](day-10/README.md#sidecarless--proxyless)
+- [Funcionalidades Comuns dos Service Meshes](day-10/README.md#funcionalidades-comuns-dos-service-meshes)
+  - [Roteamento de Tráfego Inteligente](day-10/README.md#roteamento-de-tráfego-inteligente)
+  - [Balanceamento de Carga Dinâmico](day-10/README.md#balanceamento-de-carga-dinâmico)
+  - [Observabilidade e Telemetria Transparente](day-10/README.md#observabilidade-e-telemetria-transparente)
+  - [Segurança, Autenticação e Autorização](day-10/README.md#segurança-autenticação-e-autorização)
+  - [Criptografia de Tráfego e mTLS](day-10/README.md#criptografia-de-tráfego-e-mtls)
+  - [Resiliência na Camada de Comunicação](day-10/README.md#resiliência-na-camada-de-comunicação)
+- [Referências](day-10/README.md#referências)
+
+</details>
+
+<details>
+<summary>DAY-11 - Conceitos de Concorrência e Paralelismo</summary>
+
+- [System Design - Paralelismo, Concorrência e Multithreading](day-11/README.md#system-design---paralelismo-concorrência-e-multithreading)
+  - [O que é um Processo?](day-11/README.md#o-que-é-um-processo)
+  - [O que é uma Thread?](day-11/README.md#o-que-é-uma-thread)
+  - [O que é Multithreading?](day-11/README.md#o-que-é-multithreading)
+- [Concorrência](day-11/README.md#concorrência)
+    - [Exemplo de Implementação](day-11/README.md#exemplo-de-implementação)
+- [Paralelismo](day-11/README.md#paralelismo)
+    - [Implementando um algoritmo de paralelismo](day-11/README.md#implementando-um-algoritmo-de-paralelismo)
+  - [Paralelismo Externo vs Paralelismo Interno](day-11/README.md#paralelismo-externo-vs-paralelismo-interno)
+    - [Paralelismo Interno](day-11/README.md#paralelismo-interno)
+    - [Paralelismo Externo](day-11/README.md#paralelismo-externo)
+- [Paralelismo vs Concorrência](day-11/README.md#paralelismo-vs-concorrência)
+- [Lidando com Paralelismo e Concorrência](day-11/README.md#lidando-com-paralelismo-e-concorrência)
+    - [Deadlocks e Starvation](day-11/README.md#deadlocks-e-starvation)
+  - [Race Conditions - Condições de Corrida](day-11/README.md#race-conditions---condições-de-corrida)
+    - [Race Conditions e Last-Write-Wins](day-11/README.md#race-conditions-e-last-write-wins)
+  - [Mutex](day-11/README.md#mutex)
+  - [Mutex Distribuído](day-11/README.md#mutex-distribuído)
+    - [Exemplo de Implementação](day-11/README.md#exemplo-de-implementação-1)
+  - [Mutex Distribuído - Zookeeper](day-11/README.md#mutex-distribuído---zookeeper)
+    - [Exemplo de Implementação](day-11/README.md#exemplo-de-implementação-2)
+  - [Spinlock](day-11/README.md#spinlock)
+    - [Exemplo de Implementação](day-11/README.md#exemplo-de-implementação-3)
+  - [Semáforos e Worker Pools](day-11/README.md#semáforos-e-worker-pools)
+    - [Exemplo de Implementação:](day-11/README.md#exemplo-de-implementação-4)
+- [Referências](day-11/README.md#referências)
+
+</details>
+
+<details>
+<summary>DAY-12 - Padrões de Comunicação Síncronos</summary>
+
+- [System Design - Padrões de Comunicação Síncronos](day-12/README.md#system-design---padrões-de-comunicação-síncronos)
+- [Definindo Comunicações Sincronas](day-12/README.md#definindo-comunicações-sincronas)
+- [API’s REST - Representational State Transfer](day-12/README.md#apis-rest---representational-state-transfer)
+  - [Componentes de uma requisição REST](day-12/README.md#componentes-de-uma-requisição-rest)
+    - [URI’s e URL’s](day-12/README.md#uris-e-urls)
+      - [URI - Uniform Resource Identifier](day-12/README.md#uri---uniform-resource-identifier)
+      - [URL - Uniform Resource Locator](day-12/README.md#url---uniform-resource-locator)
+    - [Recursos e Paths](day-12/README.md#recursos-e-paths)
+    - [Headers](day-12/README.md#headers)
+    - [Query Strings](day-12/README.md#query-strings)
+    - [Body e Formatos](day-12/README.md#body-e-formatos)
+    - [Utilização de Métodos HTTP para Representar Ações nos Paths](day-12/README.md#utilização-de-métodos-http-para-representar-ações-nos-paths)
+      - [Idempotência nas Requisições REST](day-12/README.md#idempotência-nas-requisições-rest)
+    - [Métodos HTTP nas URI’s e Recursos](day-12/README.md#métodos-http-nas-uris-e-recursos)
+      - [Status Codes de Resposta e Padrões do REST](day-12/README.md#status-codes-de-resposta-e-padrões-do-rest)
+  - [Principios do REST](day-12/README.md#principios-do-rest)
+    - [Interface Uniforme](day-12/README.md#interface-uniforme)
+    - [Comunicação Stateless](day-12/README.md#comunicação-stateless)
+    - [Camadas](day-12/README.md#camadas)
+    - [Cache](day-12/README.md#cache)
+- [Webhooks](day-12/README.md#webhooks)
+    - [Pooling e a Diferença entre Webhooks e API’s](day-12/README.md#pooling-e-a-diferença-entre-webhooks-e-apis)
+- [RPC - Remote Procedure Call](day-12/README.md#rpc---remote-procedure-call)
+    - [Exemplo de um Servidor RPC](day-12/README.md#exemplo-de-um-servidor-rpc)
+    - [Exemplo de um Client RPC](day-12/README.md#exemplo-de-um-client-rpc)
+- [gRPC - Google Remote Procedure Call](day-12/README.md#grpc---google-remote-procedure-call)
+  - [ProtoBufs](day-12/README.md#protobufs)
+    - [Exemplo de Protobuf](day-12/README.md#exemplo-de-protobuf)
+    - [Exemplo de Server gRPC](day-12/README.md#exemplo-de-server-grpc)
+    - [Exemplo de Client gRPC](day-12/README.md#exemplo-de-client-grpc)
+- [Websockets](day-12/README.md#websockets)
+- [GraphQL](day-12/README.md#graphql)
+  - [Componentes do GraphQL](day-12/README.md#componentes-do-graphql)
+    - [Schema](day-12/README.md#schema)
+    - [Query](day-12/README.md#query)
+    - [Mutations](day-12/README.md#mutations)
+    - [Resolvers e Data Sources](day-12/README.md#resolvers-e-data-sources)
+  - [Convergência de Arquiteturas gRPC \& REST \& GraphQL](day-12/README.md#convergência-de-arquiteturas-grpc--rest--graphql)
+- [Referências](day-12/README.md#referências)
+
+</details>
 
 
 # Materiais
@@ -277,6 +385,11 @@
 | Load Balancers e Proxies Reversos | [Slides](./day-07/07%20-%20System%20Design%20-%20Load%20Balancers%20e%20Proxies%20Reversos.pdf) |
 | API Gateways | [Slides](./day-08/08%20-%20System%20Design%20-%20API%20Gateways.pdf) |
 | Backend for Frontend (BFF) | [Slides](./day-09/09%20-%20System%20Design%20-%20BFF's.pdf) |
+| Service Mesh | [Slides](./day-10/10%20-%20System%20Design%20-%20Service%20Mesh.pdf) |
+| Conceitos de Concorrência e Paralelismo | [Slides](./day-11/11%20-%20System%20Design%20-%20Concorrencia%20a%20Paralelismo.pdf) |
+| Padrões de Comunicação Síncronos | [Slides](./day-12/12%20-%20System%20Design%20-%20Comunicação%20Sincrona.pdf) |
+
+
 
 # Book de Cases e Exercícios Livres 
 
@@ -298,3 +411,17 @@
 | Sistema de Contestação de Compras | Intermediário | [Link](/cases/INTERMEDIARIO_CONTESTACAO_COMPRAS.md) |
 | Sistema de Gestão de Pontos | Intermediário | [Link](/cases/INTERMEDIARIO_SISTEMA_DE_PONTOS.md) | 
 | Sistema de Votação de Reality Shows | Intermediário | [Link](/cases/INTERMEDIARIO_VOTACAO.md) |
+| Sistema Distribuído de Gestão de Estoque para Varejo | Intermediário | [Link](/cases/INTERMEDIARIO_ESTOQUE.md)   |
+| Ingestão e Telemetria | Avançado | [Link](/cases/AVANCADO_TELEMETRIA_LOGISTICA.md) |
+| Gestão de Vagas   | Avançado  | [Link](/cases/AVANCADO_CADASTRO_VAGAS.md) |
+| Controle de Ponto | Intermediário  | [Link](/cases/INTERMEDIARIO_GESTAO_DE_PONTO.md) | 
+
+
+## Cases Resolvidos 
+
+| Case                  | Link                                                                  |
+|-----------------------|-----------------------------------------------------------------------|
+| Encurtador de Links   | [Draw.io](/cases/resolucao/T1-Case-encurtador-de-links-basico.drawio)   |
+| Busca e Catalogo      | [Draw.io](/cases/resolucao/T1-Case-Busca-Ecommerce.drawio)               |
+| Notificação Omnichannel | [Draw.io](/cases/resolucao/T1-Case-Omnichannel.drawio)                 |
+| Sistema de Votação    | [Draw.io](/cases/resolucao/T1-Case-Vota-AI.drawio.xml)                  |

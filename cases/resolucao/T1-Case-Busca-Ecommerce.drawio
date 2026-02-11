@@ -1,0 +1,305 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:145.0) Gecko/20100101 Firefox/145.0" version="28.2.9">
+  <diagram name="Page-1" id="qeF2Kbu8gBcfGvpLaAj1">
+    <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-36" value="" style="rounded=1;whiteSpace=wrap;html=1;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;fillColor=none;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="1739" y="585.25" width="120" height="120" as="geometry" />
+        </mxCell>
+        <UserObject label="&lt;div class=&quot;markdown-heading&quot; dir=&quot;auto&quot;&gt;&lt;h2 tabindex=&quot;-1&quot; class=&quot;heading-element&quot; dir=&quot;auto&quot;&gt;Endpoints (exemplo)&lt;/h2&gt;&lt;a id=&quot;user-content-endpoints-exemplo&quot; class=&quot;anchor&quot; aria-label=&quot;Permalink: Endpoints (exemplo)&quot; href=&quot;https://github.com/msfidelis/linuxtips-curso-descomplicando-o-system-design/blob/main/cases/BASICO_CATALOGO.md#endpoints-exemplo&quot;&gt;&lt;svg class=&quot;octicon octicon-link&quot; viewBox=&quot;0 0 16 16&quot; version=&quot;1.1&quot; width=&quot;16&quot; height=&quot;16&quot; aria-hidden=&quot;true&quot;&gt;&lt;/svg&gt;&lt;/a&gt;&lt;/div&gt;&lt;ul dir=&quot;auto&quot;&gt;&#xa;&lt;li&gt;&lt;code&gt;GET /search?q=texto&amp;amp;category=...&amp;amp;brand=...&amp;amp;sort=relevance|price_asc&amp;amp;limit=20&amp;amp;cursor=...&lt;/code&gt;&lt;/li&gt;&#xa;&lt;li&gt;&lt;code&gt;GET /suggest?q=tex&lt;/code&gt; (autocomplete de termos e 3–5 produtos)&lt;/li&gt;&#xa;&lt;li&gt;&lt;code&gt;GET /products/{id}&lt;/code&gt;&lt;/li&gt;&#xa;&lt;li&gt;&lt;code&gt;POST /admin/reindex&lt;/code&gt; (parcial por &lt;code&gt;productId&lt;/code&gt;) e &lt;code&gt;POST /admin/rebuild&lt;/code&gt; (batch)&lt;/li&gt;&#xa;&lt;/ul&gt;" link="&lt;div class=&quot;markdown-heading&quot; dir=&quot;auto&quot;&gt;&lt;h2 tabindex=&quot;-1&quot; class=&quot;heading-element&quot; dir=&quot;auto&quot;&gt;Endpoints (exemplo)&lt;/h2&gt;&lt;a id=&quot;user-content-endpoints-exemplo&quot; class=&quot;anchor&quot; aria-label=&quot;Permalink: Endpoints (exemplo)&quot; href=&quot;https://github.com/msfidelis/linuxtips-curso-descomplicando-o-system-design/blob/main/cases/BASICO_CATALOGO.md#endpoints-exemplo&quot;&gt;&lt;svg class=&quot;octicon octicon-link&quot; viewBox=&quot;0 0 16 16&quot; version=&quot;1.1&quot; width=&quot;16&quot; height=&quot;16&quot; aria-hidden=&quot;true&quot;&gt;&lt;/svg&gt;&lt;/a&gt;&lt;/div&gt;&lt;ul dir=&quot;auto&quot;&gt;&#xa;&lt;li&gt;&lt;code&gt;GET /search?q=texto&amp;amp;category=...&amp;amp;brand=...&amp;amp;sort=relevance|price_asc&amp;amp;limit=20&amp;amp;cursor=...&lt;/code&gt;&lt;/li&gt;&#xa;&lt;li&gt;&lt;code&gt;GET /suggest?q=tex&lt;/code&gt; (autocomplete de termos e 3–5 produtos)&lt;/li&gt;&#xa;&lt;li&gt;&lt;code&gt;GET /products/{id}&lt;/code&gt;&lt;/li&gt;&#xa;&lt;li&gt;&lt;code&gt;POST /admin/reindex&lt;/code&gt; (parcial por &lt;code&gt;productId&lt;/code&gt;) e &lt;code&gt;POST /admin/rebuild&lt;/code&gt; (batch)&lt;/li&gt;&#xa;&lt;/ul&gt;" id="DnRJEZd64QJhaAmxBPdI-2">
+          <mxCell style="text;whiteSpace=wrap;html=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+            <mxGeometry x="140" y="-10" width="560" height="270" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="&lt;div class=&quot;markdown-heading&quot; dir=&quot;auto&quot;&gt;&lt;h2 tabindex=&quot;-1&quot; class=&quot;heading-element&quot; dir=&quot;auto&quot;&gt;Requisitos Funcionais&lt;/h2&gt;&lt;a id=&quot;user-content-requisitos-funcionais&quot; class=&quot;anchor&quot; aria-label=&quot;Permalink: Requisitos Funcionais&quot; href=&quot;https://github.com/msfidelis/linuxtips-curso-descomplicando-o-system-design/blob/main/cases/BASICO_CATALOGO.md#requisitos-funcionais&quot;&gt;&lt;svg class=&quot;octicon octicon-link&quot; viewBox=&quot;0 0 16 16&quot; version=&quot;1.1&quot; width=&quot;16&quot; height=&quot;16&quot; aria-hidden=&quot;true&quot;&gt;&lt;/svg&gt;&lt;/a&gt;&lt;/div&gt;&lt;ul dir=&quot;auto&quot;&gt;&#xa;&lt;li&gt;&lt;strong&gt;Indexação&lt;/strong&gt; do catálogo (nome, descrição, categoria, marca, preço, atributos chave) com suporte a &lt;strong&gt;sinônimos&lt;/strong&gt; e &lt;strong&gt;tolerância a typos&lt;/strong&gt;.&lt;/li&gt;&#xa;&lt;li&gt;&lt;strong&gt;Busca&lt;/strong&gt; por texto livre com &lt;strong&gt;filtros&lt;/strong&gt; (categoria, faixa de preço, marca) e &lt;strong&gt;ordenação&lt;/strong&gt; (relevância, preço).&lt;/li&gt;&#xa;&lt;li&gt;&lt;strong&gt;Autocomplete&lt;/strong&gt; (sugestões de termos e produtos) em até 50 ms p95.&lt;/li&gt;&#xa;&lt;li&gt;&lt;strong&gt;Detalhes do produto&lt;/strong&gt; com dados de estoque e preço atual.&lt;/li&gt;&#xa;&lt;li&gt;&lt;strong&gt;Paginação&lt;/strong&gt; determinística (limit/offset ou cursor).&lt;/li&gt;&#xa;&lt;li&gt;&lt;strong&gt;Admin&lt;/strong&gt;: endpoint para &lt;strong&gt;reindexar&lt;/strong&gt; produto alterado (parcial) e &lt;strong&gt;rebuild&lt;/strong&gt; completo (batch).&lt;/li&gt;&#xa;&lt;/ul&gt;&#xa;&lt;div class=&quot;markdown-heading&quot; dir=&quot;auto&quot;&gt;&lt;h2 tabindex=&quot;-1&quot; class=&quot;heading-element&quot; dir=&quot;auto&quot;&gt;Requisitos Não Funcionais&lt;/h2&gt;&lt;a id=&quot;user-content-requisitos-não-funcionais&quot; class=&quot;anchor&quot; aria-label=&quot;Permalink: Requisitos Não Funcionais&quot; href=&quot;https://github.com/msfidelis/linuxtips-curso-descomplicando-o-system-design/blob/main/cases/BASICO_CATALOGO.md#requisitos-não-funcionais&quot;&gt;&lt;svg class=&quot;octicon octicon-link&quot; viewBox=&quot;0 0 16 16&quot; version=&quot;1.1&quot; width=&quot;16&quot; height=&quot;16&quot; aria-hidden=&quot;true&quot;&gt;&lt;/svg&gt;&lt;/a&gt;&lt;/div&gt;&lt;ul dir=&quot;auto&quot;&gt;&#xa;&lt;li&gt;&lt;strong&gt;Latência&lt;/strong&gt;: p95 &amp;lt; 150 ms para busca; p95 &amp;lt; 50 ms para autocomplete; p95 &amp;lt; 100 ms para detalhes (com cache).&lt;/li&gt;&#xa;&lt;li&gt;&lt;strong&gt;Disponibilidade&lt;/strong&gt;: 99,5% mensal.&lt;/li&gt;&#xa;&lt;li&gt;&lt;strong&gt;Relevância&lt;/strong&gt;: ranking básico (BM25 ou similar) + boost por popularidade/categoria.&lt;/li&gt;&#xa;&lt;li&gt;&lt;strong&gt;Cache&lt;/strong&gt;: resultados de &lt;strong&gt;queries populares&lt;/strong&gt; (chave: termo normalizado + filtros) e &lt;strong&gt;detalhes de produto hot&lt;/strong&gt; com TTL curto (ex.: 60–180s).&lt;/li&gt;&#xa;&lt;li&gt;&lt;strong&gt;Observabilidade&lt;/strong&gt;: métricas de taxa de acerto de cache, latência p95/p99 por endpoint, principais queries e erro por índice ausente.&lt;/li&gt;&#xa;&lt;li&gt;&lt;strong&gt;Custos&lt;/strong&gt;: evitar sobrecarregar o motor de busca com queries repetidas; invalidação de cache por produto atualizado.&lt;/li&gt;&#xa;&lt;/ul&gt;" link="&lt;div class=&quot;markdown-heading&quot; dir=&quot;auto&quot;&gt;&lt;h2 tabindex=&quot;-1&quot; class=&quot;heading-element&quot; dir=&quot;auto&quot;&gt;Requisitos Funcionais&lt;/h2&gt;&lt;a id=&quot;user-content-requisitos-funcionais&quot; class=&quot;anchor&quot; aria-label=&quot;Permalink: Requisitos Funcionais&quot; href=&quot;https://github.com/msfidelis/linuxtips-curso-descomplicando-o-system-design/blob/main/cases/BASICO_CATALOGO.md#requisitos-funcionais&quot;&gt;&lt;svg class=&quot;octicon octicon-link&quot; viewBox=&quot;0 0 16 16&quot; version=&quot;1.1&quot; width=&quot;16&quot; height=&quot;16&quot; aria-hidden=&quot;true&quot;&gt;&lt;/svg&gt;&lt;/a&gt;&lt;/div&gt;&lt;ul dir=&quot;auto&quot;&gt;&#xa;&lt;li&gt;&lt;strong&gt;Indexação&lt;/strong&gt; do catálogo (nome, descrição, categoria, marca, preço, atributos chave) com suporte a &lt;strong&gt;sinônimos&lt;/strong&gt; e &lt;strong&gt;tolerância a typos&lt;/strong&gt;.&lt;/li&gt;&#xa;&lt;li&gt;&lt;strong&gt;Busca&lt;/strong&gt; por texto livre com &lt;strong&gt;filtros&lt;/strong&gt; (categoria, faixa de preço, marca) e &lt;strong&gt;ordenação&lt;/strong&gt; (relevância, preço).&lt;/li&gt;&#xa;&lt;li&gt;&lt;strong&gt;Autocomplete&lt;/strong&gt; (sugestões de termos e produtos) em até 50 ms p95.&lt;/li&gt;&#xa;&lt;li&gt;&lt;strong&gt;Detalhes do produto&lt;/strong&gt; com dados de estoque e preço atual.&lt;/li&gt;&#xa;&lt;li&gt;&lt;strong&gt;Paginação&lt;/strong&gt; determinística (limit/offset ou cursor).&lt;/li&gt;&#xa;&lt;li&gt;&lt;strong&gt;Admin&lt;/strong&gt;: endpoint para &lt;strong&gt;reindexar&lt;/strong&gt; produto alterado (parcial) e &lt;strong&gt;rebuild&lt;/strong&gt; completo (batch).&lt;/li&gt;&#xa;&lt;/ul&gt;&#xa;&lt;div class=&quot;markdown-heading&quot; dir=&quot;auto&quot;&gt;&lt;h2 tabindex=&quot;-1&quot; class=&quot;heading-element&quot; dir=&quot;auto&quot;&gt;Requisitos Não Funcionais&lt;/h2&gt;&lt;a id=&quot;user-content-requisitos-não-funcionais&quot; class=&quot;anchor&quot; aria-label=&quot;Permalink: Requisitos Não Funcionais&quot; href=&quot;https://github.com/msfidelis/linuxtips-curso-descomplicando-o-system-design/blob/main/cases/BASICO_CATALOGO.md#requisitos-não-funcionais&quot;&gt;&lt;svg class=&quot;octicon octicon-link&quot; viewBox=&quot;0 0 16 16&quot; version=&quot;1.1&quot; width=&quot;16&quot; height=&quot;16&quot; aria-hidden=&quot;true&quot;&gt;&lt;/svg&gt;&lt;/a&gt;&lt;/div&gt;&lt;ul dir=&quot;auto&quot;&gt;&#xa;&lt;li&gt;&lt;strong&gt;Latência&lt;/strong&gt;: p95 &amp;lt; 150 ms para busca; p95 &amp;lt; 50 ms para autocomplete; p95 &amp;lt; 100 ms para detalhes (com cache).&lt;/li&gt;&#xa;&lt;li&gt;&lt;strong&gt;Disponibilidade&lt;/strong&gt;: 99,5% mensal.&lt;/li&gt;&#xa;&lt;li&gt;&lt;strong&gt;Relevância&lt;/strong&gt;: ranking básico (BM25 ou similar) + boost por popularidade/categoria.&lt;/li&gt;&#xa;&lt;li&gt;&lt;strong&gt;Cache&lt;/strong&gt;: resultados de &lt;strong&gt;queries populares&lt;/strong&gt; (chave: termo normalizado + filtros) e &lt;strong&gt;detalhes de produto hot&lt;/strong&gt; com TTL curto (ex.: 60–180s).&lt;/li&gt;&#xa;&lt;li&gt;&lt;strong&gt;Observabilidade&lt;/strong&gt;: métricas de taxa de acerto de cache, latência p95/p99 por endpoint, principais queries e erro por índice ausente.&lt;/li&gt;&#xa;&lt;li&gt;&lt;strong&gt;Custos&lt;/strong&gt;: evitar sobrecarregar o motor de busca com queries repetidas; invalidação de cache por produto atualizado.&lt;/li&gt;&#xa;&lt;/ul&gt;" id="DnRJEZd64QJhaAmxBPdI-3">
+          <mxCell style="text;whiteSpace=wrap;html=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+            <mxGeometry x="140" y="250" width="560" height="700" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" edge="1" parent="1" source="DnRJEZd64QJhaAmxBPdI-4" target="DnRJEZd64QJhaAmxBPdI-10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-4" value="Search Engine" style="rounded=1;whiteSpace=wrap;html=1;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="1169" y="130" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-5" value="Suggestion Engine" style="rounded=1;whiteSpace=wrap;html=1;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="1169" y="870" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-6" value="Product/Estoque" style="rounded=1;whiteSpace=wrap;html=1;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="1169" y="353.5" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-10" value="" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;fillColor=#60a917;fontColor=#ffffff;strokeColor=#2D7600;" vertex="1" parent="1">
+          <mxGeometry x="1444" y="50" width="60" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-11" value="Elasticsearch" style="rounded=0;whiteSpace=wrap;html=1;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="1490" y="110" width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-48" style="edgeStyle=orthogonalEdgeStyle;rounded=0;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" edge="1" parent="1" source="DnRJEZd64QJhaAmxBPdI-14" target="DnRJEZd64QJhaAmxBPdI-36">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-14" value="" style="image;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/azure2/databases/Azure_Database_PostgreSQL_Server.svg;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="1456" y="613.5" width="48" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-15" value="&lt;div&gt;Tabela: Produto&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="1484" y="666" width="120" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-38" style="edgeStyle=orthogonalEdgeStyle;rounded=0;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" edge="1" parent="1" source="DnRJEZd64QJhaAmxBPdI-16" target="DnRJEZd64QJhaAmxBPdI-15">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1624" y="712.5" />
+              <mxPoint x="1624" y="676.5" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-16" value="&lt;div&gt;Tabela: Estoque&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="1484" y="702" width="120" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-39" style="edgeStyle=orthogonalEdgeStyle;rounded=0;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.25;entryDx=0;entryDy=0;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" edge="1" parent="1" source="DnRJEZd64QJhaAmxBPdI-17" target="DnRJEZd64QJhaAmxBPdI-15">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1656" y="752" />
+              <mxPoint x="1656" y="671.5" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-17" value="&lt;div&gt;Tabela: Metadado&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="1484" y="742" width="120" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-44" style="edgeStyle=orthogonalEdgeStyle;rounded=0;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" edge="1" parent="1" source="DnRJEZd64QJhaAmxBPdI-18" target="DnRJEZd64QJhaAmxBPdI-40">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-18" value="Admin/Reindex" style="rounded=1;whiteSpace=wrap;html=1;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="1169" y="470" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-19" value="API Gateway" style="rounded=1;whiteSpace=wrap;html=1;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="800" y="300" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-20" value="" style="endArrow=classic;html=1;rounded=0;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="DnRJEZd64QJhaAmxBPdI-19" target="DnRJEZd64QJhaAmxBPdI-4">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="1130" y="260" as="sourcePoint" />
+            <mxPoint x="1100" y="190" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-21" value="" style="endArrow=classic;html=1;rounded=0;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="DnRJEZd64QJhaAmxBPdI-19" target="DnRJEZd64QJhaAmxBPdI-5">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="1160" y="360" as="sourcePoint" />
+            <mxPoint x="1319" y="190" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-22" value="" style="endArrow=classic;html=1;rounded=0;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="DnRJEZd64QJhaAmxBPdI-19" target="DnRJEZd64QJhaAmxBPdI-6">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="1150" y="430" as="sourcePoint" />
+            <mxPoint x="1309" y="370" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-23" value="" style="endArrow=classic;html=1;rounded=0;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="DnRJEZd64QJhaAmxBPdI-19" target="DnRJEZd64QJhaAmxBPdI-18">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="1150" y="480" as="sourcePoint" />
+            <mxPoint x="1309" y="420" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-26" value="/search" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="190" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-27" value="/suggest" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="1180" y="930" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-28" value="/products/{id}" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="1040" y="321.5" width="100" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-29" value="/admin/reindex" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="1010" y="450" width="100" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-31" value="" style="image;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/azure2/databases/Azure_Database_PostgreSQL_Server.svg;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="1767" y="606.75" width="48" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-32" value="" style="image;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/azure2/databases/Azure_Database_PostgreSQL_Server.svg;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="1775" y="615.25" width="48" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-37" value="Read Replicas" style="rounded=0;whiteSpace=wrap;html=1;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="1739" y="697.75" width="120" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-41" style="edgeStyle=orthogonalEdgeStyle;rounded=0;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" edge="1" parent="1" source="DnRJEZd64QJhaAmxBPdI-40" target="DnRJEZd64QJhaAmxBPdI-14">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-49" style="edgeStyle=orthogonalEdgeStyle;rounded=0;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" edge="1" parent="1" source="DnRJEZd64QJhaAmxBPdI-40" target="DnRJEZd64QJhaAmxBPdI-45">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-40" value="&lt;div&gt;Backoffice&lt;/div&gt;&lt;div&gt;Produto&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="1420" y="470" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-43" value="/admin/rebuild" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="1010" y="474" width="100" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-51" style="edgeStyle=orthogonalEdgeStyle;rounded=0;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;startArrow=classic;startFill=1;" edge="1" parent="1" source="DnRJEZd64QJhaAmxBPdI-45" target="DnRJEZd64QJhaAmxBPdI-50">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-45" value="" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;rotation=-90;" vertex="1" parent="1">
+          <mxGeometry x="1767.5" y="420" width="30" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-47" value="Reindex" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="1753.5" y="485" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-52" style="edgeStyle=orthogonalEdgeStyle;rounded=0;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;dashed=1;" edge="1" parent="1" source="DnRJEZd64QJhaAmxBPdI-50" target="DnRJEZd64QJhaAmxBPdI-36">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2050" y="645" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-50" value="&lt;div&gt;Reindex&lt;/div&gt;App" style="rounded=0;whiteSpace=wrap;html=1;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="1990" y="470" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-53" style="edgeStyle=orthogonalEdgeStyle;rounded=0;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;dashed=1;" edge="1" parent="1" source="DnRJEZd64QJhaAmxBPdI-50" target="DnRJEZd64QJhaAmxBPdI-10">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2050" y="90" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-54" value="&lt;div&gt;Busca na Tabela&lt;/div&gt;&lt;div&gt;01&lt;/div&gt;" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="1960" y="636" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-55" value="&lt;div&gt;Indexa no Elasticsearch&lt;/div&gt;02" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="1960" y="30" width="90" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-56" value="Alteração de Produto" style="ellipse;whiteSpace=wrap;html=1;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="1580" y="490" width="90" height="61" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-57" value="Evento de Reindex" style="ellipse;whiteSpace=wrap;html=1;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="1890" y="490" width="90" height="61" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-60" value="" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;fillColor=#a20025;fontColor=#ffffff;strokeColor=#6F0000;" vertex="1" parent="1">
+          <mxGeometry x="1444" y="175" width="60" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-61" style="edgeStyle=orthogonalEdgeStyle;rounded=0;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" edge="1" parent="1" source="DnRJEZd64QJhaAmxBPdI-4" target="DnRJEZd64QJhaAmxBPdI-60">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-62" value="Redis" style="rounded=0;whiteSpace=wrap;html=1;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="1490" y="230" width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-63" style="edgeStyle=orthogonalEdgeStyle;rounded=0;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.25;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0;entryDx=0;entryDy=27.5;entryPerimeter=0;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;dashed=1;" edge="1" parent="1" source="DnRJEZd64QJhaAmxBPdI-50" target="DnRJEZd64QJhaAmxBPdI-60">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-64" value="&lt;div&gt;Redis&lt;/div&gt;&lt;div&gt;DEL *&lt;/div&gt;" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="1900" y="180" width="90" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-65" value="md5(&lt;code&gt;/search?q=texto&amp;amp;category=...&amp;amp;brand=...&amp;amp;sort=relevance|price_asc&amp;amp;limit=20&amp;amp;cursor=._&lt;/code&gt;)" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="346" y="-10" width="823" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-71" style="edgeStyle=orthogonalEdgeStyle;rounded=0;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0;exitDx=0;exitDy=15;exitPerimeter=0;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" edge="1" parent="1" source="DnRJEZd64QJhaAmxBPdI-66" target="DnRJEZd64QJhaAmxBPdI-11">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1504" y="370" />
+              <mxPoint x="1690" y="370" />
+              <mxPoint x="1690" y="125" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-66" value="" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;fillColor=#a20025;fontColor=#ffffff;strokeColor=#6F0000;" vertex="1" parent="1">
+          <mxGeometry x="1444" y="343" width="60" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-67" value="Redis / Product ID" style="rounded=0;whiteSpace=wrap;html=1;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="1490" y="398" width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-68" style="edgeStyle=orthogonalEdgeStyle;rounded=0;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" edge="1" parent="1" source="DnRJEZd64QJhaAmxBPdI-6" target="DnRJEZd64QJhaAmxBPdI-66">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-69" style="edgeStyle=orthogonalEdgeStyle;rounded=0;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;dashed=1;" edge="1" parent="1" source="DnRJEZd64QJhaAmxBPdI-50" target="DnRJEZd64QJhaAmxBPdI-66">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2000" y="470" />
+              <mxPoint x="2000" y="383" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-72" value="Escrita Dupla" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="1767" y="350" width="64" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-73" value="Fallback pro Elasticsearch" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="1670" y="230" width="84" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-74" value="produto:iphone-16-pro-max-256gb -&amp;gt; id:link" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="1324" y="980" width="346" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-75" value="SCAN MATCH produto:*{termo}* COUNT 5" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="1360" y="1020" width="270" height="10" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-76" value="SCAN MATCH *iphone* COUNT 5" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="1355" y="1040" width="270" height="10" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-77" value="SCAN MATCH *iphone*laraja* COUNT 5" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="1360" y="1060" width="270" height="10" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-79" value="" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;fillColor=#a20025;fontColor=#ffffff;strokeColor=#6F0000;" vertex="1" parent="1">
+          <mxGeometry x="1430" y="860" width="60" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-80" style="edgeStyle=orthogonalEdgeStyle;rounded=0;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" edge="1" parent="1" source="DnRJEZd64QJhaAmxBPdI-5" target="DnRJEZd64QJhaAmxBPdI-79">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-81" style="edgeStyle=orthogonalEdgeStyle;rounded=0;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" edge="1" parent="1" source="DnRJEZd64QJhaAmxBPdI-50" target="DnRJEZd64QJhaAmxBPdI-79">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2070" y="530" />
+              <mxPoint x="2070" y="900" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-82" value="" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;fillColor=#a20025;fontColor=#ffffff;strokeColor=#6F0000;" vertex="1" parent="1">
+          <mxGeometry x="1444" y="880" width="60" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-83" value="" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;fillColor=#a20025;fontColor=#ffffff;strokeColor=#6F0000;" vertex="1" parent="1">
+          <mxGeometry x="1467" y="900" width="60" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-84" value="" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;rotation=-90;" vertex="1" parent="1">
+          <mxGeometry x="1205" y="-145" width="30" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-85" style="edgeStyle=orthogonalEdgeStyle;rounded=0;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.056;entryY=0.55;entryDx=0;entryDy=0;entryPerimeter=0;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" edge="1" parent="1" source="DnRJEZd64QJhaAmxBPdI-4" target="DnRJEZd64QJhaAmxBPdI-84">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-94" style="edgeStyle=orthogonalEdgeStyle;rounded=0;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" edge="1" parent="1" source="DnRJEZd64QJhaAmxBPdI-86" target="DnRJEZd64QJhaAmxBPdI-83">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2150" y="-65" />
+              <mxPoint x="2150" y="940" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-86" value="Sumarização" style="rounded=0;whiteSpace=wrap;html=1;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="1420" y="-95" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-87" style="edgeStyle=orthogonalEdgeStyle;rounded=0;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;entryPerimeter=0;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" edge="1" parent="1" source="DnRJEZd64QJhaAmxBPdI-86" target="DnRJEZd64QJhaAmxBPdI-84">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-88" value="termo:geladeira: -&amp;gt; geladeira-electrolux;geladeira-frost-free" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="1544" y="-235" width="346" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-89" value="SCAN MATCH *{termo}* COUNT 5" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="1580" y="-195" width="270" height="10" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-90" value="SCAN MATCH *iphone* COUNT 5" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="1575" y="-175" width="270" height="10" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-91" value="SCAN MATCH *iphone*laraja* COUNT 5" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="1580" y="-155" width="270" height="10" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-92" value="" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;fillColor=#6a00ff;fontColor=#ffffff;strokeColor=#3700CC;" vertex="1" parent="1">
+          <mxGeometry x="1450" y="-245" width="60" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-93" style="edgeStyle=orthogonalEdgeStyle;rounded=0;sketch=1;hachureGap=4;jiggle=2;curveFitting=1;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;entryPerimeter=0;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" edge="1" parent="1" source="DnRJEZd64QJhaAmxBPdI-86" target="DnRJEZd64QJhaAmxBPdI-92">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-95" value="termo:{termo-usado} -&amp;gt; id:link" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="1307" y="1090" width="346" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-97" value="SCAN MATCH *iphone* COUNT 5" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="1339" y="1130" width="270" height="10" as="geometry" />
+        </mxCell>
+        <mxCell id="DnRJEZd64QJhaAmxBPdI-98" value="SUmarização" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="1199" y="-80" width="60" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
