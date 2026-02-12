@@ -438,6 +438,37 @@
 
 </details>
 
+<details>
+<summary>DAY-14 -Performance, Capacidade e Escalabilidade</summary>
+
+- [System Design - Performance, Capacidade e Escalabilidade](day-14/README.md#system-design---performance-capacidade-e-escalabilidade)
+- [Definindo Performance](day-14/README.md#definindo-performance)
+  - [Métricas de Performance](day-14/README.md#métricas-de-performance)
+    - [Utilização e Saturação de Recursos](day-14/README.md#utilização-e-saturação-de-recursos)
+    - [Throughput, ou Tráfego](day-14/README.md#throughput-ou-tráfego)
+    - [Tempo de Resposta](day-14/README.md#tempo-de-resposta)
+    - [Taxa de Erros](day-14/README.md#taxa-de-erros)
+    - [Utilizando Percentis em Métricas de Performance](day-14/README.md#utilizando-percentis-em-métricas-de-performance)
+- [Definindo Capacidade](day-14/README.md#definindo-capacidade)
+  - [Gargalos de Capacidade](day-14/README.md#gargalos-de-capacidade)
+  - [Backpressure de Capacidade](day-14/README.md#backpressure-de-capacidade)
+  - [Custo de Transação por Capacidade](day-14/README.md#custo-de-transação-por-capacidade)
+- [Definindo Escalabilidade](day-14/README.md#definindo-escalabilidade)
+  - [Importância da Escalabilidade em Sistemas Modernos](day-14/README.md#importância-da-escalabilidade-em-sistemas-modernos)
+  - [Escalabilidade Vertical e Escalabilidade Horizontal](day-14/README.md#escalabilidade-vertical-e-escalabilidade-horizontal)
+    - [Escalabilidade Vertical](day-14/README.md#escalabilidade-vertical)
+      - [Scale Up e Scale Down](day-14/README.md#scale-up-e-scale-down)
+    - [Escalabilidade Horizontal](day-14/README.md#escalabilidade-horizontal)
+      - [Scale Out e Scale In](day-14/README.md#scale-out-e-scale-in)
+- [Planejamento de Capacidade e Escalabilidade](day-14/README.md#planejamento-de-capacidade-e-escalabilidade)
+  - [Fórmula Básica para Capacidade](day-14/README.md#fórmula-básica-para-capacidade)
+  - [Utilização de Recursos Computacionais](day-14/README.md#utilização-de-recursos-computacionais)
+  - [Requisições e Transações por Períodos de Tempo (Throughput)](day-14/README.md#requisições-e-transações-por-períodos-de-tempo-throughput)
+  - [Escalabilidade de Software](day-14/README.md#escalabilidade-de-software)
+- [Referências](day-14/README.md#referências)
+
+</details>
+
 
 # Materiais
 | Aula | Slides | 
@@ -455,6 +486,8 @@
 | Conceitos de Concorrência e Paralelismo | [Slides](./day-11/11%20-%20System%20Design%20-%20Concorrencia%20a%20Paralelismo.pdf) |
 | Padrões de Comunicação Síncronos | [Slides](./day-12/12%20-%20System%20Design%20-%20Comunicação%20Sincrona.pdf) |
 | Protocolos de Comunicação Assincronos | [Slides](./day-13/13%20-%20System%20Design%20-%20Comunicação%20Assincrona.pdf) |
+| Performance, Capacidade e Escalabilidade | [Slides](./day-14/14%20-%20System%20Design%20-%20Escalabilidade,%20Performance%20e%20Capacity.pdf) |
+
 
 
 # Book de Cases e Exercícios Livres 
@@ -491,3 +524,5 @@
 | Busca e Catalogo      | [Draw.io](/cases/resolucao/T1-Case-Busca-Ecommerce.drawio)               |
 | Notificação Omnichannel | [Draw.io](/cases/resolucao/T1-Case-Omnichannel.drawio)                 |
 | Sistema de Votação    | [Draw.io](/cases/resolucao/T1-Case-Vota-AI.drawio.xml)                  |
+| Sistema de Votação    | [Draw.io](/cases/resolucao/T1-Case-Vota-AI.drawio.xml)                  |
+| Orquestrador de Notificações Omnichannel para E-commerce | [Draw.io](/cases/resolucao/T2-Case-Busca-Ecommerce.drawio.xml) |
