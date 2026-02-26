@@ -573,7 +573,59 @@
 &nbsp;
 
 
+<details>
+<summary>DAY-18 - CQRS (Command Query Responsability Segregation)</summary>
 
+- [System Design - CQRS (Command Query Responsability Segregation)](day-18/README.md#system-design---cqrs-command-query-responsability-segregation)
+- [Definindo CQRS](day-18/README.md#definindo-cqrs)
+  - [Separação de Responsabilidades](day-18/README.md#separação-de-responsabilidades)
+    - [Perspectiva sobre Modelos de Domínio](day-18/README.md#perspectiva-sobre-modelos-de-domínio)
+- [Modelos de Implementação](day-18/README.md#modelos-de-implementação)
+  - [CQRS em bancos SQL e Views Materializadas](day-18/README.md#cqrs-em-bancos-sql-e-views-materializadas)
+      - [Output](day-18/README.md#output)
+    - [Consistência Eventual no CQRS](day-18/README.md#consistência-eventual-no-cqrs)
+  - [CQRS e Réplicas de Leitura](day-18/README.md#cqrs-e-réplicas-de-leitura)
+  - [CQRS e Bancos de Dados NoSQL](day-18/README.md#cqrs-e-bancos-de-dados-nosql)
+  - [CQRS em Sistemas Distribuídos](day-18/README.md#cqrs-em-sistemas-distribuídos)
+    - [Pattern de Dual-Write no Contexto de CQRS](day-18/README.md#pattern-de-dual-write-no-contexto-de-cqrs)
+    - [Outbox Pattern no Contexto de CQRS](day-18/README.md#outbox-pattern-no-contexto-de-cqrs)
+- [Referencias](day-18/README.md#referencias)
+
+</details>
+
+
+
+&nbsp;
+
+
+<details>
+<summary>DAY-19 - Saga Pattern</summary>
+
+- [System Design - Saga Pattern](day-19/README.md#system-design---saga-pattern)
+- [O que é o modelo SAGA?](day-19/README.md#o-que-é-o-modelo-saga)
+  - [A Origem Histórica do Saga Pattern](day-19/README.md#a-origem-histórica-do-saga-pattern)
+- [O problema de lidar com transações distribuídas](day-19/README.md#o-problema-de-lidar-com-transações-distribuídas)
+- [O problema de lidar com transações longas](day-19/README.md#o-problema-de-lidar-com-transações-longas)
+- [A Proposta de Transações Saga](day-19/README.md#a-proposta-de-transações-saga)
+  - [Modelo Orquestrado](day-19/README.md#modelo-orquestrado)
+    - [Modelo de Comando / Resposta em Transações Saga](day-19/README.md#modelo-de-comando--resposta-em-transações-saga)
+  - [Modelo Coreografado](day-19/README.md#modelo-coreografado)
+- [Adoções Arquiteturais](day-19/README.md#adoções-arquiteturais)
+  - [Maquinas de Estado no Modelo Saga](day-19/README.md#maquinas-de-estado-no-modelo-saga)
+    - [Transições de Estados da Saga](day-19/README.md#transições-de-estados-da-saga)
+    - [Ciclo de Vida da Saga](day-19/README.md#ciclo-de-vida-da-saga)
+  - [Logs de Saga e Rastreabilidade da Transação](day-19/README.md#logs-de-saga-e-rastreabilidade-da-transação)
+  - [Modelos de Ação e Compensação no Saga Pattern](day-19/README.md#modelos-de-ação-e-compensação-no-saga-pattern)
+  - [Problemas de Dual Write em Transações Saga](day-19/README.md#problemas-de-dual-write-em-transações-saga)
+    - [Outbox Pattern e Change Data Capture em Transações Saga](day-19/README.md#outbox-pattern-e-change-data-capture-em-transações-saga)
+    - [Two-Phase Commit em Transações Saga](day-19/README.md#two-phase-commit-em-transações-saga)
+  - [Mecanismos de Reinicialização de Saga](day-19/README.md#mecanismos-de-reinicialização-de-saga)
+- [Referências](day-19/README.md#referências)
+
+</details>
+
+
+&nbsp;
 
 
 
@@ -600,6 +652,8 @@
 | The Scale Cube | [Slides](./day-15/15%20-%20System%20Design%20-%20Scale%20Cube.pdf) | [Artigo](https://fidelissauro.dev/cubo-escalabilidade/) |
 | Conceitos de Sharding e Particionamento | [Slides](./day-16/16%20-%20System%20Design%20-%20Sharding.pdf) | [Artigo](https://fidelissauro.dev/sharding/) |
 | Conceitos de Replicação de Dados | [Slides](./day-17/17%20-%20System%20Design%20-%20Replicação.pdf) | [Artigo](https://fidelissauro.dev/replicacao/) |
+| CQRS | [Slides](./day-18/18%20-%20System%20Design%20-%20CQRS.pdf) | [Artigo](https://fidelissauro.dev/cqrs/) |
+| Saga Pattern | [Slides](./day-19/19%20-%20System%20Design%20-%20Saga%20Pattern.pdf) | [Artigo](https://fidelissauro.dev/saga-pattern/) |
 
 
 # Book de Cases e Exercícios Livres 
