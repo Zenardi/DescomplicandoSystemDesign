@@ -627,8 +627,140 @@
 
 &nbsp;
 
+<details>
+<summary>DAY-20 - Event Sourcing</summary>
+
+- [System Design - Event Sourcing](day-20/README.md#system-design---event-sourcing)
+- [Definindo Event Sourcing](day-20/README.md#definindo-event-sourcing)
+- [Persistência Tradicional e Event Sourcing](day-20/README.md#persistência-tradicional-e-event-sourcing)
+- [Arquitetura Event-Sourcing](day-20/README.md#arquitetura-event-sourcing)
+  - [Agregados](day-20/README.md#agregados)
+  - [Event Store](day-20/README.md#event-store)
+  - [Event-Bus e Publishers](day-20/README.md#event-bus-e-publishers)
+  - [Projections e Modelos de Leitura](day-20/README.md#projections-e-modelos-de-leitura)
+    - [Projections e Read Models Transacionais](day-20/README.md#projections-e-read-models-transacionais)
+    - [Projections e Read Models Semi-Síncronos](day-20/README.md#projections-e-read-models-semi-síncronos)
+    - [Projections e Read Models Assíncronos](day-20/README.md#projections-e-read-models-assíncronos)
+- [Reconstituição de Estados e Rehydration](day-20/README.md#reconstituição-de-estados-e-rehydration)
+  - [Snapshotting](day-20/README.md#snapshotting)
+- [Versionamento e Garantias de Ordem em Consistência Eventual (Last-Write-Wins)](day-20/README.md#versionamento-e-garantias-de-ordem-em-consistência-eventual-last-write-wins)
+- [Idempotência em Domínios Complexos](day-20/README.md#idempotência-em-domínios-complexos)
+- [Referências](day-20/README.md#referências)
+
+</details>
+
+&nbsp;
+
+<details>
+<summary>DAY-21 - Padrões de Resiliência</summary>
+
+- [System Design - Padrões de Resiliência](day-21/README.md#system-design---padrões-de-resiliência)
+- [Definindo Resiliência](day-21/README.md#definindo-resiliência)
+  - [Resiliência e Disponibilidade](day-21/README.md#resiliência-e-disponibilidade)
+  - [Métricas de Resiliência e Disponibilidade](day-21/README.md#métricas-de-resiliência-e-disponibilidade)
+    - [Métrica de Disponibilidade de Uso](day-21/README.md#métrica-de-disponibilidade-de-uso)
+    - [Métrica de Disponibilidade de Uptime](day-21/README.md#métrica-de-disponibilidade-de-uptime)
+  - [Blast Radius](day-21/README.md#blast-radius)
+  - [Estratégias e Patterns de Resiliência](day-21/README.md#estratégias-e-patterns-de-resiliência)
+  - [Replicação de Serviços, Balanceamento de Carga e Healthchecks](day-21/README.md#replicação-de-serviços-balanceamento-de-carga-e-healthchecks)
+  - [Idempotência](day-21/README.md#idempotência)
+    - [Chaves de Idempotência](day-21/README.md#chaves-de-idempotência)
+  - [Timeouts](day-21/README.md#timeouts)
+  - [Estratégias de Retry (Retentativas)](day-21/README.md#estratégias-de-retry-retentativas)
+    - [Retries Imediatos em Memória](day-21/README.md#retries-imediatos-em-memória)
+    - [Retries Assíncronos](day-21/README.md#retries-assíncronos)
+    - [Retries com Backoff Exponencial](day-21/README.md#retries-com-backoff-exponencial)
+    - [Retries com Estratégias de Jitter](day-21/README.md#retries-com-estratégias-de-jitter)
+  - [Circuit Breakers](day-21/README.md#circuit-breakers)
+  - [Throttling e Rate Limiting](day-21/README.md#throttling-e-rate-limiting)
+  - [Padrões de Fallback](day-21/README.md#padrões-de-fallback)
+    - [Exemplo: Fallback Sistêmico por Redundância](day-21/README.md#exemplo-fallback-sistêmico-por-redundância)
+    - [Exemplo: Fallback com Snapshot de Dados](day-21/README.md#exemplo-fallback-com-snapshot-de-dados)
+    - [Exemplo: Fallback com Fluxos Assíncronos](day-21/README.md#exemplo-fallback-com-fluxos-assíncronos)
+    - [Exemplo: Fallback Contratual](day-21/README.md#exemplo-fallback-contratual)
+    - [Acionamento de Fallback Proativo](day-21/README.md#acionamento-de-fallback-proativo)
+  - [Graceful Degradation](day-21/README.md#graceful-degradation)
+  - [Backpressure como Resiliência](day-21/README.md#backpressure-como-resiliência)
+  - [Resiliência na Camada de Dados](day-21/README.md#resiliência-na-camada-de-dados)
+    - [Read-Write Splitting](day-21/README.md#read-write-splitting)
+    - [Caching de Dados como Resiliência](day-21/README.md#caching-de-dados-como-resiliência)
+  - [Sharding e Particionamento de Clientes em Resiliência](day-21/README.md#sharding-e-particionamento-de-clientes-em-resiliência)
+  - [Bulkhead Pattern](day-21/README.md#bulkhead-pattern)
+  - [Lease Pattern](day-21/README.md#lease-pattern)
+- [Referências](day-21/README.md#referências)
+
+</details>
 
 
+<details>
+<summary>DAY-22 - Estratégias de Deployment</summary>
+
+- [System Design -  Estratégias de Deployment](day-22/README.md#system-design----estratégias-de-deployment)
+- [Definindo um Deployment](day-22/README.md#definindo-um-deployment)
+- [Rollbacks de Versões](day-22/README.md#rollbacks-de-versões)
+- [Estratégias de Deployments](day-22/README.md#estratégias-de-deployments)
+  - [Big Bang Deployments](day-22/README.md#big-bang-deployments)
+  - [Rolling Updates](day-22/README.md#rolling-updates)
+  - [Blue-Green Deployments](day-22/README.md#blue-green-deployments)
+  - [Canary Releases](day-22/README.md#canary-releases)
+  - [Migrations e Versionamento de Schemas](day-22/README.md#migrations-e-versionamento-de-schemas)
+  - [Shadow Deployment e Mirror Traffic](day-22/README.md#shadow-deployment-e-mirror-traffic)
+  - [Feature Flags](day-22/README.md#feature-flags)
+    - [Clustering e Segregação de Segmentos](day-22/README.md#clustering-e-segregação-de-segmentos)
+  - [Sharding deployment](day-22/README.md#sharding-deployment)
+    - [Referências](day-22/README.md#referências)
+
+</details>
+
+&nbsp;
+
+<details>
+<summary>DAY-23 - Capacity Planning e a Teoria das Filas</summary>
+
+- [System Design - Capacity Planning e a Teoria das Filas](day-23/README.md#system-design---capacity-planning-e-a-teoria-das-filas)
+- [Teoria das Filas](day-23/README.md#teoria-das-filas)
+  - [A Lei de Little na Teoria das Filas](day-23/README.md#a-lei-de-little-na-teoria-das-filas)
+    - [Lei de Little e o “Ponto Saudável”](day-23/README.md#lei-de-little-e-o-ponto-saudável)
+    - [Knee Curve (Curva do Joelho)](day-23/README.md#knee-curve-curva-do-joelho)
+    - [Margens Seguras de Saturação](day-23/README.md#margens-seguras-de-saturação)
+  - [Modelagem de Carga](day-23/README.md#modelagem-de-carga)
+    - [Transações por Segundo](day-23/README.md#transações-por-segundo)
+    - [Processos Concorrentes](day-23/README.md#processos-concorrentes)
+    - [Tamanho de Payload](day-23/README.md#tamanho-de-payload)
+    - [Cálculos de Estimativa de Carga](day-23/README.md#cálculos-de-estimativa-de-carga)
+      - [Estimativa de Transações por Segundo](day-23/README.md#estimativa-de-transações-por-segundo)
+      - [TPS Sistêmico](day-23/README.md#tps-sistêmico)
+      - [Estimativa de Tamanho de Payload](day-23/README.md#estimativa-de-tamanho-de-payload)
+      - [Estimativa de Bytes de Uma Transação](day-23/README.md#estimativa-de-bytes-de-uma-transação)
+      - [Estimativa de Banda pelo Payload e Transações por Segundo](day-23/README.md#estimativa-de-banda-pelo-payload-e-transações-por-segundo)
+    - [Perfis de Tráfego](day-23/README.md#perfis-de-tráfego)
+      - [Perfil Diário](day-23/README.md#perfil-diário)
+      - [Perfil Semanal](day-23/README.md#perfil-semanal)
+      - [Perfil Sazonal](day-23/README.md#perfil-sazonal)
+    - [Projeção de Crescimento](day-23/README.md#projeção-de-crescimento)
+      - [Crescimento Linear](day-23/README.md#crescimento-linear)
+      - [Crescimento Não Linear](day-23/README.md#crescimento-não-linear)
+      - [Crescimento Mediante Novas Features e Eventos de Negócio](day-23/README.md#crescimento-mediante-novas-features-e-eventos-de-negócio)
+    - [Capacidade End to End (E2E)](day-23/README.md#capacidade-end-to-end-e2e)
+      - [Throughput individual](day-23/README.md#throughput-individual)
+      - [Throughput sistêmico](day-23/README.md#throughput-sistêmico)
+      - [Dependência do Gargalo](day-23/README.md#dependência-do-gargalo)
+- [Planejamento de Capacidade](day-23/README.md#planejamento-de-capacidade)
+  - [Delimitar o Fluxo, Funcionalidades e Componentes](day-23/README.md#delimitar-o-fluxo-funcionalidades-e-componentes)
+  - [Levantar as Estimativas de Carga](day-23/README.md#levantar-as-estimativas-de-carga)
+  - [Identificação do Throughput Individual dos Componentes e Serviços](day-23/README.md#identificação-do-throughput-individual-dos-componentes-e-serviços)
+  - [Derivação do Throughput Sistêmico](day-23/README.md#derivação-do-throughput-sistêmico)
+  - [Levantamento da Projeção de Crescimento](day-23/README.md#levantamento-da-projeção-de-crescimento)
+  - [Avaliar o Custo e as Margens Operacionais](day-23/README.md#avaliar-o-custo-e-as-margens-operacionais)
+  - [Definição dos Limites Operacionais](day-23/README.md#definição-dos-limites-operacionais)
+  - [Testes de Carga e Estresse](day-23/README.md#testes-de-carga-e-estresse)
+- [Referências](day-23/README.md#referências)
+
+</details>
+
+
+
+&nbsp;
 &nbsp;
 
 
@@ -654,6 +786,13 @@
 | Conceitos de Replicação de Dados | [Slides](./day-17/17%20-%20System%20Design%20-%20Replicação.pdf) | [Artigo](https://fidelissauro.dev/replicacao/) |
 | CQRS | [Slides](./day-18/18%20-%20System%20Design%20-%20CQRS.pdf) | [Artigo](https://fidelissauro.dev/cqrs/) |
 | Saga Pattern | [Slides](./day-19/19%20-%20System%20Design%20-%20Saga%20Pattern.pdf) | [Artigo](https://fidelissauro.dev/saga-pattern/) |
+| Event Sourcing | [Slides](./day-20/20%20-%20System%20Design%20-%20Event%20Sourcing.pdf) | [Artigo](https://fidelissauro.dev/event-sourcing/) |
+| Patterns de Resiliência | [Slides](./day-21/21%20-%20System%20Design%20-%20Patterns%20de%20Resiliência.pdf) | [Artigo](https://fidelissauro.dev/resiliencia/) |
+| Estratégias de Deploy | [Slides](./day-22/22%20-%20System%20Design%20-%20Estratégias%20de%20Deploy.pdf) | [Artigo](https://fidelissauro.dev/deployment-strategies/) |
+| Capacity Planning e Teoria das Filas | - | [Artigo](https://fidelissauro.dev/capacity-planning/) |
+
+
+
 
 
 # Book de Cases e Exercícios Livres 
