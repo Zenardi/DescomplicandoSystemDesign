@@ -1,6 +1,9 @@
 # Descomplicando System Design
 ![main-header](./images/main-header.png)
 
+> [!NOTE]
+> Todos os artigos aqui mencionados foram escritos pelo [Matheus Fidelis](https://github.com/msfidelis), instrutor do curso [Descomplicando o System Design](https://linuxtips.io/treinamento/descomplicando-o-system-design-2026/) e autor dos mesmos.
+
 - [Descomplicando System Design](#descomplicando-system-design)
 - [Conteúdo](#conteúdo)
 - [Materiais](#materiais)
@@ -52,6 +55,8 @@
 * [HTTP/3 (QUIC)](day-01/README.md#http3-quic)
 </details>
 
+&nbsp;
+
 <details>
 <summary>DAY-02 - Storage, RAID e Sistemas de Arquivos</summary>
 
@@ -74,6 +79,8 @@
   - [RAID 6 (Striping com Dupla Paridade)](day-02/README.md#raid-6-striping-com-dupla-paridade)
   - [RAID 10 (Combinação de RAID 1 com RAID 0)](day-02/README.md#raid-10-combinação-de-raid-1-com-raid-0)
 </details>
+
+&nbsp;
 
 <details>
 <summary>DAY-03 - Teorema CAP, ACID, BASE e Bancos de Dados Distribuídos</summary>
@@ -114,6 +121,8 @@
 
 </details>
 
+&nbsp;
+
 <details>
 <summary>DAY-04 - Databases, Modelos de Dados e Indexação</summary>
 
@@ -150,6 +159,8 @@
 
 </details>
 
+&nbsp;
+
 <details>
 <summary>DAY-05 - Estratégias de Cache</summary>
 
@@ -178,6 +189,8 @@
 
 </details>
 
+&nbsp;
+
 <details>
 <summary>DAY-06 - Monolitos, Microserviços e Domínios</summary>
 
@@ -193,6 +206,8 @@
 - [Referências](day-06/README.md#referências)
 
 </details>
+
+&nbsp;
 
 <details>
 <summary>DAY-07 - Load Balancers e Proxies Reversos</summary>
@@ -235,6 +250,8 @@
 
 </details>
 
+&nbsp;
+
 <details>
 <summary>DAY-08 - API Gateways</summary>
 
@@ -256,6 +273,8 @@
 
 </details>
 
+&nbsp;
+
 <details>
 <summary>DAY-09 - Backend for Frontend (BFF)</summary>
 
@@ -271,6 +290,8 @@
     - [Referências](day-09/README.md#referências)
 
 </details>
+
+&nbsp;
 
 <details>
 <summary>DAY-10 - Service Mesh</summary>
@@ -294,6 +315,8 @@
 - [Referências](day-10/README.md#referências)
 
 </details>
+
+&nbsp;
 
 <details>
 <summary>DAY-11 - Conceitos de Concorrência e Paralelismo</summary>
@@ -326,6 +349,8 @@
 - [Referências](day-11/README.md#referências)
 
 </details>
+
+&nbsp;
 
 <details>
 <summary>DAY-12 - Padrões de Comunicação Síncronos</summary>
@@ -371,6 +396,8 @@
 - [Referências](day-12/README.md#referências)
 
 </details>
+
+&nbsp;
 
 <details>
 <summary>DAY-13 - Protocolos de Comunicação Assincronos</summary>
@@ -438,6 +465,8 @@
 
 </details>
 
+&nbsp;
+
 <details>
 <summary>DAY-14 -Performance, Capacidade e Escalabilidade</summary>
 
@@ -469,25 +498,108 @@
 
 </details>
 
+&nbsp;
+
+<details>
+<summary>DAY-15 -Scale Cube</summary>
+
+- [System Design - Scale Cube](day-15/README.md#system-design---scale-cube)
+  - [Eixo X - Escalabilidade Horizontal](day-15/README.md#eixo-x---escalabilidade-horizontal)
+  - [Eixo Y - Quebra de Funcionalidades](day-15/README.md#eixo-y---quebra-de-funcionalidades)
+  - [Eixo Z - Sharding de Dados](day-15/README.md#eixo-z---sharding-de-dados)
+    - [Uso do Scale Cube](day-15/README.md#uso-do-scale-cube)
+    - [Referências](day-15/README.md#referências)
+
+</details>
+
+
+&nbsp;
+
+
+<details>
+<summary>DAY-16 - Sharding e Particionamento de Dados</summary>
+
+- [System Design - Sharding e Particionamento de Dados](day-16/README.md#system-design---sharding-e-particionamento-de-dados)
+- [Definindo Sharding](day-16/README.md#definindo-sharding)
+  - [Topologia de Sharding](day-16/README.md#topologia-de-sharding)
+    - [Sharding para Segregação de Dados](day-16/README.md#sharding-para-segregação-de-dados)
+    - [Sharding para Segregação Computacional](day-16/README.md#sharding-para-segregação-computacional)
+- [Escalabilidade e Performance](day-16/README.md#escalabilidade-e-performance)
+- [Sharding Keys e Hot Partitions](day-16/README.md#sharding-keys-e-hot-partitions)
+  - [Sharding Keys](day-16/README.md#sharding-keys)
+  - [Hot Partitions](day-16/README.md#hot-partitions)
+- [Estratégias e Aplicações de Sharding](day-16/README.md#estratégias-e-aplicações-de-sharding)
+  - [Sharding por ranges de iniciais](day-16/README.md#sharding-por-ranges-de-iniciais)
+  - [Sharding por Ranges de Identificadores](day-16/README.md#sharding-por-ranges-de-identificadores)
+  - [Sharding por Ranges de Datas e Tiers de Storage](day-16/README.md#sharding-por-ranges-de-datas-e-tiers-de-storage)
+  - [Sharding por Hashing](day-16/README.md#sharding-por-hashing)
+      - [Exemplo de Balanceamento por Hash Functions](day-16/README.md#exemplo-de-balanceamento-por-hash-functions)
+      - [Output](day-16/README.md#output)
+    - [Distribuição e os Algoritmos de Hashing](day-16/README.md#distribuição-e-os-algoritmos-de-hashing)
+      - [Output](day-16/README.md#output-1)
+  - [Sharding e Distribuição por MurmurHash](day-16/README.md#sharding-e-distribuição-por-murmurhash)
+      - [Output](day-16/README.md#output-2)
+  - [Sharding por Hashing Consistente](day-16/README.md#sharding-por-hashing-consistente)
+  - [Sharding por Hashing e Gestão de Chaves](day-16/README.md#sharding-por-hashing-e-gestão-de-chaves)
+  - [Segregação Avançada com Suffle Sharding](day-16/README.md#segregação-avançada-com-suffle-sharding)
+      - [Referencias](day-16/README.md#referencias)
+
+</details>
+
+&nbsp;
+
+<details>
+<summary>DAY-17 - Replicação de Dados</summary>
+
+- [System Design - Replicação de Dados](day-17/README.md#system-design---replicação-de-dados)
+- [Definindo Replicação na Engenharia de Software](day-17/README.md#definindo-replicação-na-engenharia-de-software)
+- [Modelos de Replicação](day-17/README.md#modelos-de-replicação)
+  - [Replicação Primary-Replica](day-17/README.md#replicação-primary-replica)
+  - [Replicação Primary-Primary - Multi-Master](day-17/README.md#replicação-primary-primary---multi-master)
+- [Estratégias de Replicação](day-17/README.md#estratégias-de-replicação)
+  - [Replicação Total e Parcial](day-17/README.md#replicação-total-e-parcial)
+  - [Replicação Síncrona](day-17/README.md#replicação-síncrona)
+  - [Replicação Assíncrona](day-17/README.md#replicação-assíncrona)
+  - [Replicação Semi-Síncrona](day-17/README.md#replicação-semi-síncrona)
+  - [Replicação por Logs](day-17/README.md#replicação-por-logs)
+- [Arquitetura](day-17/README.md#arquitetura)
+  - [Event-Carried State Transfer - Replicação de Estados e Objetos de Domínios](day-17/README.md#event-carried-state-transfer---replicação-de-estados-e-objetos-de-domínios)
+  - [Replicação por Change Data Capture - Captura de Alterações em Dados](day-17/README.md#replicação-por-change-data-capture---captura-de-alterações-em-dados)
+  - [CRDT’s - Conflict Free Replicated Data Types](day-17/README.md#crdts---conflict-free-replicated-data-types)
+- [Referências](day-17/README.md#referências)
+
+</details>
+
+&nbsp;
+
+
+
+
+
+
+&nbsp;
+
 
 # Materiais
-| Aula | Slides | 
-| --- | --- |
-| Protocolos de Rede | [Slides](./day-01/01%20-%20System%20Design%20-%20Protocolos%20de%20Rede.pdf) |
-| Raid e Storage     | [Slides](./day-02/02%20-%20System%20Design%20-%20Raid%20e%20Storage.pdf) |
-| Teorema CAP, Database ACID, BASE e Teorema PACELC | [Slides](./day-03/03%20-%20System%20Design%20-%20Teorema%20CAP.pdf) |
-| Databases, Modelos de Dados e Indexação | [Slides](./day-04/04%20-%20System%20Design%20-%20Databases.pdf) |
-| Estratégias de Cache | [Slides](./day-05/05%20-%20System%20Design%20-%20Cache.pdf) |
-| Monolitos, Microserviços e Domínios | [Slides](./day-06/06%20-%20System%20Design%20-%20Microserviços%20e%20Monolitos.pdf) |
-| Load Balancers e Proxies Reversos | [Slides](./day-07/07%20-%20System%20Design%20-%20Load%20Balancers%20e%20Proxies%20Reversos.pdf) |
-| API Gateways | [Slides](./day-08/08%20-%20System%20Design%20-%20API%20Gateways.pdf) |
-| Backend for Frontend (BFF) | [Slides](./day-09/09%20-%20System%20Design%20-%20BFF's.pdf) |
-| Service Mesh | [Slides](./day-10/10%20-%20System%20Design%20-%20Service%20Mesh.pdf) |
-| Conceitos de Concorrência e Paralelismo | [Slides](./day-11/11%20-%20System%20Design%20-%20Concorrencia%20a%20Paralelismo.pdf) |
-| Padrões de Comunicação Síncronos | [Slides](./day-12/12%20-%20System%20Design%20-%20Comunicação%20Sincrona.pdf) |
-| Protocolos de Comunicação Assincronos | [Slides](./day-13/13%20-%20System%20Design%20-%20Comunicação%20Assincrona.pdf) |
-| Performance, Capacidade e Escalabilidade | [Slides](./day-14/14%20-%20System%20Design%20-%20Escalabilidade,%20Performance%20e%20Capacity.pdf) |
-
+| Aula | Slides | Artigo Original |
+| --- | --- | --- |
+| Protocolos de Rede | [Slides](./day-01/01%20-%20System%20Design%20-%20Protocolos%20de%20Rede.pdf) | [Artigo](https://fidelissauro.dev/protocolos-de-rede/) |
+| Raid e Storage     | [Slides](./day-02/02%20-%20System%20Design%20-%20Raid%20e%20Storage.pdf) | [Artigo](https://fidelissauro.dev/storage/) |
+| Teorema CAP, Database ACID, BASE e Teorema PACELC | [Slides](./day-03/03%20-%20System%20Design%20-%20Teorema%20CAP.pdf) | [Artigo](https://fidelissauro.dev/teorema-cap/) |
+| Databases, Modelos de Dados e Indexação | [Slides](./day-04/04%20-%20System%20Design%20-%20Databases.pdf) | [Artigo](https://fidelissauro.dev/databases/) |
+| Estratégias de Cache | [Slides](./day-05/05%20-%20System%20Design%20-%20Cache.pdf) | [Artigo](https://fidelissauro.dev/caching/) |
+| Monolitos, Microserviços e Domínios | [Slides](./day-06/06%20-%20System%20Design%20-%20Microserviços%20e%20Monolitos.pdf) | [Artigo](https://fidelissauro.dev/monolitos-microservicos/) |
+| Load Balancers e Proxies Reversos | [Slides](./day-07/07%20-%20System%20Design%20-%20Load%20Balancers%20e%20Proxies%20Reversos.pdf) | [Artigo](https://fidelissauro.dev/load-balancing/) |
+| API Gateways | [Slides](./day-08/08%20-%20System%20Design%20-%20API%20Gateways.pdf) | [Artigo](https://fidelissauro.dev/api-gateways) |
+| Backend for Frontend (BFF) | [Slides](./day-09/09%20-%20System%20Design%20-%20BFF's.pdf) | [Artigo](https://fidelissauro.dev/bffs) |
+| Service Mesh | [Slides](./day-10/10%20-%20System%20Design%20-%20Service%20Mesh.pdf) | [Artigo](https://fidelissauro.dev/service-mesh) |
+| Conceitos de Concorrência e Paralelismo | [Slides](./day-11/11%20-%20System%20Design%20-%20Concorrencia%20a%20Paralelismo.pdf) | [Artigo](https://fidelissauro.dev/concorrencia-paralelismo/) |
+| Padrões de Comunicação Síncronos | [Slides](./day-12/12%20-%20System%20Design%20-%20Comunicação%20Sincrona.pdf) | [Artigo](https://fidelissauro.dev/padroes-de-comunicacao-sincronos/) |
+| Protocolos de Comunicação Assincronos | [Slides](./day-13/13%20-%20System%20Design%20-%20Comunicação%20Assincrona.pdf) | [Artigo](https://fidelissauro.dev/mensageria-eventos-streaming/) |
+| Performance, Capacidade e Escalabilidade | [Slides](./day-14/14%20-%20System%20Design%20-%20Escalabilidade,%20Performance%20e%20Capacity.pdf) | [Artigo](https://fidelissauro.dev/performance-capacidade-escalabilidade/) |
+| The Scale Cube | [Slides](./day-15/15%20-%20System%20Design%20-%20Scale%20Cube.pdf) | [Artigo](https://fidelissauro.dev/cubo-escalabilidade/) |
+| Conceitos de Sharding e Particionamento | [Slides](./day-16/16%20-%20System%20Design%20-%20Sharding.pdf) | [Artigo](https://fidelissauro.dev/sharding/) |
+| Conceitos de Replicação de Dados | [Slides](./day-17/17%20-%20System%20Design%20-%20Replicação.pdf) | [Artigo](https://fidelissauro.dev/replicacao/) |
 
 
 # Book de Cases e Exercícios Livres 
