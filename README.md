@@ -691,6 +691,7 @@
 
 </details>
 
+&nbsp;
 
 <details>
 <summary>DAY-22 - Estratégias de Deployment</summary>
@@ -758,11 +759,98 @@
 
 </details>
 
+&nbsp;
+
+<details>
+<summary>DAY-24 - Testes de Carga e Estresse</summary>
+
+- [System Design - Testes de Carga e Estresse](day-24/README.md#system-design---testes-de-carga-e-estresse)
+- [Introdução](day-24/README.md#introdução)
+  - [A importância dos testes de performance](day-24/README.md#a-importância-dos-testes-de-performance)
+  - [A importância de conhecer comportamentos do sistema](day-24/README.md#a-importância-de-conhecer-comportamentos-do-sistema)
+  - [Testes de Performance em Build e Run](day-24/README.md#testes-de-performance-em-build-e-run)
+- [Testes de Carga e Estresse](day-24/README.md#testes-de-carga-e-estresse)
+- [Tipos de Teste](day-24/README.md#tipos-de-teste)
+  - [Teste de Fumaça, Smoke Tests](day-24/README.md#teste-de-fumaça-smoke-tests)
+  - [Teste de Average Load](day-24/README.md#teste-de-average-load)
+  - [Testes de Estresse](day-24/README.md#testes-de-estresse)
+  - [Testes de Spike](day-24/README.md#testes-de-spike)
+  - [Testes de Breakpoint](day-24/README.md#testes-de-breakpoint)
+- [Respondendo a Perguntas Chave](day-24/README.md#respondendo-a-perguntas-chave)
+    - [Qual é o trafego esperado do meu sistema hoje?](day-24/README.md#qual-é-o-trafego-esperado-do-meu-sistema-hoje)
+    - [Quais são meus objetivos de tempo de resposta, taxa de erros e saturação?](day-24/README.md#quais-são-meus-objetivos-de-tempo-de-resposta-taxa-de-erros-e-saturação)
+    - [Qual é o trafego esperado do meu sistema em períodos de pico?](day-24/README.md#qual-é-o-trafego-esperado-do-meu-sistema-em-períodos-de-pico)
+    - [Quais os protocolos e estímulos que minha aplicação é exposta?](day-24/README.md#quais-os-protocolos-e-estímulos-que-minha-aplicação-é-exposta)
+    - [Qual é a expectativa de crescimento do meu sistema?](day-24/README.md#qual-é-a-expectativa-de-crescimento-do-meu-sistema)
+    - [Qual é o cenário mais extremo que o sistema enfrentará?](day-24/README.md#qual-é-o-cenário-mais-extremo-que-o-sistema-enfrentará)
+  - [Quais são as funcionalidades principais que precisam ser testadas?](day-24/README.md#quais-são-as-funcionalidades-principais-que-precisam-ser-testadas)
+  - [Quais são as jornadas comuns do usuário?](day-24/README.md#quais-são-as-jornadas-comuns-do-usuário)
+  - [Quais os endpoints mais utilizados? E quais os mais caros?](day-24/README.md#quais-os-endpoints-mais-utilizados-e-quais-os-mais-caros)
+  - [Métricas em Testes de Performance](day-24/README.md#métricas-em-testes-de-performance)
+    - [Service Levels como objetivos esperados](day-24/README.md#service-levels-como-objetivos-esperados)
+- [Estratégias de pré-teste](day-24/README.md#estratégias-de-pré-teste)
+  - [Avaliando a capacidade individual de cada réplica](day-24/README.md#avaliando-a-capacidade-individual-de-cada-réplica)
+  - [Validação de unidade assíncrona](day-24/README.md#validação-de-unidade-assíncrona)
+- [Ferramental para Testes](day-24/README.md#ferramental-para-testes)
+  - [Grafana K6](day-24/README.md#grafana-k6)
+  - [Locust](day-24/README.md#locust)
+  - [Apache JMeter](day-24/README.md#apache-jmeter)
+  - [Gatling](day-24/README.md#gatling)
+  - [Oha / Ohayou](day-24/README.md#oha--ohayou)
+- [Modelo de Roteiro de Teste](day-24/README.md#modelo-de-roteiro-de-teste)
+  - [Relatório de Teste de Performance - Produto de Cobrança de Vendas - Time de Engenharia](day-24/README.md#relatório-de-teste-de-performance---produto-de-cobrança-de-vendas---time-de-engenharia)
+  - [1. Visão Geral](day-24/README.md#1-visão-geral)
+  - [2. Objetivos do Teste](day-24/README.md#2-objetivos-do-teste)
+    - [Metas:](day-24/README.md#metas)
+  - [3. Cenários de Teste](day-24/README.md#3-cenários-de-teste)
+    - [3.0. Pré-teste](day-24/README.md#30-pré-teste)
+    - [3.1. Cenário 1: Carga Média (Average Load)](day-24/README.md#31-cenário-1-carga-média-average-load)
+    - [3.2. Cenário 2: Carga de Pico (Spike Test)](day-24/README.md#32-cenário-2-carga-de-pico-spike-test)
+    - [3.3. Cenário 3: Stress Test](day-24/README.md#33-cenário-3-stress-test)
+    - [3.4. Cenário 4: Breakpoint](day-24/README.md#34-cenário-4-breakpoint)
+- [Referências](day-24/README.md#referências)
+
+</details>
 
 
 &nbsp;
+
+<details>
+<summary>DAY-25 - Bulkhead Pattern</summary>
+
+- [System Design - Bulkhead Pattern](day-25/README.md#system-design---bulkhead-pattern)
+- [Definindo Bulkheads](day-25/README.md#definindo-bulkheads)
+  - [Bulkheads e a Engenharia Naval](day-25/README.md#bulkheads-e-a-engenharia-naval)
+  - [Bulkheads e a Arquitetura de Software](day-25/README.md#bulkheads-e-a-arquitetura-de-software)
+- [Implementações e Contenção de Falhas](day-25/README.md#implementações-e-contenção-de-falhas)
+  - [Recursos Lógicos](day-25/README.md#recursos-lógicos)
+  - [Recursos Físicos](day-25/README.md#recursos-físicos)
+- [Distribuição de Bulkheads e Blast Radius](day-25/README.md#distribuição-de-bulkheads-e-blast-radius)
+- [Bulkheads e Shardings](day-25/README.md#bulkheads-e-shardings)
+  - [Bulkheads de Sharding Funcional](day-25/README.md#bulkheads-de-sharding-funcional)
+  - [Bulkheads de Sharding Operacional](day-25/README.md#bulkheads-de-sharding-operacional)
+- [Arquiteturas de Bulkheads](day-25/README.md#arquiteturas-de-bulkheads)
+  - [Bulkheads por Priorização](day-25/README.md#bulkheads-por-priorização)
+  - [Bulkheads por Criticidade](day-25/README.md#bulkheads-por-criticidade)
+  - [Bulkheads por Tipo de Uso](day-25/README.md#bulkheads-por-tipo-de-uso)
+  - [Bulkheads por Segmento](day-25/README.md#bulkheads-por-segmento)
+  - [Bulkheads por Hashing Consistente](day-25/README.md#bulkheads-por-hashing-consistente)
+  - [Bulkheads por Tenants](day-25/README.md#bulkheads-por-tenants)
+    - [Noisy Neighbor e Bulkheads Tenants](day-25/README.md#noisy-neighbor-e-bulkheads-tenants)
+- [Referências](day-25/README.md#referências)
+
+</details>
+
 &nbsp;
 
+<details>
+<summary>DAY-26 - Cell Based Pattern</summary>
+
+-
+
+</details>
+
+&nbsp;
 
 # Materiais
 | Aula | Slides | Artigo Original |
@@ -790,8 +878,9 @@
 | Patterns de Resiliência | [Slides](./day-21/21%20-%20System%20Design%20-%20Patterns%20de%20Resiliência.pdf) | [Artigo](https://fidelissauro.dev/resiliencia/) |
 | Estratégias de Deploy | [Slides](./day-22/22%20-%20System%20Design%20-%20Estratégias%20de%20Deploy.pdf) | [Artigo](https://fidelissauro.dev/deployment-strategies/) |
 | Capacity Planning e Teoria das Filas | - | [Artigo](https://fidelissauro.dev/capacity-planning/) |
-
-
+| Testes de Carga e Estresse | [Slides](./day-24/24%20-%20System%20Design%20-%20Load%20Tests%20.pdf) | [Artigo](https://fidelissauro.dev/load-testing/) |
+| Bulkhead Pattern | [Slides](./day-25/25%20-%20System%20Design%20-%20Bulkhead.pdf) | [Artigo](https://fidelissauro.dev/bulkheads/) |
+| Cell Based Pattern | [Slides](./day-26/26%20-%20System%20Design%20-%20Cell%20Based%20Pattern.pdf) | - |
 
 
 
