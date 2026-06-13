@@ -25,1182 +25,225 @@
 	- [Segregação Avançada com Suffle Sharding](#segregação-avançada-com-suffle-sharding)
 			- [Referencias](#referencias)
 
+> **Nota:** Este documento é um material de estudo baseado no artigo original **"System Design - Sharding e Particionamento de Dados"**, de **Matheus Fidelis**, publicado em [fidelissauro.dev/sharding](https://fidelissauro.dev/sharding/). As ilustrações pertencem ao autor original. Recomenda-se a leitura do artigo completo na fonte.
+
+---
 
 ![capa-sharding.png](./images/capa-sharding.png)
 
-Esse é mais um capitulo da nossa série de **System Design**, e novamente vamos abordar assuntos delicados relacionados a escalabilidade, focando em assuntos críticos como dados. Dessa vez, iremos nos aprofundar em **algumas das estratégias mais efetivas e interessantes na arquitetura de sistemas, que são o particionamento, ou shardings**. O objetivo desse trabalho será apresentar estratégias, prós e contras entre algumas das possibilidades arquiteturais de segregação de dados, clientes e esforço computacional para aumentarmos alguns graus de escalabilidade horizontal em diversas cargas de trabalho.
-
 # Definindo Sharding
 
-Sharding, ou Particionamento, é uma técnica de design de sistemas distribuídos utilizada para **dividir grandes conjuntos de dados em várias partes menores**, chamadas de **shards ou partições**. Cada **shard representa uma fração do todo**, permitindo que o **sistema gerencie grandes volumes de dados de forma mais  eficiente e segura**. Essa técnica é amplamente empregada para **melhorar a escalabilidade, performance e disponibilidade dos sistemas**, especialmente em ambientes onde a quantidade de dados é tão grande que não pode ser gerenciada eficientemente por um único local, servidor, banco de dados ou carga de trabalho.
+Sharding (ou particionamento) é uma técnica de sistemas distribuídos que consiste em quebrar grandes conjuntos de dados em pedaços menores chamados de **shards** ou **partições**. Cada shard guarda apenas uma fatia do todo, o que permite tratar volumes massivos de dados com mais eficiência, segurança e disponibilidade. É uma estratégia útil principalmente quando os dados crescem a ponto de não caberem mais, de forma performática, em um único servidor, banco ou carga de trabalho.
 
-O conceito de **sharding não se limita apenas a databases**. Embora seu uso mais comum seja a distribuição de dados, o particionamento pode ser aplicado em várias áreas da engenharia de software, como a distribuição de cargas de trabalho em microserviços, cache distribuído, e até mesmo na segmentação de [tráfego de rede](https://fidelissauro.dev/protocolos-de-rede/).
+O conceito não se restringe a bancos de dados. Apesar de esse ser o uso mais difundido, a mesma ideia de particionar pode ser aplicada à distribuição de cargas em microsserviços, a caches distribuídos e até à segmentação de tráfego de rede.
 
 ![Sharding Definição](images/sharding-definicao.png)
 
-No contexto de bancos de dados, **cada shard é um subconjunto do banco de dados original, que pode ser armazenado em diferentes servidores ou nós de um sistema distribuído**. Essa divisão permite que o sistema distribua e gerencie dados de maneira eficaz, **evitando os gargalos e pontos únicos de falha** que podem ocorrer quando todos os dados são centralizados em um único ponto. Além disso, o sharding facilita a escalabilidade horizontal, onde novos servidores podem ser adicionados para armazenar shards adicionais conforme a quantidade de dados cresce, sem comprometer o desempenho.
+No mundo de bancos de dados, cada shard é um subconjunto da base original que pode viver em servidores ou nós diferentes. Essa divisão distribui o trabalho, elimina gargalos e remove pontos únicos de falha que aparecem quando tudo está centralizado. Também é o que viabiliza a escalabilidade horizontal: à medida que os dados crescem, basta acrescentar novos servidores para hospedar shards adicionais.
 
-Essa técnica também traz a complexidade de manutenção e balanceamento dos shards, além da necessidade de garantir a consistência dos dados entre diferentes shards em escala.
+Em contrapartida, o sharding adiciona complexidade de manutenção e de balanceamento dos shards, além do desafio de manter a consistência dos dados entre as partições conforme a escala aumenta.
 
 ## Topologia de Sharding
 
-No contexto de sharding, existem várias topologias que podem ser aplicadas para suprir as necessidades específicas de sistemas. Se olharmos o conceito fora da caixa, podemos encontrar várias abordagens diferentes para distribuir cargas e aumentar a performance e resiliência de um sistema.
+Existem diferentes topologias de sharding, cada uma adequada a um tipo de necessidade. Pensando o conceito de forma ampla, encontramos várias abordagens distintas para distribuir carga e ganhar performance e resiliência.
 
 ### Sharding para Segregação de Dados
 
-O **sharding para segregação de dados** é a técnica mais conhecida quando pensamos em sharding.  É essencialmente utilizada para distribuir diferentes conjuntos de dados entre shards distintos, sendo esses shards **conhecidos como diferentes tabelas ou instâncias de bancos de dados sendo roteados com base em algum critério**. Esta abordagem é frequentemente aplicada em sistemas onde há necessidade de isolar certos tipos de dados por motivos de segurança, compliance, ou simplesmente para facilitar a gestão e o desempenho.
+Essa é a forma mais conhecida de sharding. O objetivo é separar conjuntos diferentes de dados em shards distintos — tabelas ou instâncias de banco roteadas por algum critério. É comum em sistemas que precisam isolar tipos de dados por questões de segurança, compliance ou simplesmente para facilitar gestão e desempenho.
 
 ![Sharding Data](images/sharding-data-horizontal.png)
 
-Uma aplicação multi-tenant, os dados de cada um dos **clientes principais podem ser segregados em diferentes shards**. Isso não só melhora a segurança, **garantindo que os dados de um cliente não sejam acessíveis por outro**, ou diminuindo a superficie de acesso, mas também **permite otimizar a performance ao adaptar a infraestrutura de cada shard às necessidades específicas de cada cliente**.
+Em uma aplicação multi-tenant, por exemplo, os dados de cada cliente principal podem ser segregados em shards próprios. Isso reforça a segurança, impedindo que um cliente acesse os dados de outro, e ainda permite adaptar a infraestrutura de cada shard às necessidades específicas daquele cliente.
 
-Outro caso comum de sharding para segregação de dados ocorre em sistemas que **armazenam dados sensíveis e não sensíveis**. Dados altamente confidenciais ou que sejam inerentes a alguma regulamentação externa **podem ser segregados em shards com maior segurança ou com capacidades adicionais de auditoria**, enquanto dados menos críticos podem ser armazenados em shards com configurações mais leves, reduzindo custos e complexidade para um público geral
+Outro caso recorrente é a separação entre dados sensíveis e não sensíveis. Informações confidenciais ou sujeitas a regulamentação podem ficar em shards com mais segurança e auditoria, enquanto dados menos críticos ficam em shards mais leves, reduzindo custo e complexidade.
 
 ### Sharding para Segregação Computacional
 
-O **sharding para segregação computacional** é uma abordagem focada na distribuição das cargas de trabalho computacionais entre diferentes shards. **Em vez de apenas distribuir dados, essa técnica visa isolar operações computacionais intensivas para shards dedicados**, elevando algumas camadas a mais de otimização.
+Aqui o foco deixa de ser apenas o dado e passa a ser a carga computacional. Em vez de distribuir registros, a ideia é isolar operações intensivas em shards dedicados, adicionando camadas extras de otimização.
 
 ![Sharding Computing](images/sharding-computing.png)
 
-Em sistemas que realizam operações computacionais pesadas, como cálculos em tempo real, processamento de grandes volumes de dados ou execução de algoritmos de machine learning, **a segregação computacional permite que essas tarefas sejam isoladas em shards específicos**, enquanto **operações menos intensivas são alocadas em outros shards**. Isso evita que as operações mais leves sejam afetadas pelo consumo de recursos das operações mais pesadas, garantindo uma performance mais consistente em todo o sistema.
+Em sistemas que executam tarefas pesadas — cálculos em tempo real, processamento de grandes volumes, algoritmos de machine learning — segregar esse processamento em shards específicos evita que operações mais leves sejam prejudicadas pelo consumo de recursos das mais pesadas, mantendo um desempenho mais previsível no sistema como um todo.
 
-Essa abordagem também **é útil em ambientes onde diferentes tipos de operações exigem configurações de hardware específicas**. Shards voltados para operações de I/O intensivo podem ser otimizados com discos rápidos e maior largura de banda, enquanto shards que realizam processamento de CPU intensivo podem ser configurados com mais núcleos de processamento.
+Essa topologia também ajuda quando diferentes operações exigem hardware distinto: shards voltados a I/O intensivo podem usar discos rápidos e mais banda, enquanto shards de processamento podem ser configurados com mais núcleos de CPU.
 
 # Escalabilidade e Performance
 
-A importância do sharding em sistemas distribuídos reside principalmente na **necessidade de lidar com grandes volumes de dados e garantir que o sistema possa escalar horizontalmente**. Um dos pontos mais críticos de escala em sistemas distribuídos é o banco de dados, e o sharding desempenha um papel fundamental nessa área.
+A relevância do sharding em sistemas distribuídos está ligada à necessidade de lidar com grandes volumes de dados e de escalar horizontalmente. O banco de dados é frequentemente o ponto mais crítico de escala, e o sharding atua exatamente nesse gargalo.
 
-Ao **dividir os dados em múltiplos shards, cada shard pode ser armazenado e gerenciado em servidores diferentes**. Isso permite que mais capacidade seja adicionada ao sistema sem a necessidade de reestruturar a base de dados original por completo, facilitando a **expansão da infraestrutura** à medida que a demanda aumenta. Essa capacidade de escalabilidade horizontal é importante para **sistemas que precisam crescer continuamente sem comprometer o desempenho ou a integridade dos dados como um todo**.
+Ao dividir os dados em vários shards hospedados em servidores diferentes, é possível adicionar capacidade sem reestruturar toda a base original, expandindo a infraestrutura conforme a demanda cresce. Essa elasticidade horizontal é essencial para sistemas que precisam crescer de forma contínua sem comprometer desempenho ou integridade.
 
-Com os dados divididos em shards menores, as **operações de leitura e escrita podem ser distribuídas entre diferentes recursos computacionais**. Essa distribuição reduz a carga em qualquer servidor individual, resultando em tempos de resposta mais rápidos e uma performance geral melhorada. Além disso, o particionamento dos dados ajuda a evitar gargalos, **permitindo que o sistema mantenha um desempenho consistente mesmo sob altas cargas**.
+Com os dados fragmentados, as operações de leitura e escrita também se distribuem entre recursos distintos. Isso reduz a carga sobre qualquer servidor individual, melhora os tempos de resposta e evita gargalos, sustentando um desempenho consistente mesmo sob alta carga.
 
-Outro benefício significativo do sharding é a **contribuição para a alta disponibilidade**. **Se um nó de um sistema que contém um shard específico falhar, os outros shards ainda estarão disponíveis, permitindo que o sistema continue a operar com funcionalidades reduzidas**, em vez de enfrentar uma falha total. Essa resiliência é crítica em ambientes de produção onde a disponibilidade contínua é essencial para a experiência do usuário e a integridade dos serviços.
+Há ainda o ganho de disponibilidade: se o nó que hospeda um shard falhar, os demais shards continuam ativos, permitindo que o sistema opere com funcionalidade reduzida em vez de cair por completo — uma resiliência crucial em ambientes de produção.
 
 # Sharding Keys e Hot Partitions
 
-Antes de explorarmos algumas possibilidades existentes para implementações de shardings, precismos explorar dois conceitos muito importantes e complementares dentro da teoria de particionamento, precisaremos entender o que são as sharding keys e o fenômeno das hot partitions.
+Antes de explorar implementações concretas, é importante entender dois conceitos complementares e centrais na teoria de particionamento: as **sharding keys** e o fenômeno das **hot partitions**.
 
 ## Sharding Keys
 
-Quando pensamos em uma estratégia de particionamento de dados para resolver problemas de escalabilidade, a primeira pergunta que devemos fazer é: **“Particionar baseado em quê?”**. **Definir como vamos dividir os dados em um determinado contexto é o passo mais importante**, antes de qualquer escolha de tecnologia. Ao definir uma dimensão de corte para o particionamento, encontramos nossa **sharding key**.
+A primeira pergunta ao planejar um particionamento é: "particionar com base em quê?". Definir a dimensão de corte é a decisão mais importante, anterior a qualquer escolha de tecnologia. Esse critério de corte é o que chamamos de **sharding key**.
 
-A **sharding key**, ou **chave de partição**, é o **critério utilizado para determinar como e em qual partição os dados serão armazenados**. A escolha dessa chave **deve ser pensada para garantir uma distribuição eficiente e balanceada dos dados entre os shards**. Uma sharding key ideal deve ter alta cardinalidade, o que significa que ela deve ser capaz de **gerar um grande número de valores únicos para garantir uma distribuição uniforme dos dados**. Além disso, a sharding key deve ser **baseada em campos que são frequentemente acessados nas consultas, como datas, identificadores, categorias, entre outros**.
+A sharding key (ou chave de partição) é o atributo que determina como e em qual partição cada dado será armazenado. Uma boa escolha precisa garantir distribuição equilibrada, o que normalmente exige alta cardinalidade — ou seja, um grande número de valores únicos. Idealmente, a chave também deve coincidir com campos frequentemente usados nas consultas, como datas, identificadores ou categorias.
 
-Sharding keys comuns podem incluir as **iniciais de um identificador de cliente**, o **ID de uma entidade**, o **hash de um valor comum**, ou **categorias específicas**. Por exemplo, em um sistema financeiro, **é comum dividir a base de clientes entre Pessoas Físicas e Pessoas Jurídicas**. Instituições bancárias podem **realizar sharding baseado em ranges de agências**. Em sistemas de vendas ou logística, uma abordagem comum é **dividir a base por intervalos de datas em que as transações ocorreram**, utilizando sharding keys como meses ou anos. Em sistemas multi-tenant, é possível particionar com base no hash de um identificador do tenant, garantindo que os dados de cada tenant sejam armazenados de forma isolada e eficiente.
+Exemplos comuns de sharding keys incluem iniciais de um identificador de cliente, o ID de uma entidade, o hash de algum valor ou categorias específicas. Em sistemas financeiros, é comum separar Pessoas Físicas de Pessoas Jurídicas; bancos podem particionar por faixas de agências; sistemas de vendas e logística costumam dividir por intervalos de datas; e sistemas multi-tenant frequentemente usam o hash do identificador do tenant.
 
-Existem várias estratégias e aplicações para definir quais sharding keys escolher para a distribuição de dados. A escolha da estratégia correta depende do contexto e das características específicas do sistema. Nos próximos tópicos, exploraremos algumas dessas estratégias em mais detalhes.
+A estratégia certa depende do contexto e das características do sistema. Nos próximos tópicos algumas dessas abordagens são detalhadas.
 
 ## Hot Partitions
 
-As **Hot partitions são problemas que ocorrem devido à má distribuição de dados e alocações entre as partições de um sistema**. Esse fenômeno ocorre quando **uma ou mais partições recebem uma carga de trabalho desproporcionalmente alta em comparação com as outras**, resultando em um desempenho degradado.
+**Hot partitions** são problemas decorrentes da má distribuição de dados e carga entre as partições. O fenômeno acontece quando uma ou poucas partições recebem uma carga desproporcionalmente alta em relação às demais, degradando o desempenho.
 
 ![Hot Partition](images/sharding-hotpartition.png)
 
-Vamos elaborar um caso hipotético de um sistema multi-tenant, onde comportamos em média 300 clientes distribuídos entre 10 partições. Idealmente, cada partição comportaria cerca de 30 clientes, representando aproximadamente 10% do uso total do sistema, assumindo uma distribuição equilibrada. No entanto, suponha que três desses 300 clientes principais representem juntos 50% de todo o uso do sistema. Agora, **imagine que, devido a um cálculo de hash, esses três clientes sejam alocados na mesma partição**. Isso faria com que uma única partição representasse mais de 50% do uso total, enquanto as outras nove partições ficariam subutilizadas. **Esse cenário ilustra o problema de uma hot partition**.
+Imagine um sistema multi-tenant com 300 clientes distribuídos em 10 partições. No cenário ideal, cada partição teria cerca de 30 clientes, ou ~10% do uso. Mas suponha que três desses clientes concentrem 50% de todo o uso e, por azar do cálculo de hash, caiam na mesma partição. Essa única partição passaria a representar mais da metade da carga, enquanto as outras nove ficariam ociosas — exatamente o quadro de uma hot partition.
 
 ![Hot Partition 2](images/sharding-hotpartition-2.png)
 
-Como a distribuição dos dados entre as partições geralmente é **realizada por meio de operações lógicas e matemáticas efetuadas sobre a chave de partição**, **e não diretamente com base no tamanho ou padrão de uso dos dados**, pode ocorrer o fenômeno onde uma ou mais partições recebem uma quantidade desproporcional de tráfego ou carga de trabalho. **Essas partições sobrecarregadas podem causar lentidão nas operações e, em casos extremos, levar a falhas graves no sistema**. Enquanto isso, as outras partições, estando subutilizadas, resultam em uma utilização ineficiente dos recursos disponíveis.
+Como a distribuição é definida por operações matemáticas sobre a chave de partição — e não pelo tamanho ou padrão de uso real dos dados — esse desbalanceamento pode surgir naturalmente. Partições sobrecarregadas geram lentidão e, em casos extremos, falhas, ao passo que as subutilizadas desperdiçam recursos.
 
-Para mitigar o problema de hot partitions, algumas técnicas podem ser aplicadas, **como o uso de chaves de particionamento aleatórias**, que ajudam a distribuir a carga de forma mais uniforme. Outra abordagem é o **pré-partitionamento, onde a distribuição dos dados é planejada antecipadamente com base em padrões de uso conhecidos**. Adicionalmente, **a capacidade de isolar sharding keys específicas em partições dedicadas pode ser útil** em cenários onde certos clientes ou dados geram tráfego significativamente maior. Por fim, o uso de caching inteligente pode aliviar a carga sobre as partições mais utilizadas, **redistribuindo as operações de leitura e melhorando o desempenho geral do sistema**.
+Para mitigar, há técnicas como o uso de chaves de particionamento mais aleatórias, o pré-particionamento baseado em padrões de uso já conhecidos, o isolamento de sharding keys específicas em partições dedicadas e o uso de caching inteligente para aliviar as partições mais acessadas.
 
 # Estratégias e Aplicações de Sharding
 
-O objetivo dessa sessão é explicar algumas das muitas possibilidades de aplicação de shardings para sistemas distribuídos. Aqui iremos explorar técnicas de como realizar o particionamento utilizando diversos modelos de sharding keys.
+Esta seção apresenta algumas das muitas possibilidades de aplicação de sharding em sistemas distribuídos, explorando como realizar o particionamento com diferentes modelos de sharding keys.
 
 ## Sharding por ranges de iniciais
 
-Uma estratégia, embora não tão eficaz, mas útil para ilustrar o conceito de sharding, é a distribuição de uma base de usuários, clientes ou tenants baseada nas iniciais de um identificador. Podemos definir a distribuição dos dados entre intervalos de iniciais das **sharding keys**, como, por exemplo, **utilizando intervalos de A-E para um shard, F-J para outro, K-N, O-R, S-V e W-Z consecutivamente**.
+Uma estratégia simples — não muito eficaz, mas didática — é distribuir usuários, clientes ou tenants pelas iniciais de um identificador. Definimos intervalos de letras por shard, por exemplo A–E em um shard, F–J em outro, e assim por diante até W–Z.
 
 ![Sharding Letras](images/sharding-letras.png)
 
-Embora este seja um exemplo simples e fácil de compreender para ilustrar a distribuição de dados entre partições, ele também revela um dos problemas que o sharding busca evitar: as **hot partitions** ou partições quentes. Esse problema ocorre quando há um uso desproporcional entre os shards, resultando em um desequilíbrio de carga.
+Apesar de fácil de entender, esse modelo escancara justamente o problema que o sharding tenta evitar: as hot partitions. Quando o uso é desproporcional entre os intervalos, surge o desbalanceamento de carga.
 
-Para complementar o exemplo, em um cenário de distribuição baseada nas iniciais dos nomes dos clientes, **podemos inferir que existem mais Anas, Brunos, Carlos e Danielas do que Wesleys, Yasmins e Ziraldos**. Nesse caso, a partição responsável por armazenar os dados de clientes com iniciais de A-E (partição 1) seria muito mais utilizada em comparação com a partição responsável por W-Z (partição 6). Isso resultaria em um **desbalanceamento de performance** significativo, onde a partição 1 estaria sobrecarregada perante a uma hot partition, enquanto a partição 6 estaria quase que completamente subutilizada.
+No exemplo das iniciais de nomes, é razoável supor que existam muito mais Anas, Brunos e Carlos do que Wesleys, Yasmins e Ziraldos. Assim, a partição de A–E ficaria sobrecarregada (uma hot partition), enquanto a de W–Z permaneceria quase ociosa, gerando um desequilíbrio expressivo de performance.
 
-Este exemplo demonstra a importância de escolher uma **sharding key** que promova uma distribuição equilibrada dos dados para evitar gargalos e garantir o desempenho eficiente do sistema.
+O caso reforça a importância de escolher uma sharding key que promova distribuição equilibrada para evitar gargalos.
 
 ## Sharding por Ranges de Identificadores
 
-Estabelecer uma estratégia de distribuição onde os dados são divididos com base em intervalos contínuos de valores da **sharding key** é uma abordagem comum no mercado. **Uma distribuição sequencial requer um controle maior de governança**, pois pode resultar em um **fenômeno de “transbordo”**, onde alguns **shards podem ficar “cheios” enquanto outros permanecem “vazios”** ou subutilizados.
+Outra abordagem comum divide os dados por intervalos contínuos de valores da sharding key. Por ser sequencial, exige maior governança, pois pode gerar o efeito de "transbordo": alguns shards ficam cheios enquanto outros permanecem vazios ou subutilizados.
 
-Essa estratégia consiste na ideia de que cada **shard contém um intervalo específico de valores**, e as consultas são direcionadas ao shard apropriado com base na **sharding key**. Esta abordagem é particularmente útil quando **os dados podem ser ordenados de forma natural e as consultas frequentemente envolvem intervalos de valores**.
+A ideia é que cada shard contenha uma faixa específica de valores, e as consultas sejam direcionadas ao shard correspondente. Funciona bem quando os dados têm uma ordem natural e as consultas costumam envolver intervalos.
 
 ![Sharding Range](images/sharding-range.png)
 
-Imagine que temos uma base de 10.000 usuários que foram ordenados de forma sequencial durante a sua criação. Após análises, **foi determinado que essa base de dados poderia ser particionada em 3 shards**, cada um contendo um **intervalo específico de identificadores de usuários**. Além disso, essa estratégia **deveria suportar a criação de novos usuários**. Se levarmos o aspecto sequencial ao pé da letra, poderíamos acabar com dois shards “cheios” e um com capacidade ociosa suficiente para suportar o crescimento futuro da base de usuários.
+Pense em uma base de 10.000 usuários criados sequencialmente, dividida em 3 shards por faixas de identificadores, com espaço reservado para novos cadastros. Levando o aspecto sequencial ao pé da letra, é possível terminar com dois shards cheios e um quase vazio, guardando capacidade para o crescimento.
 
-No entanto, **esse tipo de particionamento pode levar a problemas de balanceamento de carga**. Se a distribuição dos valores não for uniforme, **alguns shards podem atingir sua capacidade máxima enquanto outros permanecem subutilizados**, criando ineficiências e possíveis gargalos no sistema. Portanto, ao utilizar sharding por ranges de identificadores, é obrigatório monitorar e ajustar a distribuição conforme o sistema cresce para evitar esses ocasionais problemas para garantir uma performance consistente entre todos os shards.
+O risco é o desbalanceamento de carga: se os valores não se distribuírem de forma uniforme, alguns shards atingem o limite enquanto outros ficam ociosos. Por isso, ao usar ranges de identificadores, é obrigatório monitorar e reajustar a distribuição à medida que o sistema cresce.
 
 ## Sharding por Ranges de Datas e Tiers de Storage
 
-Utilizar atributos sequenciais é uma das possibilidades ao definir distribuições baseadas em ranges de valores das **sharding keys**. Esse aspecto pode ser aproveitado, por exemplo, em **sharding por intervalos de tempo**. Dentro de um hipotético sistema de vendas, **poderíamos definir o sharding com base em intervalos de datas**. Em um exemplo mais direto, imagine que temos uma base de dados projetada para armazenar as transações que ocorreram dentro de cada ano. A longo prazo, isso resultaria em uma base de dados responsável por agrupar todas as transações de um determinado ano.
+Atributos sequenciais também viabilizam o sharding por intervalos de tempo. Em um sistema de vendas hipotético, poderíamos particionar por intervalos de datas — por exemplo, uma base por ano, agrupando todas as transações daquele período.
 
 ![Sharding Ano](images/sharding-ano.png)
 
-Nessa abordagem, **poderíamos aplicar uma outra estratégia comum em sharding: a utilização de diferentes “tiers” de armazenamento para os dados**. Essa estratégia envolve **categorizar os dados em camadas de armazenamento com diferentes níveis de desempenho e custo**. Por exemplo, os dados do ano corrente e do ano anterior poderiam ser armazenados em um **tier “hot”**, utilizando opções de armazenamento mais caras e performáticas, para garantir acesso rápido e eficiente. Para os anos que ainda têm acesso frequente, mas sem a mesma intensidade dos anos mais recentes, um **tier intermediário “warm”** poderia ser utilizado. Finalmente, para os dados de vendas de anos muito anteriores, que são acessados esporadicamente, poderíamos utilizar um **tier “cold”**, que oferece uma opção de armazenamento mais barata e menos performática.
+Nesse modelo cabe uma estratégia adicional muito comum: usar diferentes **tiers** de armazenamento. A ideia é organizar os dados em camadas com diferentes níveis de custo e desempenho. Os anos corrente e anterior poderiam ficar em um tier **hot**, com armazenamento caro e rápido; anos ainda acessados com frequência moderada iriam para um tier **warm** intermediário; e dados muito antigos, raramente consultados, ficariam em um tier **cold**, mais barato e lento.
 
-Essa combinação de sharding por intervalos de datas com tiers de armazenamento permite não apenas uma distribuição eficiente dos dados, mas também uma **otimização de custos e desempenho, adaptando os recursos de acordo com a frequência de acesso e a importância dos dados ao longo do tempo**.
+Combinar particionamento por datas com tiers de storage oferece distribuição eficiente e, ao mesmo tempo, otimização de custo e desempenho, ajustando os recursos à frequência de acesso e à importância dos dados ao longo do tempo.
 
 ## Sharding por Hashing
 
-O sharding por hashing é uma **técnica de particionamento de dados ou computação onde uma função hash é aplicada sobre a shard key** para decidir onde cada dado será armazenado ou para onde o cliente será roteado. Essa função **converte o valor do atributo, ou sharding key, em um valor de hash, que é então mapeado para um dos shards disponíveis** utilizando uma operação de módulo (`mod`), que retorna o resto da divisão de um número por outro.
+No sharding por hashing, aplica-se uma função de hash sobre a sharding key para decidir onde o dado é armazenado ou para onde o cliente é roteado. A função converte o valor da chave em um hash, que é então mapeado para um dos shards disponíveis por meio de uma operação de módulo (`mod`), que retorna o resto de uma divisão.
 
-Por exemplo, se o valor de hash for 15 e houver 3 shards, a operação `15 % 3` resultará em 0, indicando que o registro deve ser armazenado no shard 0. Caso o valor do hash seja 10, a operação `10 % 3` retornará 1, o que significa que o cliente será alocado no shard 1.
+Por exemplo, se o hash for 15 e houver 3 shards, `15 % 3` resulta em 0, indicando o shard 0. Se o hash for 10, `10 % 3` resulta em 1, levando o registro ao shard 1.
 
 ![Hash function](images/sharding-hash.png)
 
 #### Exemplo de Balanceamento por Hash Functions
 
-Vamos imaginar um sistema multi-tenant que atende a vários cenários de negócio. Foi identificado que o identificador do tenant seria a melhor **shard key** para distribuir os clientes de forma equitativa entre os shards. Nesse caso, para **determinar em qual shard o cliente será alocado, podemos aplicar o algoritmo SHA-256 para gerar um hash do valor do identificador**. Em seguida, **o hash é convertido para um número inteiro. Com base nesse inteiro, aplicamos a operação de módulo pelo número de shards disponíveis**, e o resultado indicará o shard no qual o tenant será alocado.
+Considere um sistema multi-tenant em que o identificador do tenant foi escolhido como sharding key. Para decidir o shard de cada cliente, aplica-se o algoritmo SHA-256 sobre o identificador, converte-se o hash em um número inteiro e calcula-se o módulo pelo número de shards; o resto indica o shard de destino.
 
-Essa abordagem de sharding por hashing é especialmente útil para evitar hot partitions, uma vez que a função hash tende a distribuir os dados de forma uniforme entre os shards. Além disso, a simplicidade da operação de módulo torna esse método eficiente e fácil de implementar, mesmo em sistemas de grande escala.
+Essa abordagem ajuda a evitar hot partitions, já que a função de hash tende a distribuir os dados de forma uniforme. A operação de módulo, por sua vez, é simples e barata, o que torna o método eficiente mesmo em larga escala.
 
-```go
-package main
-
-import (
-	"crypto/sha256"
-	"encoding/binary"
-	"fmt"
-	"strings"
-)
-
-// Calcula o hash SHA-256 do valor do tenant e o converte para um inteiro
-func hashTenant(tenant string) int {
-
-	// Converte o valor do tenant para minúsculas
-	tenant = strings.ToLower(tenant) 
-
-	// Converte a string tenant para um byte slice e calcula o hash.
-	hash := sha256.New()
-	hash.Write([]byte(tenant))
-	hashBytes := hash.Sum(nil)
-
-	// Converte o hash para um número inteiro
-	hashInt := binary.BigEndian.Uint64(hashBytes)
-	
-	// Converte o valor para um valor positivo caso o hashint venha a ser negativo
-	if int(hashInt) < 0 {
-		return -int(hashInt)
-	}
-	return int(hashInt)
-}
-
-// Recebe uma string do tenant e o número de shards, retornando o número do shard correspondente
-func getShardByTenant(tenant string) int {
-	// Número disponível de Shards 
-	numShards := 3
-
-	// Calcula o mod do hash baseado no numero de shards
-	hashValue := hashTenant(tenant)
-	shard := hashValue % numShards
-	return shard
-}
-
-func main() {
-	// Lista de tenants
-	tenants := []string{
-		"Petshops-Souza",
-		"Pizzarias-Carvalho",
-		"Mecanica-Dois-Irmaos",
-		"Padaria-Estrela-Filial-1",
-		"Padaria-Estrela-Filial-2",
-		"Padaria-Estrela-Filial-3",
-		"Hortifruti-Oba",
-		"Acougue-Zona-Leste",
-		"Acougue-Zona-Oeste",
-		"Acougue-Zona-Norte",
-	}
-
-	// Verifica a distribuição dos tenants entre os shards
-	for _, tenant := range tenants {
-		shard := getShardByTenant(tenant)
-		fmt.Printf("Tenant: %s, Shard: %d\n", tenant, shard)
-	}
-}
-
-```
-
-
-```go
-package main
-
-import (
-	"crypto/sha256"
-	"encoding/binary"
-	"fmt"
-	"strings"
-)
-
-// Calcula o hash SHA-256 do valor do tenant e o converte para um inteiro
-func hashTenant(tenant string) int {
-
-	// Converte o valor do tenant para minúsculas
-	tenant = strings.ToLower(tenant) 
-
-	// Converte a string tenant para um byte slice e calcula o hash.
-	hash := sha256.New()
-	hash.Write([]byte(tenant))
-	hashBytes := hash.Sum(nil)
-
-	// Converte o hash para um número inteiro
-	hashInt := binary.BigEndian.Uint64(hashBytes)
-	
-	// Converte o valor para um valor positivo caso o hashint venha a ser negativo
-	if int(hashInt) < 0 {
-		return -int(hashInt)
-	}
-	return int(hashInt)
-}
-
-// Recebe uma string do tenant e o número de shards, retornando o número do shard correspondente
-func getShardByTenant(tenant string) int {
-	// Número disponível de Shards 
-	numShards := 3
-
-	// Calcula o mod do hash baseado no numero de shards
-	hashValue := hashTenant(tenant)
-	shard := hashValue % numShards
-	return shard
-}
-
-func main() {
-	// Lista de tenants
-	tenants := []string{
-		"Petshops-Souza",
-		"Pizzarias-Carvalho",
-		"Mecanica-Dois-Irmaos",
-		"Padaria-Estrela-Filial-1",
-		"Padaria-Estrela-Filial-2",
-		"Padaria-Estrela-Filial-3",
-		"Hortifruti-Oba",
-		"Acougue-Zona-Leste",
-		"Acougue-Zona-Oeste",
-		"Acougue-Zona-Norte",
-	}
-
-	// Verifica a distribuição dos tenants entre os shards
-	for _, tenant := range tenants {
-		shard := getShardByTenant(tenant)
-		fmt.Printf("Tenant: %s, Shard: %d\n", tenant, shard)
-	}
-}
-
-```
+O artigo apresenta uma implementação em Go com as funções `hashTenant` (que calcula o SHA-256 do identificador, em minúsculas, e o converte para inteiro) e `getShardByTenant` (que aplica o módulo por 3 shards), executadas sobre uma lista de tenants fictícios como padarias, açougues e pet shops.
 
 #### Output
 
-```sh
-Tenant: Petshops-Souza, Shard: 1
-Tenant: Pizzarias-Carvalho, Shard: 2
-Tenant: Mecanica-Dois-Irmaos, Shard: 1
-Tenant: Padaria-Estrela-Filial-1, Shard: 0
-Tenant: Padaria-Estrela-Filial-2, Shard: 2
-Tenant: Padaria-Estrela-Filial-3, Shard: 1
-Tenant: Hortifruti-Oba, Shard: 2
-Tenant: Acougue-Zona-Leste, Shard: 2
-Tenant: Acougue-Zona-Oeste, Shard: 0
-Tenant: Acougue-Zona-Norte, Shard: 1
+A saída do programa imprime cada tenant ao lado do shard correspondente, distribuindo as dez entradas de exemplo entre os shards 0, 1 e 2 de forma razoavelmente equilibrada.
 
-```
-
-
-```sh
-Tenant: Petshops-Souza, Shard: 1
-Tenant: Pizzarias-Carvalho, Shard: 2
-Tenant: Mecanica-Dois-Irmaos, Shard: 1
-Tenant: Padaria-Estrela-Filial-1, Shard: 0
-Tenant: Padaria-Estrela-Filial-2, Shard: 2
-Tenant: Padaria-Estrela-Filial-3, Shard: 1
-Tenant: Hortifruti-Oba, Shard: 2
-Tenant: Acougue-Zona-Leste, Shard: 2
-Tenant: Acougue-Zona-Oeste, Shard: 0
-Tenant: Acougue-Zona-Norte, Shard: 1
-
-```
-
-Este esquema de distribuição é simples, intuitivo e funciona bem. Ou seja, **até que o número de servidores mude**. **O que acontece se um dos servidores falhar ou ficar indisponível? As chaves precisam ser redistribuídas** para compensar a ausência do servidor, naturalmente. O mesmo se aplica se um ou mais servidores novos forem adicionados ao pool. Resumindo, **sempre que o número de servidores mudar, o resultado da operação de módulo também mudará**, o que acarretará em uma perda de referências na distribuição dos dados.
+O esquema é simples, intuitivo e funciona bem — até que o número de servidores mude. Se um servidor falha ou um novo é adicionado, as chaves precisam ser redistribuídas, porque o resultado da operação de módulo muda. Em outras palavras, sempre que a quantidade de servidores varia, perdem-se as referências de distribuição dos dados.
 
 ![Sharding: Rehash](images/sharding-rehash.png)
 
 > Exemplo de perda de referências entre shards devido à mudança no resultado do módulo
 
-Em recursos **stateless**, como, por exemplo, um shardeamento de recursos computacionais, como servidores de aplicação, essa dificuldade é fácil de superar. Da mesma forma, em aplicações que mantêm dados em estado, mas que podem ser facilmente recriados e reconsistidos, como camadas de cache, o impacto é menor. No entanto, **em particionamentos que envolvem dados persistentes, essa estratégia começa a apresentar sérios desafios com a mudança de servidores, perdendo totalmente o roteamento para o armazenamento de dados original** e potencialmente criando inconsistências instantâneas.
+Em recursos **stateless**, como servidores de aplicação, essa redistribuição é trivial. Em recursos com estado facilmente reconstruível, como caches, o impacto também é pequeno. Mas em particionamentos com dados persistentes a mudança de servidores se torna um problema sério, podendo perder o roteamento para o armazenamento original e gerar inconsistências imediatas.
 
-Nesse cenário, é necessário um árduo trabalho de redistribuição de dados entre os shards, que deve ocorrer imediatamente após qualquer alteração na escalabilidade horizontal. Para mitigar esse problema em cenários onde os nodes podem mudar, a estratégia de Hashing Consistente é frequentemente adotada.
+Nesse cenário, é preciso um trabalho árduo de redistribuição logo após qualquer mudança de escala horizontal. Para mitigar isso quando os nós variam com frequência, costuma-se adotar o **Hashing Consistente**.
 
 ### Distribuição e os Algoritmos de Hashing
 
-A escolha correta de um algoritmo de hashing para basear a distribuição de dados é um ponto de tunning fino que pode mudar completamente o resultado da solução. Após uma escolha inteligente da sharding key, é recomendado aplicar diversos tipos de algoritmo de hashing sobre uma amostra das chaves de forma comparativa chegar em uma conclusão sobre qual implementação garantirá a melhor distribuição.
+A escolha do algoritmo de hashing é um ponto de tuning fino que pode mudar completamente o resultado da distribuição. Depois de escolher bem a sharding key, é recomendável testar comparativamente vários algoritmos sobre uma amostra de chaves para identificar qual garante a melhor distribuição.
 
-Dependendo do algoritmo selecionado, os dados podem ser distribuídos de forma mais ou menos uniforme entre os shards, impactando diretamente a performance e a resiliência do sistema.
+Dependendo do algoritmo, os dados ficam mais ou menos uniformes entre os shards, impactando diretamente performance e resiliência.
 
-O código a seguir implementa cinco funções de hash: **SHA-256**, **SHA-512**, **MD5**, **FNV-1a**, e uma função de **hash simples**. Cada função de hash converte o identificador de um tenant em um valor de hash, que é então utilizado para determinar em qual shard o tenant será alocado.
-
-```go
-package main
-
-import (
-	"crypto/md5"
-	"crypto/sha256"
-	"crypto/sha512"
-	"encoding/binary"
-	"fmt"
-	"hash/fnv"
-	"strings"
-)
-
-// Função de hash utilizando SHA-256
-func hashSHA256(tenant string) int {
-	tenant = strings.ToLower(tenant)
-	hash := sha256.New()
-	hash.Write([]byte(tenant))
-	hashBytes := hash.Sum(nil)
-	hashInt := binary.BigEndian.Uint64(hashBytes)
-	return int(hashInt)
-}
-
-// Função de hash utilizando SHA-512
-func hashSHA512(tenant string) int {
-	tenant = strings.ToLower(tenant)
-	hash := sha512.New()
-	hash.Write([]byte(tenant))
-	hashBytes := hash.Sum(nil)
-	hashInt := binary.BigEndian.Uint64(hashBytes)
-	return int(hashInt)
-}
-
-// Função de hash utilizando MD5
-func hashMD5(tenant string) int {
-	tenant = strings.ToLower(tenant)
-	hash := md5.New()
-	hash.Write([]byte(tenant))
-	hashBytes := hash.Sum(nil)
-	hashInt := binary.BigEndian.Uint64(hashBytes)
-	return int(hashInt)
-}
-
-// Função de hash utilizando FNV-1a
-func hashFNV1a(tenant string) int {
-	tenant = strings.ToLower(tenant)
-	hash := fnv.New64a()
-	hash.Write([]byte(tenant))
-	hashInt := hash.Sum64()
-	return int(hashInt)
-}
-
-// Função de hash simples
-func hashSimple(tenant string) int {
-	tenant = strings.ToLower(tenant)
-	var hash int
-	for _, char := range tenant {
-		hash += int(char)
-	}
-	return hash
-}
-
-// Função para obter o shard utilizando o hash escolhido
-func getShardByTenant(tenant string, hashFunc func(string) int, numShards int) int {
-	hashValue := hashFunc(tenant)
-	shard := hashValue % numShards
-
-	if int(shard) < 0 {
-		return -int(shard)
-	}
-	return shard
-}
-
-func main() {
-	// Lista de tenants
-	tenants := []string{
-		"Petshops-Souza",
-		"Pizzarias-Carvalho",
-		"Mecanica-Dois-Irmaos",
-		"Padaria-Estrela-Filial-1",
-		"Padaria-Estrela-Filial-2",
-		"Salão-Beleza-Filial-1",
-		"Salão-Beleza-Filial-2",
-		"Auto-Peças-Sul",
-		"Academia-BoaForma",
-		"Escola-Livre",
-		// ... 
-	}
-
-	// Número de shards
-	numShards := 5
-
-	// Hash functions
-	hashFuncs := map[string]func(string) int{
-		"SHA-256":      hashSHA256,
-		"SHA-512":      hashSHA512,
-		"MD5":          hashMD5,
-		"FNV-1a":       hashFNV1a,
-		"Hash Simples": hashSimple,
-	}
-
-	// Resultado das distribuições
-	distributions := make(map[string][]int)
-
-	// Inicializa as distribuições
-	for name := range hashFuncs {
-		distributions[name] = make([]int, numShards)
-	}
-
-	// Calcula a distribuição dos tenants entre os shards para cada algoritmo de hash
-	for _, tenant := range tenants {
-		for name, hashFunc := range hashFuncs {
-			shard := getShardByTenant(tenant, hashFunc, numShards)
-			distributions[name][shard]++
-		}
-	}
-
-	// Exibe os resultados
-	for name, dist := range distributions {
-		fmt.Printf("Distribuição para %s:\n", name)
-		for i, count := range dist {
-			fmt.Printf("Shard %d: %d tenants\n", i, count)
-		}
-		fmt.Println()
-	}
-}
-
-```
-
-```go
-package main
-
-import (
-	"crypto/md5"
-	"crypto/sha256"
-	"crypto/sha512"
-	"encoding/binary"
-	"fmt"
-	"hash/fnv"
-	"strings"
-)
-
-// Função de hash utilizando SHA-256
-func hashSHA256(tenant string) int {
-	tenant = strings.ToLower(tenant)
-	hash := sha256.New()
-	hash.Write([]byte(tenant))
-	hashBytes := hash.Sum(nil)
-	hashInt := binary.BigEndian.Uint64(hashBytes)
-	return int(hashInt)
-}
-
-// Função de hash utilizando SHA-512
-func hashSHA512(tenant string) int {
-	tenant = strings.ToLower(tenant)
-	hash := sha512.New()
-	hash.Write([]byte(tenant))
-	hashBytes := hash.Sum(nil)
-	hashInt := binary.BigEndian.Uint64(hashBytes)
-	return int(hashInt)
-}
-
-// Função de hash utilizando MD5
-func hashMD5(tenant string) int {
-	tenant = strings.ToLower(tenant)
-	hash := md5.New()
-	hash.Write([]byte(tenant))
-	hashBytes := hash.Sum(nil)
-	hashInt := binary.BigEndian.Uint64(hashBytes)
-	return int(hashInt)
-}
-
-// Função de hash utilizando FNV-1a
-func hashFNV1a(tenant string) int {
-	tenant = strings.ToLower(tenant)
-	hash := fnv.New64a()
-	hash.Write([]byte(tenant))
-	hashInt := hash.Sum64()
-	return int(hashInt)
-}
-
-// Função de hash simples
-func hashSimple(tenant string) int {
-	tenant = strings.ToLower(tenant)
-	var hash int
-	for _, char := range tenant {
-		hash += int(char)
-	}
-	return hash
-}
-
-// Função para obter o shard utilizando o hash escolhido
-func getShardByTenant(tenant string, hashFunc func(string) int, numShards int) int {
-	hashValue := hashFunc(tenant)
-	shard := hashValue % numShards
-
-	if int(shard) < 0 {
-		return -int(shard)
-	}
-	return shard
-}
-
-func main() {
-	// Lista de tenants
-	tenants := []string{
-		"Petshops-Souza",
-		"Pizzarias-Carvalho",
-		"Mecanica-Dois-Irmaos",
-		"Padaria-Estrela-Filial-1",
-		"Padaria-Estrela-Filial-2",
-		"Salão-Beleza-Filial-1",
-		"Salão-Beleza-Filial-2",
-		"Auto-Peças-Sul",
-		"Academia-BoaForma",
-		"Escola-Livre",
-		// ... 
-	}
-
-	// Número de shards
-	numShards := 5
-
-	// Hash functions
-	hashFuncs := map[string]func(string) int{
-		"SHA-256":      hashSHA256,
-		"SHA-512":      hashSHA512,
-		"MD5":          hashMD5,
-		"FNV-1a":       hashFNV1a,
-		"Hash Simples": hashSimple,
-	}
-
-	// Resultado das distribuições
-	distributions := make(map[string][]int)
-
-	// Inicializa as distribuições
-	for name := range hashFuncs {
-		distributions[name] = make([]int, numShards)
-	}
-
-	// Calcula a distribuição dos tenants entre os shards para cada algoritmo de hash
-	for _, tenant := range tenants {
-		for name, hashFunc := range hashFuncs {
-			shard := getShardByTenant(tenant, hashFunc, numShards)
-			distributions[name][shard]++
-		}
-	}
-
-	// Exibe os resultados
-	for name, dist := range distributions {
-		fmt.Printf("Distribuição para %s:\n", name)
-		for i, count := range dist {
-			fmt.Printf("Shard %d: %d tenants\n", i, count)
-		}
-		fmt.Println()
-	}
-}
-
-```
+O artigo apresenta um código em Go que implementa cinco funções de hash — **SHA-256**, **SHA-512**, **MD5**, **FNV-1a** e uma **função de hash simples** (que apenas soma os códigos dos caracteres). Cada função transforma o identificador do tenant em um valor usado para calcular o shard via módulo por 5 shards.
 
 #### Output
 
-```sh
-go run main.go
-Distribuição para SHA-512:
-Shard 0: 8 tenants
-Shard 1: 9 tenants
-Shard 2: 12 tenants
-Shard 3: 7 tenants
-Shard 4: 5 tenants
+A saída exibe, para cada algoritmo, quantos tenants caíram em cada um dos cinco shards. Os números variam bastante de um algoritmo para outro: alguns produzem uma distribuição mais equilibrada, enquanto outros concentram mais entradas em determinados shards.
 
-Distribuição para MD5:
-Shard 0: 13 tenants
-Shard 1: 9 tenants
-Shard 2: 4 tenants
-Shard 3: 5 tenants
-Shard 4: 10 tenants
-
-Distribuição para FNV-1a:
-Shard 0: 6 tenants
-Shard 1: 6 tenants
-Shard 2: 6 tenants
-Shard 3: 14 tenants
-Shard 4: 9 tenants
-
-Distribuição para Hash Simples:
-Shard 0: 5 tenants
-Shard 1: 7 tenants
-Shard 2: 9 tenants
-Shard 3: 10 tenants
-Shard 4: 10 tenants
-
-Distribuição para SHA-256:
-Shard 0: 9 tenants
-Shard 1: 7 tenants
-Shard 2: 6 tenants
-Shard 3: 8 tenants
-Shard 4: 11 tenants
-
-```
-
-
-```sh
- go run main.go
-Distribuição para SHA-512:
-Shard 0: 8 tenants
-Shard 1: 9 tenants
-Shard 2: 12 tenants
-Shard 3: 7 tenants
-Shard 4: 5 tenants
-
-Distribuição para MD5:
-Shard 0: 13 tenants
-Shard 1: 9 tenants
-Shard 2: 4 tenants
-Shard 3: 5 tenants
-Shard 4: 10 tenants
-
-Distribuição para FNV-1a:
-Shard 0: 6 tenants
-Shard 1: 6 tenants
-Shard 2: 6 tenants
-Shard 3: 14 tenants
-Shard 4: 9 tenants
-
-Distribuição para Hash Simples:
-Shard 0: 5 tenants
-Shard 1: 7 tenants
-Shard 2: 9 tenants
-Shard 3: 10 tenants
-Shard 4: 10 tenants
-
-Distribuição para SHA-256:
-Shard 0: 9 tenants
-Shard 1: 7 tenants
-Shard 2: 6 tenants
-Shard 3: 8 tenants
-Shard 4: 11 tenants
-
-```
-
-É de extrema importância ressaltar que o resultado desse experimento somente tem valor para os critérios das sharding keys do exemplo. Em caso de um outro tipo de valor, os resultados podem ser completamente diferentes. O exemplo é apenas para ilustrar a diferença de resultado na distribuição.
+Vale ressaltar que esse resultado só tem valor para o conjunto específico de sharding keys do exemplo. Com outro tipo de valor, os resultados podem ser completamente diferentes — o experimento serve apenas para ilustrar como a escolha do algoritmo afeta a distribuição.
 
 ## Sharding e Distribuição por MurmurHash
 
-O **MurmurHash**, ou simplesmente Murmur, **é uma função de hash rápida, eficiente e não criptográfica, comumente utilizada para gerar identificadores de hash a partir de strings ou outros tipos de dados**. O MurmurHash **transforma esses dados em números inteiros**, proporcionando a **capacidade nativa de lidar com ranges e intervalos de valores**, o que é especialmente útil para a distribuição de dados e aplicações de hashing consistente.
+O **MurmurHash** (ou simplesmente Murmur) é uma função de hash rápida, eficiente e **não criptográfica**, muito usada para gerar identificadores a partir de strings e outros dados. Ele transforma os dados em números inteiros, lidando nativamente com ranges e intervalos de valores, o que o torna especialmente útil para distribuição de dados e hashing consistente.
 
 ![Murmur](images/murmur.png)
 
-O MurmurHash **se destaca nessa tarefa de evitar hot partitions por distribuição desbalanceada**, pois espalha os valores de hash de maneira próxima ao uniforme.
+O MurmurHash se destaca em evitar hot partitions, pois espalha os valores de hash de forma próxima ao uniforme.
 
-Quando você aplica o MurmurHash a uma string, que serve como sua sharding key, **o algoritmo gera um valor de hash numérico.** Este valor de hash é um **número inteiro de 32 ou 64 bits**, dependendo da versão do MurmurHash utilizada, sem a necessidade de operações adicionais para essa conversão. A simplicidade do MurmurHash, junto com seu baixo consumo de recursos computacionais, o tornam **ideal para sistemas que precisam processar grandes volumes de dados rapidamente**.
+Ao aplicar o MurmurHash a uma string usada como sharding key, o algoritmo gera diretamente um valor numérico — um inteiro de 32 ou 64 bits, conforme a versão — sem necessidade de conversões adicionais. Sua simplicidade e baixo custo computacional o tornam ideal para sistemas que precisam processar grandes volumes rapidamente.
 
-A seguir, é apresentada a implementação do MurmurHash como algoritmo de hashing para a distribuição de tenants entre 5 shards.
-
-```go
-package main
-
-import (
-	"fmt"
-	"github.com/spaolacci/murmur3"
-)
-
-// Função para calcular o hash utilizando MurmurHash3
-func murmurHash(tenant string) uint32 {
-	return murmur3.Sum32([]byte(tenant))
-}
-
-// Função para determinar o shard a partir do valor de hash
-func getShardByMurmurHash(tenant string, numShards int) int {
-	hashValue := murmurHash(tenant)
-	shard := hashValue % uint32(numShards)
-	return int(shard)
-}
-
-func main() {
-	// Lista de tenants
-	tenants := []string{
-		"Petshops-Souza",
-		"Pizzarias-Carvalho",
-		"Mecanica-Dois-Irmaos",
-		"Padaria-Estrela-Filial-1",
-		"Padaria-Estrela-Filial-2",
-		"Padaria-Estrela-Filial-3",
-		"Padaria-Estrela-Filial-3",
-		"Hortifruti-Oba",
-		"Acougue-Zona-Leste",
-		"Acougue-Zona-Oeste",
-		"Acougue-Zona-Norte",
-		"Livraria-Cultura",
-		// ...
-	}
-	// Número de shards
-	numShards := 5
-
-	// Criação de um mapa para contar a distribuição dos tenants pelos shards
-	shardDistribution := make(map[int]int)
-
-	// Exibe a distribuição final dos shards
-	fmt.Println("\nDistribuição Final dos Shards:")
-	for i := 0; i < numShards; i++ {
-		fmt.Printf("Shard %d: %d tenants\n", i, shardDistribution[i])
-	}
-}
-
-```
-
-
-```go
-package main
-
-import (
-	"fmt"
-	"github.com/spaolacci/murmur3"
-)
-
-// Função para calcular o hash utilizando MurmurHash3
-func murmurHash(tenant string) uint32 {
-	return murmur3.Sum32([]byte(tenant))
-}
-
-// Função para determinar o shard a partir do valor de hash
-func getShardByMurmurHash(tenant string, numShards int) int {
-	hashValue := murmurHash(tenant)
-	shard := hashValue % uint32(numShards)
-	return int(shard)
-}
-
-func main() {
-	// Lista de tenants
-	tenants := []string{
-		"Petshops-Souza",
-		"Pizzarias-Carvalho",
-		"Mecanica-Dois-Irmaos",
-		"Padaria-Estrela-Filial-1",
-		"Padaria-Estrela-Filial-2",
-		"Padaria-Estrela-Filial-3",
-		"Padaria-Estrela-Filial-3",
-		"Hortifruti-Oba",
-		"Acougue-Zona-Leste",
-		"Acougue-Zona-Oeste",
-		"Acougue-Zona-Norte",
-		"Livraria-Cultura",
-		// ...
-	}
-	// Número de shards
-	numShards := 5
-
-	// Criação de um mapa para contar a distribuição dos tenants pelos shards
-	shardDistribution := make(map[int]int)
-
-	// Exibe a distribuição final dos shards
-	fmt.Println("\nDistribuição Final dos Shards:")
-	for i := 0; i < numShards; i++ {
-		fmt.Printf("Shard %d: %d tenants\n", i, shardDistribution[i])
-	}
-}
-
-```
+O artigo mostra uma implementação em Go que usa a biblioteca `murmur3` para calcular o hash de cada tenant e determinar o shard via módulo por 5 shards.
 
 #### Output
 
-```sh
-Distribuição Final dos Shards:
-Shard 0: 7 tenants
-Shard 1: 8 tenants
-Shard 2: 9 tenants
-Shard 3: 8 tenants
-Shard 4: 7 tenants
-
-```
-
-
-```sh
-Distribuição Final dos Shards:
-Shard 0: 7 tenants
-Shard 1: 8 tenants
-Shard 2: 9 tenants
-Shard 3: 8 tenants
-Shard 4: 7 tenants
-
-```
+A saída apresenta a distribuição final dos tenants entre os cinco shards, com contagens bastante próximas entre si — evidenciando a tendência de distribuição uniforme do MurmurHash.
 
 ## Sharding por Hashing Consistente
 
-O Hashing Consistente **é uma técnica de sharding em sistemas distribuídos muito util onde a adição ou remoção de servidores, ou shards, é uma tarefa comum**. Diferentemente do sharding por hashing simples, onde a adição ou remoção de um shard pode exigir a redistribuição de muitos, senão de todos os dados, **o hashing consistente minimiza a quantidade de dados que precisam ser realocados**, proporcionando mais escalabilidade à solução. É importante ressaltar que, **embora a redistribuição seja minimizada, ela ainda ocorre, porém em uma escala muito menor**.
+O **Hashing Consistente** é uma técnica de sharding muito útil em sistemas distribuídos nos quais adicionar ou remover servidores é tarefa rotineira. Diferente do hashing simples — onde uma mudança de shard pode exigir a redistribuição de quase todos os dados —, o hashing consistente minimiza a quantidade de dados realocados. Vale notar que a redistribuição ainda ocorre, porém em escala muito menor.
 
 ![Hash Ring](images/sharding-hash-ring.png)
 
-As representações visuais de **hashing consistente são geralmente ilustradas de forma cíclica**, e a estrutura de dados central para a distribuição das chaves entre os nós é conceituada como um anel, **conhecido como “hash ring”**. A **distribuição de uma hash em um nó ocorre, na verdade, por um intervalo de valores dentro do anel**, e não diretamente pelo valor da hash da chave. Isso permite que, **ao alterar a quantidade de nós, os valores resultantes do cálculo de módulo mudem muito pouco, reduzindo a necessidade de redistribuição de dados**.
+Visualmente, o hashing consistente é representado de forma cíclica: a estrutura central é um anel, o **hash ring**. A alocação de uma chave em um nó se dá por um intervalo de valores dentro do anel, e não pelo valor exato do hash. Assim, ao alterar a quantidade de nós, os resultados mudam muito pouco, reduzindo a necessidade de redistribuição.
 
-Se utilizássemos uma abordagem tradicional de hashing para distribuir os dados dos tenants entre os servidores, toda vez que adicionássemos ou removêssemos um servidor, muitos dados precisariam ser redistribuídos, o que pode ser caro e demorado.
+Se usássemos hashing tradicional, cada adição ou remoção de servidor exigiria mover muitos dados — algo caro e demorado.
 
-Voltamos para a o exemplo hipotético de um sistema de sharding multi-tentant. **Imagine um círculo que representa todos os possíveis valores de hash**. **Cada nó de servidor é mapeado para um ponto nesse círculo, e cada tenant também é mapeado para um ponto no círculo usando a mesma função hash**. Tanto a alocação de nodes quanto de dados é efetuada no mesmo anél, da mesma forma. Os dados de um tenant **são armazenados no servidor que aparece primeiro no sentido horário a partir do ponto onde o tenant foi mapeado**. Caso o anel seja composto de números incrementais, se o valor da hash exceder o limite, a posição **retorna para o marco 0 do círculo, “dando uma volta”** no hash ring.
+Voltando ao sistema multi-tenant: imagine um círculo que representa todos os possíveis valores de hash. Tanto os nós de servidor quanto os tenants são mapeados para pontos nesse círculo usando a mesma função. Os dados de um tenant ficam no servidor que aparece primeiro no sentido horário a partir do ponto onde o tenant foi mapeado; se o valor ultrapassa o limite, ele "dá uma volta" e retorna ao marco 0 do anel.
 
-Nesse caso, quando um novo nó é adicionado, ele também é mapeado para um ponto específico desse círculo. Somente os dados que estão entre o novo nó e o próximo nó no sentido horário precisam ser redistribuídos, enquanto o restante pode permanecer onde estava. O mesmo ocorre com a remoção de um nó: seus dados devem ser transferidos para o próximo nó no sentido horário no círculo, minimizando a redistribuição e mantendo a integridade dos dados de forma eficiente.
+Ao adicionar um novo nó, apenas os dados entre ele e o próximo nó no sentido horário precisam ser redistribuídos; o restante permanece intacto. Na remoção de um nó, seus dados passam para o próximo nó no sentido horário, minimizando o movimento e preservando a integridade.
 
-```go
-package main
+O artigo apresenta uma implementação em Go de um `ConsistentHashRing`, com nós representados por uma struct `Node`, suporte a réplicas virtuais por nó, e métodos para adicionar (`AddNode`), remover (`RemoveNode`) e localizar o nó de um tenant (`GetTenantNode`) por busca binária no anel ordenado.
 
-import (
-	"crypto/sha256"
-	"encoding/binary"
-	"fmt"
-	"sort"
-	"strconv"
-	"strings"
-)
+A execução do exemplo distribui os tenants pelos nós, depois remove o `Shard-02` e em seguida adiciona o `Shard-04`. A saída mostra que apenas alguns tenants mudam de shard a cada alteração (marcados como "Nova movimentação"), enquanto a maioria permanece onde estava — exatamente o comportamento que torna o hashing consistente atraente.
 
-// Representa um nó no anel de hash.
-type Node struct {
-	ID   string
-	Hash uint64
-}
-
-// Representa o hash ring que contém vários nós.
-type ConsistentHashRing struct {
-	Nodes       []Node
-	NumReplicas int
-}
-
-// Cria um novo anel de hash ring.
-func NewConsistentHashRing(numReplicas int) *ConsistentHashRing {
-	return &ConsistentHashRing{
-		Nodes:       []Node{},
-		NumReplicas: numReplicas,
-	}
-}
-
-// Adiciona um novo node ao Hash Ring
-func (ring *ConsistentHashRing) AddNode(nodeID string) {
-	for i := 0; i < ring.NumReplicas; i++ {
-		replicaID := nodeID + strconv.Itoa(i)
-		hash := hashTenant(replicaID)
-		ring.Nodes = append(ring.Nodes, Node{ID: nodeID, Hash: hash})
-	}
-	sort.Slice(ring.Nodes, func(i, j int) bool {
-		return ring.Nodes[i].Hash < ring.Nodes[j].Hash
-	})
-}
-
-// Remove um node existente do Hash Ring
-func (ring *ConsistentHashRing) RemoveNode(nodeID string) {
-	var newNodes []Node
-	for _, node := range ring.Nodes {
-		if node.ID != nodeID {
-			newNodes = append(newNodes, node)
-		}
-	}
-	ring.Nodes = newNodes
-	sort.Slice(ring.Nodes, func(i, j int) bool {
-		return ring.Nodes[i].Hash < ring.Nodes[j].Hash
-	})
-}
-
-// Retorna o node onde o Tenant deverá estar alocado
-func (ring *ConsistentHashRing) GetTenantNode(key string) string {
-	hash := hashTenant(key)
-	idx := sort.Search(len(ring.Nodes), func(i int) bool {
-		return ring.Nodes[i].Hash >= hash
-	})
-
-	// Se o índice estiver fora dos limites, retorna ao primeiro nó
-	if idx == len(ring.Nodes) {
-		idx = 0
-	}
-
-	return ring.Nodes[idx].ID
-}
-
-// Calcula o hash do tenant e a converte para uint64.
-func hashTenant(s string) uint64 {
-	s = strings.ToLower(s)
-	hash := sha256.New()
-	hash.Write([]byte(s))
-	hashBytes := hash.Sum(nil)
-	return binary.BigEndian.Uint64(hashBytes[:8])
-}
-
-func main() {
-	// Cria um novo anel de hash consistente com 3 réplicas por nó.
-	ring := NewConsistentHashRing(3)
-
-	// Adiciona pseudo-nodes ao hash ring
-	ring.AddNode("Shard-00")
-	ring.AddNode("Shard-01")
-	ring.AddNode("Shard-02")
-	ring.AddNode("Shard-03")
-
-	// Lista de Tenants
-	keys := []string{
-		"Petshops-Souza",
-		"Pizzarias-Carvalho",
-		"Mecanica-Dois-Irmaos",
-		"Padaria-Estrela-Filial-1",
-		"Padaria-Estrela-Filial-2",
-		"Padaria-Estrela-Filial-3",
-		"Hortifruti-Oba",
-		"Acougue-Zona-Leste",
-		"Acougue-Zona-Oeste",
-		"Acougue-Zona-Norte",
-	}
-
-	// Distribuição Inicial dos Tenants pelos Nodes
-	for _, key := range keys {
-		node := ring.GetTenantNode(key)
-		fmt.Printf("Tenant: %s, Node: %s\n", key, node)
-	}
-
-	// Remove um nó e exibe a nova distribuição de chaves.
-	ring.RemoveNode("Shard-02")
-	fmt.Println("\nRemovendo Shard-02:\n")
-	for _, key := range keys {
-		node := ring.GetTenantNode(key)
-		fmt.Printf("Tenant: %s, Shard: %s\n", key, node)
-	}
-
-	ring.AddNode("Shard-04")
-	fmt.Println("\nAdicionando Shard-04:\n")
-	for _, key := range keys {
-		node := ring.GetTenantNode(key)
-		fmt.Printf("Tenant: %s, Shard: %s\n", key, node)
-	}
-
-}
-
-```
-
-```go
-package main
-
-import (
-	"crypto/sha256"
-	"encoding/binary"
-	"fmt"
-	"sort"
-	"strconv"
-	"strings"
-)
-
-// Representa um nó no anel de hash.
-type Node struct {
-	ID   string
-	Hash uint64
-}
-
-// Representa o hash ring que contém vários nós.
-type ConsistentHashRing struct {
-	Nodes       []Node
-	NumReplicas int
-}
-
-// Cria um novo anel de hash ring.
-func NewConsistentHashRing(numReplicas int) *ConsistentHashRing {
-	return &ConsistentHashRing{
-		Nodes:       []Node{},
-		NumReplicas: numReplicas,
-	}
-}
-
-// Adiciona um novo node ao Hash Ring
-func (ring *ConsistentHashRing) AddNode(nodeID string) {
-	for i := 0; i < ring.NumReplicas; i++ {
-		replicaID := nodeID + strconv.Itoa(i)
-		hash := hashTenant(replicaID)
-		ring.Nodes = append(ring.Nodes, Node{ID: nodeID, Hash: hash})
-	}
-	sort.Slice(ring.Nodes, func(i, j int) bool {
-		return ring.Nodes[i].Hash < ring.Nodes[j].Hash
-	})
-}
-
-// Remove um node existente do Hash Ring
-func (ring *ConsistentHashRing) RemoveNode(nodeID string) {
-	var newNodes []Node
-	for _, node := range ring.Nodes {
-		if node.ID != nodeID {
-			newNodes = append(newNodes, node)
-		}
-	}
-	ring.Nodes = newNodes
-	sort.Slice(ring.Nodes, func(i, j int) bool {
-		return ring.Nodes[i].Hash < ring.Nodes[j].Hash
-	})
-}
-
-// Retorna o node onde o Tenant deverá estar alocado
-func (ring *ConsistentHashRing) GetTenantNode(key string) string {
-	hash := hashTenant(key)
-	idx := sort.Search(len(ring.Nodes), func(i int) bool {
-		return ring.Nodes[i].Hash >= hash
-	})
-
-	// Se o índice estiver fora dos limites, retorna ao primeiro nó
-	if idx == len(ring.Nodes) {
-		idx = 0
-	}
-
-	return ring.Nodes[idx].ID
-}
-
-// Calcula o hash do tenant e a converte para uint64.
-func hashTenant(s string) uint64 {
-	s = strings.ToLower(s)
-	hash := sha256.New()
-	hash.Write([]byte(s))
-	hashBytes := hash.Sum(nil)
-	return binary.BigEndian.Uint64(hashBytes[:8])
-}
-
-func main() {
-	// Cria um novo anel de hash consistente com 3 réplicas por nó.
-	ring := NewConsistentHashRing(3)
-
-	// Adiciona pseudo-nodes ao hash ring
-	ring.AddNode("Shard-00")
-	ring.AddNode("Shard-01")
-	ring.AddNode("Shard-02")
-	ring.AddNode("Shard-03")
-
-	// Lista de Tenants
-	keys := []string{
-		"Petshops-Souza",
-		"Pizzarias-Carvalho",
-		"Mecanica-Dois-Irmaos",
-		"Padaria-Estrela-Filial-1",
-		"Padaria-Estrela-Filial-2",
-		"Padaria-Estrela-Filial-3",
-		"Hortifruti-Oba",
-		"Acougue-Zona-Leste",
-		"Acougue-Zona-Oeste",
-		"Acougue-Zona-Norte",
-	}
-
-	// Distribuição Inicial dos Tenants pelos Nodes
-	for _, key := range keys {
-		node := ring.GetTenantNode(key)
-		fmt.Printf("Tenant: %s, Node: %s\n", key, node)
-	}
-
-	// Remove um nó e exibe a nova distribuição de chaves.
-	ring.RemoveNode("Shard-02")
-	fmt.Println("\nRemovendo Shard-02:\n")
-	for _, key := range keys {
-		node := ring.GetTenantNode(key)
-		fmt.Printf("Tenant: %s, Shard: %s\n", key, node)
-	}
-
-	ring.AddNode("Shard-04")
-	fmt.Println("\nAdicionando Shard-04:\n")
-	for _, key := range keys {
-		node := ring.GetTenantNode(key)
-		fmt.Printf("Tenant: %s, Shard: %s\n", key, node)
-	}
-
-}
-
-```
-
-```sh
-❯ go run main.go
-Tenant: Petshops-Souza, Node: Shard-03
-Tenant: Pizzarias-Carvalho, Node: Shard-01
-Tenant: Mecanica-Dois-Irmaos, Node: Shard-02
-Tenant: Padaria-Estrela-Filial-1, Node: Shard-01
-Tenant: Padaria-Estrela-Filial-2, Node: Shard-03
-Tenant: Padaria-Estrela-Filial-3, Node: Shard-02
-Tenant: Hortifruti-Oba, Node: Shard-01
-Tenant: Acougue-Zona-Leste, Node: Shard-02
-Tenant: Acougue-Zona-Oeste, Node: Shard-03
-Tenant: Acougue-Zona-Norte, Node: Shard-01
-
-Removendo Shard-02:
-
-Tenant: Petshops-Souza, Shard: Shard-03
-Tenant: Pizzarias-Carvalho, Shard: Shard-01
-Tenant: Mecanica-Dois-Irmaos, Shard: Shard-00 // Nova movimentação
-Tenant: Padaria-Estrela-Filial-1, Shard: Shard-01
-Tenant: Padaria-Estrela-Filial-2, Shard: Shard-03
-Tenant: Padaria-Estrela-Filial-3, Shard: Shard-00 // Nova movimentação
-Tenant: Hortifruti-Oba, Shard: Shard-01
-Tenant: Acougue-Zona-Leste, Shard: Shard-00 // Nova movimentação
-Tenant: Acougue-Zona-Oeste, Shard: Shard-03
-Tenant: Acougue-Zona-Norte, Shard: Shard-01
-
-Adicionando Shard-04:
-
-Tenant: Petshops-Souza, Shard: Shard-03
-Tenant: Pizzarias-Carvalho, Shard: Shard-01
-Tenant: Mecanica-Dois-Irmaos, Shard: Shard-00
-Tenant: Padaria-Estrela-Filial-1, Shard: Shard-01
-Tenant: Padaria-Estrela-Filial-2, Shard: Shard-03
-Tenant: Padaria-Estrela-Filial-3, Shard: Shard-00
-Tenant: Hortifruti-Oba, Shard: Shard-04 // Nova movimentação
-Tenant: Acougue-Zona-Leste, Shard: Shard-00
-Tenant: Acougue-Zona-Oeste, Shard: Shard-03
-Tenant: Acougue-Zona-Norte, Shard: Shard-01
-
-```
-
-
-```sh
-❯ go run main.go
-Tenant: Petshops-Souza, Node: Shard-03
-Tenant: Pizzarias-Carvalho, Node: Shard-01
-Tenant: Mecanica-Dois-Irmaos, Node: Shard-02
-Tenant: Padaria-Estrela-Filial-1, Node: Shard-01
-Tenant: Padaria-Estrela-Filial-2, Node: Shard-03
-Tenant: Padaria-Estrela-Filial-3, Node: Shard-02
-Tenant: Hortifruti-Oba, Node: Shard-01
-Tenant: Acougue-Zona-Leste, Node: Shard-02
-Tenant: Acougue-Zona-Oeste, Node: Shard-03
-Tenant: Acougue-Zona-Norte, Node: Shard-01
-
-Removendo Shard-02:
-
-Tenant: Petshops-Souza, Shard: Shard-03
-Tenant: Pizzarias-Carvalho, Shard: Shard-01
-Tenant: Mecanica-Dois-Irmaos, Shard: Shard-00 // Nova movimentação
-Tenant: Padaria-Estrela-Filial-1, Shard: Shard-01
-Tenant: Padaria-Estrela-Filial-2, Shard: Shard-03
-Tenant: Padaria-Estrela-Filial-3, Shard: Shard-00 // Nova movimentação
-Tenant: Hortifruti-Oba, Shard: Shard-01
-Tenant: Acougue-Zona-Leste, Shard: Shard-00 // Nova movimentação
-Tenant: Acougue-Zona-Oeste, Shard: Shard-03
-Tenant: Acougue-Zona-Norte, Shard: Shard-01
-
-Adicionando Shard-04:
-
-Tenant: Petshops-Souza, Shard: Shard-03
-Tenant: Pizzarias-Carvalho, Shard: Shard-01
-Tenant: Mecanica-Dois-Irmaos, Shard: Shard-00
-Tenant: Padaria-Estrela-Filial-1, Shard: Shard-01
-Tenant: Padaria-Estrela-Filial-2, Shard: Shard-03
-Tenant: Padaria-Estrela-Filial-3, Shard: Shard-00
-Tenant: Hortifruti-Oba, Shard: Shard-04 // Nova movimentação
-Tenant: Acougue-Zona-Leste, Shard: Shard-00
-Tenant: Acougue-Zona-Oeste, Shard: Shard-03
-Tenant: Acougue-Zona-Norte, Shard: Shard-01
-
-```
-
-Esse tipo de abordagem possibilita a implementação de diversos tipos de algoritmos de hashing. O ideal é testar o balancemanto como foi apresentado anteriormente para encontrar qual abordagem é mais eficiente para sua amostragem de sharding keys.
+Essa abordagem aceita diversos algoritmos de hashing. O ideal é testar o balanceamento, como demonstrado antes, para encontrar qual estratégia rende a melhor distribuição para a sua amostra de sharding keys.
 
 ## Sharding por Hashing e Gestão de Chaves
 
-Uma forma de implementar um sharding baseado em hashing é **tratar a distribuição e identificação da partição de forma cadastral**, o que requer implementações adicionais na arquitetura do sistema. A principal vantagem de um algoritmo de hashing para distribuição de carga é que o cálculo é geralmente muito barato em termos computacionais. No entanto, em caso de redistribuição, o processo pode se tornar extremamente custoso.
+Uma alternativa é tratar a distribuição e a identificação da partição de forma **cadastral**, o que exige implementações adicionais na arquitetura. A vantagem do hashing é que o cálculo costuma ser muito barato; o problema aparece nas redistribuições, que podem se tornar extremamente custosas.
 
-Podemos imaginar uma arquitetura baseada em hashing onde a distribuição é executada apenas no momento da criação de uma nova **sharding key**, e as consultas subsequentes são realizadas por meio de uma API de consulta específica que exponha essas chaves de distribuição através de algum protocolo. Podemos presumir que um componente ou processo adicional de balanceamento e roteamento inteligente necessitaria ser implementado para garantir o encaminhamento correto da requisição para seu sharding específico.
+Podemos imaginar uma arquitetura em que o cálculo de hash ocorre apenas no momento da criação de uma nova sharding key, e as consultas seguintes passam por uma API específica que expõe essas chaves de distribuição por algum protocolo. Nesse desenho, é necessário um componente de balanceamento e roteamento inteligente para encaminhar cada requisição ao seu shard correto.
 
 ![Sharding Key Service](images/sharding-hash-consistente-key-service.png)
 
-Esse tipo de estratégia, embora exija um maior esforço de engenharia, **permite um gerenciamento mais manual e controlado da distribuição de clientes e usuários entre as partições**. Além disso, ela possibilita o isolamento de clientes que geram hot partitions, alocando-os em shards segregados. Dessa forma, usuários que consomem muitos recursos podem ser isolados em infraestruturas dedicadas, prevenindo que seu impacto afete o desempenho geral do sistema.
+Apesar do maior esforço de engenharia, essa estratégia oferece um gerenciamento mais manual e controlado da distribuição de clientes entre as partições. Ela permite isolar clientes que geram hot partitions, alocando-os em shards segregados e infraestruturas dedicadas, de modo que usuários muito intensivos não afetem o desempenho geral.
 
-Essa arquitetura por exigir uma abordagem mais manual, também permite a implementação de demais técnicas de design, como implementação de caching, balancemento de carga, replicação e etc.
+Por exigir essa abordagem mais manual, ela também abre espaço para combinar outras técnicas de design, como caching, balanceamento de carga e replicação.
 
 ## Segregação Avançada com Suffle Sharding
 
-O Shuffle Sharding é uma técnica de sharding avançado que **combina sharding tradicional com replicação distribuída**. O objetivo é criar **sub-conjuntos embaralhados de shards para cada cliente**, operação ou partição do sistema. O objetivo é **reduzir drasticamente o blast radius pela falha eventual de um ou um pequeno conjunto de shards**, **salvando os dados de cliente em mais de um shard**, facilitando o isolamento de falhas, picos de carga e comportamentos maliciosos a um grupo mínimo de recursos, **evitando que um único cliente afete toda a infraestrutura ou todos os clientes de um shard**.
+O **Shuffle Sharding** é uma técnica avançada que combina o sharding tradicional com replicação distribuída. A ideia é criar subconjuntos embaralhados de shards para cada cliente, operação ou partição, reduzindo drasticamente o **blast radius** de uma falha. Salvando os dados de um cliente em mais de um shard, isola-se falhas, picos de carga e comportamentos maliciosos a um grupo mínimo de recursos, evitando que um único cliente derrube toda a infraestrutura ou todos os clientes de um shard.
 
 ![Shuffle Sharding](images/shuffle-sharding.png)
 
-O modelo funciona como uma **técnica híbrida de Replicação e Sharding**. Cada operação é roteada para um **Shard Primário** que equivale a **golden source de dados do cliente**, mas também **escrita em um ou mais Shards Secundários escolhidos pelo algoritmo de embaralhamento**. Esse embaralhamento define o “shuffle-shard virtual” do cliente. No plano de consistência, o sistema pode operar em dois modos: **Consistência Forte, quando o dado é confirmado apenas após escrita bem-sucedida em N shards** desse conjunto (por exemplo, primário + réplicas), garantindo durabilidade imediata; **Consistência Eventual, quando réplicas em shards secundários são atualizadas de forma assíncrona**, priorizando latência baixa e throughput elevado.
+O modelo funciona como uma técnica híbrida de replicação e sharding. Cada operação é roteada para um **Shard Primário** (a golden source dos dados do cliente) e também escrita em um ou mais **Shards Secundários** escolhidos pelo algoritmo de embaralhamento, que define o "shuffle-shard virtual" do cliente. Quanto à consistência, há dois modos: **Consistência Forte**, em que o dado só é confirmado após escrita bem-sucedida em N shards do conjunto, garantindo durabilidade imediata; e **Consistência Eventual**, em que as réplicas nos shards secundários são atualizadas de forma assíncrona, priorizando baixa latência e alto throughput.
 
-Essa estratégia permite um **equilíbrio entre resiliência, isolamento lógico e escalabilidade**. Como **cada cliente escreve em múltiplos shards embaralhados**, qualquer falha fica restrita aos shards específicos que aquele cliente utiliza, e não ao cluster inteiro. Uma vez que um shard dedicado, ou compartilhado entre uma gama de clientes falha, **seus devidos fallbacks assumem a responsabilidade como primário**, permitindo que os clientes segregados naquela partição sejam redirecionadas para um shard de fallback com seus dados completos, ou muito próximo disso. Em resumo, o sistema pode tolerar mais falhas parciais, já que, ao envolver mais de um shard primário/secundário, a redundância garante leitura e escrita mesmo durante incidentes.
+A estratégia equilibra resiliência, isolamento lógico e escalabilidade. Como cada cliente escreve em múltiplos shards embaralhados, qualquer falha fica restrita aos shards que aquele cliente usa, e não ao cluster inteiro. Quando um shard falha, seus fallbacks assumem como primário, redirecionando os clientes daquela partição para um shard de fallback com seus dados completos, ou muito próximos disso. No conjunto, o sistema tolera mais falhas parciais, pois a redundância entre primários e secundários sustenta leitura e escrita mesmo durante incidentes.
 
 
   
@@ -1257,4 +300,3 @@ Essa estratégia permite um **equilíbrio entre resiliência, isolamento lógico
 [The Magic of Shuffle Sharding](https://hamzahabdulla1.medium.com/uno-ddos-tres-the-magic-of-shuffle-sharding-13d6c9d3a974)
 
 [Cortex - Shuffle Sharding](https://cortexmetrics.io/docs/guides/shuffle-sharding/)
-

@@ -29,295 +29,249 @@
   - [Cenários de Read‑Intensive](#cenários-de-readintensive)
 - [Referências](#referências)
 
+> **Nota:** Este documento é um material de estudo baseado no artigo original **"Databases, Modelos de Dados e Indexação"**, de **Matheus Fidelis**, publicado em [fidelissauro.dev/databases](https://fidelissauro.dev/databases/). As ilustrações pertencem ao autor original. Recomenda-se a leitura do artigo completo na fonte.
+
+---
 
 # Databases, Modelos de Dados e Indexação
 
 ![](./images/header.png)
 
-O objetivo desse artigo é mostrar as principais implementacões de databases e suas diferenças práticas para sistemas produtivos, para que as mesmas fiquem claras para eventuais escolhas arquiteturais. Foi um pouco complicado moldar esse artigo sem que o mesmo virasse um “painel de avião” com a quantidade de termos e conceitos que podem ser levados em conta em diferentes databases, e é muito dificil falar sobre engines de bancos de dados procurando por conceitos e termos comuns entre todos sem tornar o artigo sobre o próprio database em si. Ao contrário do padrão combinado dos capítulos dessa série, não conseguirei evitar de utilizar exemplos nominais de tecnologia para explicar sua implementação. Espero que esse texto seja de grande ajuda e atue de forma complementar com os capítulos anteriores onde falamos de ACID, BASE e o Teorema CAP. Aqui abordaremos também diversos modelos de dados e tipos de indexação que podem ser comuns entre diversos tipos de databases. Espero que seja de grande ajuda e influencie ainda mais a sua curiosidade sobre o tema para os proximos capitulos.
+Este capítulo apresenta as principais implementações de bancos de dados e suas diferenças práticas quando aplicadas a sistemas em produção, com o objetivo de tornar essas distinções úteis para decisões de arquitetura. O tema é vasto e quase inevitavelmente leva ao uso de exemplos nominais de tecnologias para ilustrar cada implementação. As anotações complementam discussões anteriores sobre ACID, BASE e o Teorema CAP, e exploram diversos modelos de dados e técnicas de indexação que aparecem de forma recorrente entre engines distintas.
 
 # Definindo um Banco de Dados
-Um banco de dados, em essência, é uma forma de organizar dados dentro de uma estrutura predefinida que pode ser armazenada, gerenciada e disponibilizada para acesso de escrita e leitura através de um padrão de consulta pré-estabelecido. Um banco de dados trabalha como uma camada intermediária entre o cliente e o dado, permitindo que os mesmos sejam manipulados sem que o desenvolvedor precise lidar com alocação em disco, indexação e algoritmos de distribuição para buscar o dado de forma performática. Esse dado pode estar sendo persistido em storages duráveis, temporários ou uma combinação de ambos, escolhas que variam de sua implementação.
 
-Em arquiteturas distribuídas, o papel de um banco de dados pode adquirir complexidades adicionais para elevar o nível de consistência, disponibilidade e performance, principalmente trabalhando com camadas de replicação geográficas, baixa latência ou realizando a melhor escolha entre consistência forte ou consistência eventual para as operações que precisam ser realizadas nos dados.
+Em sua essência, um banco de dados é um mecanismo para organizar informações dentro de uma estrutura previamente definida, de modo que possam ser armazenadas, gerenciadas e acessadas para leitura e escrita por meio de um padrão de consulta. Ele atua como uma camada intermediária entre o cliente e o dado: o desenvolvedor consulta e manipula informações sem precisar lidar diretamente com alocação em disco, indexação ou algoritmos de distribuição. A persistência pode ocorrer em storages duráveis, temporários ou uma combinação dos dois, dependendo da implementação.
 
-
+Em ambientes distribuídos, o papel do banco ganha complexidade adicional, especialmente quando entram em jogo replicação geográfica, baixa latência e a decisão entre consistência forte e consistência eventual. Essas escolhas afetam diretamente os níveis de consistência, disponibilidade e desempenho que o sistema consegue oferecer.
 
 # Tipos de Bancos de Dados
-Quando avaliamos o banco de dados para uma determinada solução, devemos sempre tratar a escolha como um “racional de features” de cada um, e onde cada uma delas agrega ou ofende os níveis de performance, consistência e custo que o mesmo precisa. Para tornar isso um pouco mais claro, vamos abordar de forma macro, porém bem detalhada a nível arquitetural, as principais possibilidades que podemos encontrar para nos auxiliar nas definições de engenharia de um produto. Esse tipo de cuidado é essencial para evitar escolhas que possuam muitas features que não são utilizadas pelo produto, enquanto não agregam nos requisitos do mesmo.
+
+A escolha de um banco de dados deve ser tratada como uma análise das features de cada opção, avaliando como cada característica contribui ou prejudica os requisitos de desempenho, consistência e custo do produto. A ideia é evitar adotar uma engine repleta de recursos que nunca serão usados e que, ainda assim, não atendem ao que o sistema realmente precisa. As seções seguintes detalham, em nível arquitetural, as principais categorias disponíveis.
 
 ## Bancos de Dados Relacionais SQL
-Os bancos de dados SQL (Structured Query Language) são baseados num modelo proposto por Edgar F. Codd em 1970, sendo o modelo mais conceituado entre as opções arquiteturais. O modelo é organizado em tabelas compostas por tuplas (linhas) e atributos (colunas) e possui features que viabilizam schemas e estruturas rígidas, definindo por um contrato os tipos de dados, restrições de integridade, identificadores únicos e regras de coerência entre os relacionamentos das tabelas. Os bancos relacionais, como o próprio nome diz, são pensados para proporcionar relacionamentos internos e declarativos entre os dados de diferentes tabelas. A engenharia de software faz uso desse modelo relacional para trabalhar com entidades e agregados dentro de contextos de domínios de um software. Esses bancos contam normalmente com features do modelo ACID, como Atomicidade, Consistência, Integridade e Durabilidade.
+
+Os bancos relacionais (SQL) derivam do modelo proposto por Edgar F. Codd em 1970 e organizam os dados em tabelas formadas por tuplas (linhas) e atributos (colunas). Seu grande diferencial é o schema rígido: tipos de dados, restrições de integridade, identificadores únicos e regras de relacionamento são definidos por contrato. Esses relacionamentos declarativos entre tabelas são amplamente usados pela engenharia de software para modelar entidades e agregados de um domínio. Normalmente esses bancos oferecem garantias ACID — atomicidade, consistência, isolamento e durabilidade.
 
 ![](./images/sql-db.png)
 
-Para um exemplo ilustrativo, em um sistema de pedidos tradicional em um sistema de estoque, cada cliente é identificado por um registro único na tabela cliente, onde estão armazenados seu nome e e‑mail. Quando esse cliente realiza uma compra, gera‑se um registro na tabela pedido, que guarda a data e a referência ao cliente responsável por aquele pedido. Caso um pedido seja criado com um cliente_id inexistente na tabela cliente, o mecanismo de consistência e relacionamento de um banco SQL não permitiria a efetivação dessa transação sem necessidade de verificações adicionais pela aplicação.
-
-Em seguida, cada pedido pode incluir vários produtos, mas como um produto pode aparecer em diferentes pedidos, criamos a tabela item\_pedido para mapear essa relação “muitos‑para‑muitos”: cada linha de item\_pedido associa um único pedido a um único produto, informando também a quantidade solicitada. Por sua vez, todos os produtos disponíveis estão listados na tabela produto, que contém atributos como nome, preço e uma chave estrangeira para categoria. Essa última tabela organiza os produtos em grupos — como “Eletrônicos”, “Alimentos” ou “Vestuário” — permitindo classificar e filtrar itens de forma eficiente. Dessa forma, ao consultar um pedido, o sistema une pedido → cliente para identificar quem comprou, pedido → item\_pedido para saber o que foi comprado e em que quantidade, e item\_pedido, produto, categoria para exibir detalhes e agrupamentos de cada produto solicitado. Essa estrutura relacional assegura a integridade referencial — já que um pedido não pode existir sem um cliente válido, e um item de pedido não pode referenciar produtos inexistentes — e facilita a construção de relatórios como total gasto por cliente, quantidade vendida por categoria ou itens mais pedidos em determinado período.
+Um exemplo clássico é um sistema de pedidos e estoque. Clientes, pedidos, itens, produtos e categorias vivem em tabelas separadas, conectadas por chaves estrangeiras. A integridade referencial impede, por exemplo, que um pedido aponte para um cliente inexistente ou que um item referencie um produto que não existe. Relações muitos-para-muitos, como a de pedidos e produtos, são resolvidas por tabelas associativas (item de pedido). Esse desenho garante consistência e facilita relatórios analíticos, como total gasto por cliente ou itens mais vendidos em um período.
 
 ## Banco de Dados Não-Relacionais NoSQL
-Os bancos não relacionais, ou NoSQL (Not Only SQL), são uma proposta mais flexível aos modelos rígidos dos bancos SQL, trocando níveis altos de consistência e integridade por escalabilidade. Os bancos NoSQL, por padrão, utilizam outros formatos de dados além de tabelas e linhas, e não possuem relacionamentos diretos entre seus conjuntos de dados, tendo schemas mais flexíveis e com consistência eventual em troca de maior desempenho de leitura, escrita, escalabilidade horizontal e distribuição.
 
-São nos bancos NoSQL que encontramos maior diversidade de formatos, como chave‑valor, JSON, BSON, grafos etc., sendo que o principal foco é evitar joins custosos a favor de modelos de dados mais simples e com regras mais mutáveis, o que pode acarretar tanto em maior performance quanto em riscos de inconsistências de tipos de dados e contratos que precisam ser respeitados pela aplicação que consome o dado.
+Os bancos NoSQL (Not Only SQL) propõem uma alternativa mais flexível ao rigor dos modelos relacionais, trocando parte da consistência e da integridade por escalabilidade. Em vez de tabelas e linhas com relacionamentos diretos, adotam formatos variados e schemas flexíveis, geralmente com consistência eventual, em favor de melhor desempenho de leitura e escrita, escalabilidade horizontal e distribuição.
 
-```json
-{
-  "_id": ObjectId("60f5a2d1a2e9b5f1d4c8e918"),
-  "nome": "Ana Silva",
-  "email": "ana.silva@exemplo.com",
-  "pedidos": [
-    {
-      "pedidoId": "PED12345",
-      "data": "2025-07-27T14:35:00Z",
-      "itens": [
-        {
-          "produto": {
-            "id": ObjectId("60f5a3e8a2e9b5f1d4c8e91a"),
-            "nome": "Camiseta Manga Curta",
-            "preco": 79.90
-          },
-          "quantidade": 2
-        },
-        {
-          "produto": {
-            "id": ObjectId("60f5a3f2a2e9b5f1d4c8e91b"),
-            "nome": "Calça Jeans",
-            "preco": 149.90
-          },
-          "quantidade": 1
-        }
-      ]
-    },
-    {
-      "pedidoId": "PED12346",
-      "data": "2025-07-28T09:20:00Z",
-      "itens": [
-        {
-          "produto": {
-            "id": ObjectId("60f5a3e8a2e9b5f1d4c8e91a"),
-            "nome": "Camiseta Manga Curta",
-            "preco": 79.90
-          },
-          "quantidade": 1
-        }
-      ]
-    }
-  ]
-}
-```
+É nessa categoria que encontramos a maior diversidade de formatos — chave-valor, JSON, BSON, grafos, entre outros. O foco é evitar joins custosos privilegiando estruturas simples e mutáveis. Esse modelo tende a aumentar a performance, mas transfere para a aplicação a responsabilidade de garantir tipos e contratos, abrindo espaço para inconsistências.
 
-Seguindo o Exemplo do sistema de pedidos e estoque, toda a cadeia de entidades como cliente, pedido, item do pedido, produto e categoria é representada de forma hierárquica dentro de um único documento por cliente, eliminando a necessidade de múltiplas coleções e joins de diversas coleções de dados distribuídos entre diferentes tabelas. Cada documento da coleção traz não só os dados básicos do usuário, mas também uma lista de pedidos, em que cada elemento inclui o ID do pedido, a data e, por sua vez, uma sub-lista de itens com os detalhes de cada produto e a quantidade comprada. A coleção produtos mantém a definição de cada item e já incorpora o objeto categoria, trazendo o nome e o identificador da categoria embutidos — assim, ao ler um produto, não é preciso buscar em outra coleção.
+Retomando o exemplo de pedidos, um banco orientado a documentos pode representar toda a hierarquia (cliente, pedidos, itens, produtos e categorias) de forma aninhada dentro de um único documento por cliente. Isso elimina a necessidade de múltiplas coleções e joins: ao ler um documento, todos os dados relacionados já vêm embutidos.
 
 ## Bancos de Dados NewSQL
-O maior desafio dos sistemas distribuídos é conviver com trade‑offs encontrados nas camadas de dados. Os bancos NewSQL são databases que focam sua implementação em conciliar os dois mundos, buscando dar uma confiança transacional e relacional para as operações vindas dos modelos SQL e ainda agregar features de escalabilidade horizontal e alto throughput dos modelos NoSQL.
 
-As implementações de databases NewSQL costumam ser extremamente focadas em necessidades distribuídas, realizando operações de sharding e replicação de forma transparente e síncrona para garantir a confiabilidade ACID das transações, mas aplicando protocolos de consenso distribuído para realizar isso de forma mais distribuída e performática possível.
+O maior desafio dos sistemas distribuídos é lidar com os trade-offs da camada de dados. Os bancos NewSQL nascem da tentativa de conciliar os dois mundos: oferecer a confiabilidade transacional e relacional dos modelos SQL e, ao mesmo tempo, agregar a escalabilidade horizontal e o alto throughput típicos do NoSQL.
+
+Na prática, essas engines são profundamente voltadas para cenários distribuídos. Executam sharding e replicação de forma transparente e síncrona para preservar garantias ACID, apoiando-se em protocolos de consenso distribuído para fazer isso da maneira mais performática possível.
 
 ## Bancos de Dados em Memória
-Os databases em memória, ou in‑memory databases, são bancos de dados especializados em volatilidade e em realizar a gestão de seus dados diretamente na RAM do servidor, ao invés de tratar a persistência de forma durável em discos e volumes físicos.
+
+Os bancos in-memory são especializados em manter seus dados diretamente na RAM do servidor, em vez de persistir de forma durável em discos. A volatilidade é uma característica central desse modelo.
 
 ![](./images/mem-db.png)
 
-O objetivo dos bancos de dados em memória é reduzir latência e tempos de resposta da consulta do dado, uma vez que uma consulta em memória volátil pode ser realizada em nanosegundos na RAM, ao invés de milissegundos em um acesso em disco, cenário que pode ser agravado por um uso intensivo de I/O do volume.
+A motivação principal é reduzir latência: uma consulta em memória volátil pode ser respondida em nanossegundos, enquanto um acesso a disco fica na casa dos milissegundos — diferença que se agrava sob uso intensivo de I/O.
 
-Os modelos de dados encontrados nesse tipo de implementação costumam ser extremamente simples, e seu melhor uso possível se baseia em chave‑valor, combinado com outros tipos de databases duráveis, sendo pensados para sistemas de cache de dados, fazendo uma camada de acesso rápido para dados caros e que não são alterados com grande frequência.
+Os modelos de dados aqui costumam ser bastante simples, e o uso ideal gira em torno de chave-valor combinado com bancos duráveis. Esse tipo de banco é a base de sistemas de cache, oferecendo uma camada de acesso rápido para dados caros de calcular e que mudam pouco.
 
 ![](./images/mem-db-2.png)
 
-Os bancos de dados em memória, por serem estruturas simples e cujos dados podem ser recuperados da origem caso sejam perdidos, podem facilitar a escalabilidade horizontal, facilitando a adição e remoção de nodes aplicando algoritmos de hashing consistente e seus derivados para distribuição das informações entre diversos data nodes. Um ou mais nós do cluster podem ser designados para receber as requisições de escrita, calcular o hashing da chave e designar um node responsável entre os existentes para armazenar o dado. Para a recuperação, o mesmo algoritmo é aplicado para saber para onde será redirecionada a solicitação de leitura. Dessa forma, conseguimos trabalhar redimensionamento de forma simplificada.
-
-Utilizar somente a memória RAM para armazenar dados presume uma série de trade‑offs consideráveis, como assumir a não‑durabilidade do dado, uma vez que, ao reiniciar o serviço ou o servidor, todos os dados podem ser perdidos. Logo, o uso só é recomendado para dados que podem ser reconstituídos a qualquer momento diretamente de sua origem, além de sua escalabilidade costumar ser financeiramente cara de forma horizontal e vertical.
+Por trabalharem com estruturas simples e dados que podem ser reconstruídos a partir da origem, esses bancos facilitam a escalabilidade horizontal. Nós podem ser adicionados ou removidos com algoritmos de hashing consistente: ao escrever, calcula-se o hash da chave para definir o nó responsável; ao ler, o mesmo cálculo direciona a requisição. O trade-off é assumir a não-durabilidade — reiniciar o serviço pode apagar tudo — e conviver com um custo de escala que tende a ser financeiramente alto.
 
 ## Time-Series Databases
-Os bancos de dados baseados no tempo são especializados em armazenar séries temporais com indexação baseada em tempo, e também são conhecidos como TSDBs (Time‑Series Databases). Cada registro inserido em um Time‑Series Database é como um “carimbo” temporal preciso daquela métrica ao longo do tempo. Os modelos desse tipo de banco de dados implementam o armazenamento por “append‑only”, registrando cada ponto do dado de forma segmentada e sequencial. Esse tipo de banco de dados é utilizado em sistemas de observabilidade e monitoramento, sendo empregado para acompanhar o desempenho de determinada métrica ao longo de longos períodos — horas, dias, semanas, meses e até anos — garantindo buscas rápidas e a capacidade de realizar diversas operações e cálculos matemáticos nas mesmas de forma performática e econômica, além de alta capacidade de ingestão de dados distribuídos através de endpoints centralizados e escaláveis.
+
+Os Time-Series Databases (TSDBs) são especializados em séries temporais, com indexação baseada no tempo. Cada registro funciona como um carimbo temporal preciso de uma métrica. O armazenamento é tipicamente append-only, gravando cada ponto de forma sequencial e segmentada. São muito usados em observabilidade e monitoramento, acompanhando métricas ao longo de horas, dias ou anos, com alta capacidade de ingestão e operações matemáticas eficientes.
 
 ![](./images/ts-db.png)
 
-Os Time‑Series Databases são otimizados para ingerir e consultar historicamente grandes volumes de dados sequenciais e aplicar operações matemáticas de forma eficiente. Há sempre um trade‑off entre capacidade de relacionamentos, consistência, disponibilidade e confiabilidade, e seus principais usos são: agregadores de logs, métricas, preços, medições sequenciais de IoT etc. Para suportar alta ingestão de dados e grande número de consultas, é comum que elas sejam enfileiradas em processos de backpressure caso alguma das capacidades internas do database seja comprometida. Não há garantia atômica de disponibilidade do dado após a solicitação de escrita, nem garantias de que todos os dados serão retornados de forma exata nas consultas, sendo desaconselhável para processos transacionais e indicado para processos analíticos.
+Otimizados para ingerir e consultar grandes volumes sequenciais, esses bancos sempre carregam trade-offs entre relacionamento, consistência, disponibilidade e confiabilidade. Sob alta carga, é comum aplicarem backpressure e enfileiramento. Não há garantia atômica de disponibilidade do dado após a escrita nem de exatidão completa nas consultas, o que os torna inadequados para cenários transacionais e ideais para análises.
 
-Esse tipo de database possui também features inteligentes de expurgo de dados expirados, a fim de gerenciar de forma mais performática o storage e comportar diversas métricas ao longo do tempo.
-
-
+Esse tipo de engine também costuma incluir mecanismos inteligentes de expurgo de dados expirados, gerenciando o storage de forma mais eficiente ao longo do tempo.
 
 # Níveis de Consistência
-Em sistemas distribuídos, o nível de consistência dos dados é um dos fatores mais importantes para serem levados em consideração na escolha arquitetural. Escolher entre consistência forte e consistência eventual pode elevar a escalabilidade e a confiabilidade transacional, tanto quanto gerar problemas de confiabilidade e afetar a experiência do usuário caso seus trade‑offs não sejam considerados na arquitetura de solução. Nesse texto, iremos abordar diversos níveis em diferentes implementações de bancos de dados, e nesta seção deixaremos claras as diferenças entre os modelos.
+
+Em sistemas distribuídos, o nível de consistência é um dos fatores mais decisivos na escolha arquitetural. Optar entre consistência forte e eventual pode elevar a escalabilidade e a confiabilidade, mas também pode introduzir problemas e afetar a experiência do usuário se os trade-offs forem ignorados. As subseções a seguir esclarecem as diferenças entre os dois extremos.
 
 ## Consistência Forte
-A Consistência Forte, também conhecida por linearizabilidade ou sequential consistency em termos acadêmicos, representa um nível de consistência agressivamente transacional. Em um termo relativo de “níveis de consistência”, o termômetro hipotético estaria no grau mais extremo de temperatura possível.
 
-Isso significa que, independente do número de réplicas que um banco de dados tenha, todas elas sempre irão retornar os mesmos dados. Isto é, todo acesso de leitura a uma réplica retorna o valor mais recente gravado por qualquer operação de escrita que tenha sido previamente completada.
+A consistência forte — também chamada de linearizabilidade ou consistência sequencial na literatura — representa o nível mais agressivamente transacional. Em uma analogia de termômetro, seria o ponto mais extremo da escala.
 
-Uma vez que um cliente recebe confirmação de um commit de uma transação, qualquer outra leitura, mesmo em outro nó ou região geográfica, refletirá esse valor comitado, até que outra transação completada da mesma forma seja efetuada para alterar o dado. Uma transação só pode levar o banco de dados de um estado consistente para outro estado consistente, sem flexibilidade nesse ponto.
+Na prática, independentemente do número de réplicas, todas retornam sempre o mesmo dado. Toda leitura reflete o valor mais recente de qualquer escrita já confirmada. Uma vez que um commit é confirmado, qualquer leitura posterior — mesmo em outro nó ou região — refletirá esse valor, até que nova transação o altere. O banco só transita de um estado consistente para outro estado consistente.
 
-Os databases com consistência forte normalmente estão no modelo CA (Consistency e Availability) do Teorema CAP, ou seja, os bancos de dados SQL tradicionais. Para alcançar esse comportamento, o sistema costuma empregar protocolos de consenso como Paxos, Raft ou commits síncronos entre réplicas, o que implica que cada operação de escrita deve obter acordos de um número mínimo de nós do quorum antes de ser confirmada, podendo acarretar em maior latência e maior consumo de I/O dependendo da distribuição geográfica, em troca dessa confiabilidade do dado.
+Esses bancos costumam se posicionar no modelo CA do Teorema CAP, caso dos SQL tradicionais. Para atingir esse comportamento, empregam protocolos de consenso como Paxos ou Raft, ou commits síncronos entre réplicas, exigindo o acordo de um quórum mínimo antes de confirmar cada escrita — o que aumenta latência e consumo de I/O em troca de confiabilidade.
 
 ## Consistência Eventual
-A Consistência Eventual é um termo que define sistemas de dados onde, independente do volume de escritas que ele tem, em algum momento o sistema irá convergir para um estado consistente, mas por um breve instante diferentes réplicas do banco poderão retornar versões distintas do dado. Para viabilizar esse modelo, as replicações são feitas de forma assíncrona, sem bloqueios de escrita.
 
-Quando uma escrita acontece, apenas um nó, ou um pequeno quórum de nós, precisa confirmar a operação; o restante é realizado por meio de replicação por logs ou outro algoritmo de propagação de operações. Se uma leitura for realizada em algum nó que ainda não recebeu a escrita, ele poderá retornar dados faltantes ou desatualizados.
+A consistência eventual descreve sistemas que, independentemente do volume de escritas, convergem para um estado consistente em algum momento, ainda que por um breve intervalo réplicas distintas possam retornar versões diferentes do dado. Para viabilizar isso, a replicação é assíncrona e não bloqueia escritas.
 
-Esse tipo de modelo sacrifica a consistência para elevar o nível de alta disponibilidade e performance, pois as confirmações de escrita são locais e não aguardam resposta de outros nós. Mesmo diante de partições de rede ou indisponibilidade parcial, escritas e leituras podem prosseguir em réplicas isoladas.
+Quando ocorre uma escrita, apenas um nó (ou um pequeno quórum) precisa confirmá-la; o restante é propagado por logs ou outro mecanismo. Se uma leitura atingir um nó que ainda não recebeu a escrita, ela pode devolver dados desatualizados ou ausentes.
 
-Esse modelo possui uma série de desafios além da inconsistência temporária dos dados, pois é preciso implementar, na própria engine ou na aplicação, estratégias de sincronização e resolução de conflitos como o “last-write-wins”, que resolve conflitos por meio de checagem de timestamp, ou CRDTs, que aplicam algoritmos mais complexos de sincronização.
+Esse modelo sacrifica consistência para ganhar disponibilidade e desempenho, já que as confirmações são locais e não aguardam outros nós. Mesmo diante de partições de rede, leituras e escritas seguem operando em réplicas isoladas.
 
-No geral, tudo que não possui consistência forte — o extremo do termômetro — é de alguma forma consistência eventual. Se seu banco de dados ACID SQL adota um quórum de commit onde somente 2/3 das réplicas precisam confirmar a escrita para considerá-la efetivada, isso indica que 1/3 pode lidar com dados desatualizados, tornando o sistema aberto a um “apetite” eventual, e essa arquitetura é inclinada a topologias geo-distribuídas e a grandes volumes de operações concorrentes.
+O custo é a necessidade de tratar conflitos, seja na engine, seja na aplicação. Estratégias comuns incluem o last-write-wins (resolução por timestamp) e os CRDTs, que aplicam algoritmos mais sofisticados de sincronização. De forma geral, tudo que não é consistência forte recai, em algum grau, em consistência eventual — inclusive um banco ACID cujo quórum de commit aceita confirmação parcial das réplicas.
 
 # Modelos de Dados
+
 ![](./images/datamodel.png)
 
-Os modelos de dados definem na engine de banco de dados como os dados serão estruturados, armazenados e acessados dentro da engine. A escolha influencia diretamente entre diversos termos já citados como desemprenho, consistencia e escalabilidade da solução. Cada modelo pode ser otimizado para cenários específicos, entender o funcionamento pode direcionar escolhas as melhores escolhas de engenharia de um produto.
+Os modelos de dados definem como as informações são estruturadas, armazenadas e acessadas dentro da engine. Essa escolha influencia diretamente desempenho, consistência e escalabilidade. Cada modelo é otimizado para cenários específicos, e compreender seu funcionamento ajuda a direcionar boas decisões de engenharia.
 
 ## Modelos de Tuplas (Row‑Oriented)
-Os modelos baseados em linha, ou row‑oriented, são o modelo mais tradicional de dados que temos no mercado, e cada tupla, ou linha, com seus valores identificados por colunas, é gravada e gerenciada em disco ou memória de forma contínua e completa, guardando em sequência todos os seus atributos. Esse tipo de modelo é o mais comum que podemos encontrar, pois favorece operações ponto a ponto na mesma entidade ou registro, como as operações convencionais de leitura, escrita, atualização e deleção, sendo ideal para cenários transacionais que criam, editam e buscam registros inteiros com frequência.
+
+Os modelos orientados a linha são os mais tradicionais do mercado. Cada tupla, com seus atributos identificados por colunas, é gravada de forma contígua e completa em disco ou memória, mantendo todos os campos em sequência. Esse formato favorece operações ponto a ponto sobre um registro inteiro — leitura, escrita, atualização e deleção — sendo ideal para cenários transacionais que manipulam registros completos com frequência.
 
 ![](./images/tuple.png)
 
-Os sistemas baseados em linha são otimizados para granularidade com baixa latência, e fazem uso intensivo de caches de páginas, otimizando a recuperação completa de uma linha e toda a sequência de campos, trazendo de uma só vez todos os valores armazenados no mesmo bloco do disco.
+Sistemas baseados em linha são otimizados para granularidade com baixa latência e fazem uso intensivo de caches de páginas. Como todos os campos de uma linha ficam no mesmo bloco de disco, recuperar o registro inteiro é uma operação eficiente, trazendo todos os valores de uma só vez.
 
 ## Modelos de Documentos
-Bancos de dados orientados a documentos tratam cada registro como uma entidade completamente autônoma, geralmente em formato livre e sem restrições ou consistências rígidas de campos, normalmente estruturados em JSON ou BSON. Esse modelo flexível facilita a evolução da estrutura de dados e contratos pela ótica da aplicação consumidora, sem a necessidade de migrações complexas.
 
-Os modelos de documentos normalmente são utilizados para agrupar dados relacionados diretamente no mesmo objeto ou entidade e fornecer indexação invertida ou full-text search, permitindo buscar por padrões em todo o documento sem se prender a um campo específico. Seus filtros são estruturados sobre atributos aninhados, agregações e pipelines de transformação, suportando indexação em campos internos de forma flexível e performática.
+Bancos orientados a documentos tratam cada registro como uma entidade autônoma, normalmente em formato livre, sem restrições rígidas de campos, geralmente em JSON ou BSON. Essa flexibilidade facilita a evolução do schema e dos contratos sob a ótica da aplicação, dispensando migrações complexas.
+
+Costumam ser usados para agrupar dados relacionados em um único objeto e para oferecer indexação invertida ou full-text search, permitindo buscar padrões em todo o documento sem se prender a um campo específico. Suportam filtros sobre atributos aninhados, agregações e pipelines de transformação, com indexação flexível em campos internos.
 
 ![](./images/document-example.png)
 
-Seus usos mais comuns incluem implementações de catálogos de produtos, históricos de clientes, históricos de pacientes, agregadores de logs, armazenamento de crawlers e outros casos que exigem agregações, sumarizações e buscas desestruturadas. É comum que bancos de dados orientados a documentos sejam uma camada de consulta secundária após transformações de dados, sendo uma forma otimizada de consultas para implementações de CQRS.
+Entre os usos mais comuns estão catálogos de produtos, históricos de clientes ou pacientes, agregadores de logs e armazenamento de crawlers. É frequente que esses bancos atuem como camada de consulta secundária após transformações de dados, sendo uma escolha natural para implementações de CQRS.
 
 ## Modelos Colunares (Column-Oriented)
-Os modelos de dados colunares são inspirados em sistemas de Big Data e Data Warehouse. Os modelos transacionais, como apresentado no modelo de tuplas, organizam seus dados em formatos de colunas e linhas dentro de uma tabela. Todos os registros dessa tabela possuem o mesmo número de variáveis colunares. Caso seja necessário adicionar uma nova coluna para incluir um atributo, essa coluna será inserida em toda a tabela, adotando valores nulos ou default, caso definido no schema.
+
+Os modelos colunares são inspirados em sistemas de Big Data e Data Warehouse. Diferente do modelo de tuplas, onde os dados ficam organizados por linha, aqui cada coluna é armazenada de forma contígua. Em uma tabela tradicional, todos os registros compartilham o mesmo conjunto de colunas, e adicionar um atributo implica inseri-lo em toda a tabela com valores nulos ou default.
 
 ![](./images/column-oriented.png)
 
-Em um banco colunar, cada coluna de uma tabela é armazenada de forma contígua em disco ou em memória, em vez de manter linhas inteiras juntas. Essa implementação permite que sistemas analíticos consigam analisar grandes volumes de dados em repouso e façam consultas e operações complexas e otimizadas em atributos específicos, por exemplo média e desvio padrão dos valores de venda, idade de determinados segmentos de público, fechamentos contábeis de caixa e análise dos tipos de dispositivos móveis dos clientes, retornando-os de forma performática.
+Ao manter cada coluna contígua em disco ou memória, esse modelo permite que sistemas analíticos processem grandes volumes de dados em repouso e executem operações complexas sobre atributos específicos de forma performática — como médias, desvios-padrão, segmentações de público ou fechamentos contábeis — lendo apenas as colunas necessárias.
 
 ## Modelos de Coluna Larga (Wide-Column)
-Os bancos de dados wide-column ainda mantêm o conceito de linhas, porém cada registro pode conter seu próprio conjunto de colunas.
 
-Os dados são organizados em famílias de colunas agrupadas ao redor de chaves de linha. Para entender o agrupamento e a recuperação dos dados, uma linha pode ter um conjunto distinto de colunas agrupadas em “famílias de colunas”, e quando se busca dados dessas colunas explicitamente via query, o sistema acessa apenas as linhas dentro dessas famílias. Isso é eficiente em cenários com dados dispersos, séries temporais, data warehouses, data lakes desestruturados e dispersos.
+Os bancos wide-column preservam o conceito de linhas, mas cada registro pode ter seu próprio conjunto de colunas.
+
+Os dados são organizados em famílias de colunas agrupadas em torno de chaves de linha. Uma linha pode reunir diferentes colunas em famílias distintas; ao consultar explicitamente uma família, o sistema acessa apenas as linhas correspondentes. Isso é eficiente para dados dispersos, séries temporais, data warehouses e data lakes desestruturados.
 
 ![](./images/wide-column.png)
 
-As implementações de databases wide-column são adaptadas para lidar com replicação e sharding de forma distribuída, com capacidade de escalar até milhares de nós, reduzindo pontos únicos de falha e oferecendo schemas altamente flexíveis, a custo de consistência eventual, além de apresentarem transações atômicas limitadas e joins restritos entre tabelas e famílias.
+Essas engines são desenhadas para replicação e sharding distribuídos, escalando a milhares de nós e reduzindo pontos únicos de falha, com schemas altamente flexíveis. O preço é a consistência eventual, somada a transações atômicas limitadas e joins restritos entre tabelas e famílias.
 
 ## Modelos Key‑Value (Chave‑Valor)
-Os bancos chave‑valor, ou key‑value, talvez sejam o tipo mais simples de bancos de dados NoSQL que podemos encontrar e trabalhar. Como o próprio nome sugere, eles armazenam seus dados em uma coleção de paridade, sendo uma chave que funciona como um identificador único para o dado no conjunto e o valor que pode estar em diversos formatos não estruturados, esses que variam de simples strings, números, valores booleanos, JSON e até mesmo blobs complexos.
+
+Os bancos chave-valor são provavelmente o tipo mais simples de NoSQL. Armazenam pares formados por uma chave, que funciona como identificador único, e um valor, que pode assumir diversos formatos não estruturados — strings, números, booleanos, JSON ou blobs complexos.
 
 ![](./images/key-value.png)
 
-Os exemplos mais notáveis que temos são as engines de cache como Redis, Valkey e Memcached, mas quando devidamente configurados e modelados, podemos encontrar implementações até mesmo em databases como MongoDB, DynamoDB, Elasticsearch etc.
+Os exemplos mais conhecidos são engines de cache como Redis, Valkey e Memcached, mas o padrão também aparece em bancos como MongoDB, DynamoDB e Elasticsearch quando devidamente modelados.
 
-Sua performance está embasada na extrema facilidade de indexação e recuperação dos dados, pois o mesmo ocorre diretamente pela chave previamente composta e conhecida pelo cliente, e permite facilmente uma replicação e distribuição para suportar grandes volumes de acesso e armazenamento, além da simplificação da forma de acesso, sendo realizado normalmente através de protocolos já bem estabelecidos diretamente via TCP/IP ou implementações RESTful, evitando a utilização de protocolos complexos.
+Sua performance vem da facilidade de indexação e recuperação: o acesso ocorre diretamente pela chave, já conhecida pelo cliente. Isso favorece replicação e distribuição para suportar grandes volumes, além de simplificar o acesso, geralmente realizado por protocolos bem estabelecidos via TCP/IP ou interfaces RESTful, evitando complexidade desnecessária.
 
 ## Modelos Baseados em Grafos
-Os bancos de dados baseados em grafos são tecnologias implementadas em estruturas onde o relacionamento entre as entidades é tão importante quanto o próprio dado em si.
+
+Os bancos de grafos são construídos sobre estruturas em que o relacionamento entre entidades é tão importante quanto o próprio dado.
 
 ![](./images/grafos.png)
 
-Comparando com os modelos SQL, onde os relacionamentos são criados com chaves estrangeiras entre tabelas e JOINs gerados durante a consulta, os bancos de grafos aplicam o conceito de nodes (entidades) e arestas (relacionamentos) como objetos de primeira classe, permitindo relacionar vários tipos de dados entre diferentes entidades. Os dados são propriedades chave‑valor chamadas de vértices, e as arestas conectam esses vértices similares. Isso permite consultar, de forma performática, perguntas como “alunos da turma da manhã que moram no mesmo bairro e possuam média escolar maior que 8” ou “encontre amigos de amigos que vivem na mesma cidade e trabalharam na mesma empresa” sem a necessidade de joins custosos em diversas tabelas relacionais.
+Enquanto no modelo SQL os relacionamentos surgem de chaves estrangeiras e JOINs no momento da consulta, os bancos de grafos tratam nós (entidades) e arestas (relacionamentos) como cidadãos de primeira classe. Os dados ficam em propriedades chave-valor associadas aos vértices, e as arestas conectam esses vértices. Isso permite responder de forma performática a perguntas relacionais complexas — como "amigos de amigos que moram na mesma cidade e trabalharam na mesma empresa" — sem joins custosos entre múltiplas tabelas.
 
-O uso dos bancos de dados baseados em grafos pode ser implementado para encontrar relacionamentos e proporcionar features de recomendação de produtos com base no comportamento de usuários similares, análise de redes sociais, modelagem de ameaças, detecção de fraudes e estudos de cadeias de valor e logística complexas. As consultas de um banco de grafos devem levar em conta o grau e a complexidade dos vértices, a seletividade de padrões e a cardinalidade de seus valores para construir padrões que minimizem leituras aleatórias de disco.
-
-
+Esses bancos são aplicados em sistemas de recomendação baseados em comportamento, análise de redes sociais, modelagem de ameaças, detecção de fraudes e estudos de cadeias logísticas. As consultas precisam considerar o grau e a complexidade dos vértices, a seletividade dos padrões e a cardinalidade dos valores, de modo a minimizar leituras aleatórias em disco.
 
 # Armazenamento e Indexação
-A forma como a engine de um banco de dados realiza seu armazenamento e indexação impacta diretamente o desempenho e a flexibilidade das operações de escrita, leitura e consultas complexas sobre os conjuntos de dados. O objetivo deste tópico é descrever as principais formas de indexação e armazenamento encontradas nas engines de mercado e seus principais trade‑offs existentes.
 
-Sem a devida indexação, o banco de dados em questão precisaria escanear toda a tabela ou coleção para encontrar os dados desejados. Esta é uma operação extremamente lenta em tabelas grandes, inviabilizando uma escalabilidade saudável. Neste tópico, iremos explorar alguns conceitos comuns entre as implementações de bancos de dados que auxiliarão na compreensão dessas operações.
+A forma como a engine realiza armazenamento e indexação impacta diretamente o desempenho e a flexibilidade das operações de escrita, leitura e consulta. Esta seção descreve as principais técnicas encontradas no mercado e seus trade-offs.
+
+Sem indexação adequada, o banco precisaria escanear toda a tabela ou coleção para localizar um dado — operação lenta em grandes volumes e incompatível com uma escalabilidade saudável. Os conceitos a seguir são recorrentes entre diferentes implementações e ajudam a compreender essas operações.
 
 ## Page Size (Tamanho da Página)
-O armazenamento de páginas em databases prevê que os dados serão organizados e armazenados em blocos de dados de tamanho fixo e configurável. Esses blocos, conhecidos como páginas, são usados por bancos de dados orientados a linhas — como a maioria dos relacionais e alguns não‑relacionais — que armazenam chunks de dados contendo múltiplas tuplas (linhas) dentro de cada página. Tamanhos comuns são 4 KB, 8 KB ou 16 KB, e elas também contêm metadados para controlar relacionamentos e indexação.
 
-O principal trade‑off está no tamanho da página. Páginas maiores tendem a reduzir o número de operações de I/O necessárias para leituras de grandes volumes de dados ou para buscar múltiplos objetos fisicamente próximos, otimizando a leitura sequencial, já que mais informações são transferidas em uma única operação. Em contrapartida, elas aumentam o custo de transferência de dados em consultas simples, onde apenas alguns registros são necessários, pois a página inteira é lida desnecessariamente. Por outro lado, páginas menores minimizam a leitura de dados irrelevantes em consultas pontuais, mas geram um número maior de operações de I/O de disco para leituras extensas, pois mais páginas individuais precisam ser carregadas.
+O armazenamento em páginas organiza os dados em blocos de tamanho fixo e configurável. Essas páginas são usadas por bancos orientados a linha — a maioria dos relacionais e alguns NoSQL — que guardam chunks com múltiplas tuplas em cada página. Tamanhos comuns são 4 KB, 8 KB ou 16 KB, e as páginas também carregam metadados para controle de relacionamentos e indexação.
 
-Diversos bancos de dados SQL e NoSQL aplicam o conceito de Page Size em conjunto com outros métodos de armazenamento e indexação. Exemplos notáveis incluem MySQL (InnoDB), MariaDB (InnoDB), PostgreSQL e SQL Server.
+O principal trade-off está justamente no tamanho da página. Páginas maiores reduzem o número de operações de I/O em leituras de grandes volumes ou de objetos fisicamente próximos, otimizando a leitura sequencial; em contrapartida, encarecem consultas pontuais, em que a página inteira é lida para recuperar poucos registros. Páginas menores fazem o oposto: minimizam leitura irrelevante em consultas pontuais, mas exigem mais operações de I/O em leituras extensas.
+
+Esse conceito aparece em diversas engines SQL e NoSQL, combinado com outros métodos de indexação. Exemplos notáveis incluem MySQL (InnoDB), MariaDB (InnoDB), PostgreSQL e SQL Server.
 
 ## Indexação Colunar
-A indexação por formato colunar, columnar format ou column‑based indexing especifica padrões onde cada coluna de uma tabela é escrita em um segmento contíguo no sistema de arquivos. Essa separação, por mais contraintuitiva em termos de I/O, permite que as consultas sejam específicas ao nível de atributos recuperados, recuperando somente os componentes necessários que foram especificados. Nesse sentido, temos uma **redução considerável de I/O ao otimizar pesquisas e processos analíticos. Esse cenário também facilita aplicar operações matemáticas diretamente nas consultas do banco.
 
-Outro grande benefício é a compressão de dados. O formato colunar agrupa dados homogêneos (com pouca diversidade ou muitos valores repetidos) da mesma coluna, o que é ideal para a aplicação de algoritmos de compressão altamente eficazes, como a compressão por dicionários. Isso economiza espaço em disco e melhora ainda mais o desempenho de I/O.
+A indexação colunar define padrões em que cada coluna é gravada em um segmento contíguo do sistema de arquivos. Por mais contraintuitivo que pareça em termos de I/O, isso permite consultas específicas no nível de atributo, recuperando apenas os campos solicitados. O resultado é uma redução considerável de I/O em buscas e processos analíticos, além de facilitar operações matemáticas diretamente nas consultas.
 
-Bancos de dados e engines otimizados para analytics, big data e data warehouses, como Amazon Redshift, Google BigQuery, MemSQL e SQL Server (modo Columnstore Index), utilizam essa arquitetura de armazenamento e indexação para alcançar alta performance em consultas complexas e analíticas.
+Outro benefício importante é a compressão. Ao agrupar dados homogêneos de uma mesma coluna, com pouca diversidade ou muitos valores repetidos, o formato colunar favorece algoritmos de compressão muito eficientes, como a compressão por dicionário. Isso economiza espaço e melhora ainda mais o desempenho de I/O.
+
+Engines voltadas a analytics, big data e data warehouses — como Amazon Redshift, Google BigQuery, MemSQL e SQL Server em modo Columnstore Index — adotam essa arquitetura para alcançar alta performance em consultas analíticas complexas.
 
 ## LSM-Trees (Log-Structured Merge-Tree)
-Os Log‑Structured Systems, frequentemente implementados através do padrão LSM‑Tree (Log‑Structured Merge‑Tree), aplicam modelos de dados que são salvos primeiro em tabelas em memória (memtables) e, posteriormente, exportados para arquivos imutáveis no disco (sstables) em um modelo de append‑only.
+
+Os Log-Structured Systems, frequentemente implementados via LSM-Tree, gravam os dados primeiro em tabelas em memória (memtables) e depois os exportam para arquivos imutáveis em disco (sstables), num modelo append-only.
 
 ![](./images/lsm-trees.png)
 
-O modelo append‑only oferece extrema performance de escrita e baixa latência de confirmação do recebimento da transação, pois as operações são sequenciais (adicionadas ao final) e evitam ao máximo consultas aleatórias em disco. No entanto, ele não realiza atualizações in‑place de registros. Em vez disso, novas “versões” do dado são inseridas como novos registros. Da mesma forma, a deleção de um dado é tipicamente realizada através da inserção de um registro especial chamado “tombstone”, que marca o dado como logicamente excluído. A remoção física dos dados antigos ou marcados com tombstone ocorre posteriormente, durante um processo de compactação (merge) dos sstables.
+O append-only oferece excelente performance de escrita e baixa latência de confirmação, pois as operações são sequenciais e evitam acessos aleatórios em disco. Não há atualização in-place: novas versões do dado entram como novos registros, e deleções são feitas por meio de um marcador especial chamado tombstone. A remoção física ocorre depois, durante a compactação (merge) dos sstables.
 
-Esse tipo de cenário é ideal para sistemas que precisam garantir transações sequenciais e imutáveis para auditoria e rastreabilidade de modificações, pois mantém todas as versões anteriores do dado que ainda podem ser recuperadas se necessário. Isso permite a implementação de ledger tables, livros‑caixa, registros de auditoria e rastreabilidade de transações financeiras, trace de operações de usuários em sistemas críticos, entre outros.
+Esse comportamento é ideal para sistemas que precisam de transações sequenciais e imutáveis voltadas à auditoria e rastreabilidade, já que versões anteriores podem ser recuperadas. Aplica-se bem a ledger tables, livros-caixa, registros de auditoria e rastreamento de operações financeiras. Engines como BigTable, DynamoDB, Apache Cassandra, InfluxDB e ScyllaDB usam LSM-Trees para priorizar alta performance de escrita e escalabilidade horizontal.
 
-Engines de banco de dados como BigTable, DynamoDB, Apache Cassandra, InfluxDB e ScyllaDB implementam o modelo de LSM‑Tree para otimizar sua escrita e indexação posterior, facilitando designs que priorizam alta performance de escrita e escalabilidade horizontal, muitas vezes em detrimento de uma forte consistência eventual.
-
-As LSM‑Trees funcionam organizando as operações de escrita em estruturas de memtables na memória, onde cada nova inserção ou atualização é registrada de forma sequencial e append‑only, garantindo baixa latência na confirmação da transação. Periodicamente, essas memtables são descarregadas para o disco em arquivos sstables imutáveis. Durante esse processo, o sistema não bloqueia leituras nem escritas, permitindo um throughput alto mesmo sob cargas intensivas. A organização em camadas e a posterior compactação entre sstables reduzem a fragmentação e consolidam múltiplas versões de um mesmo registro, melhorando a eficiência de leitura e liberando espaço ocupado por dados obsoletos ou tombstones.
-
-Para realizar operações de leitura, a engine primeiro consulta as memtables mais recentes e, em seguida, percorre os sstables em ordem de atualização, combinando os resultados conforme necessário. Esse modelo garante que a versão mais atual do dado seja retornada, mesmo que exista em diferentes níveis de armazenamento. A compactação periódica reúne sstables sobrepostos em um único arquivo, aplica a eliminação de tombstones e otimiza índices, reduzindo o número de arquivos a serem lidos. Dessa forma, as LSM‑Trees equilibram alta performance de escrita com leituras consistentes, ao custo de um processo de manutenção (merge) que ocorre em segundo plano para consolidar os dados e manter a estrutura enxuta.
+Na prática, escritas são registradas sequencialmente em memtables e, periodicamente, descarregadas em sstables imutáveis sem bloquear leituras ou escritas, sustentando alto throughput. A compactação consolida múltiplas versões, elimina tombstones e reduz fragmentação. Nas leituras, a engine consulta primeiro as memtables mais recentes e depois percorre os sstables em ordem, combinando resultados para devolver a versão mais atual — equilibrando alta performance de escrita com leituras consistentes, ao custo de um merge contínuo em segundo plano.
 
 ## Indexação B‑Tree (Árvores B)
-A B‑Tree (ou Árvore B) é uma estrutura de dados autobalanceada, projetada para gerenciar grandes volumes de informações armazenados em storage e volumes. Uma B‑Tree é uma árvore multi‑way, onde cada nó pode conter várias chaves e múltiplos ponteiros para outros nós. Essa característica permite que a árvore seja mais larga e menos profunda, otimizando o acesso a dados em disco, ao contrário de implementações de árvores binárias que podem ter alta profundidade.
 
-Os dados são armazenados de forma ordenada dentro dos nós, permitindo buscas, escritas, atualizações e deleções em tempo logarítmico. O armazenamento em B‑Tree é construído para possibilitar que cada nó que contém uma parcela do dado seja alocado perfeitamente em um bloco de disco. Isso minimiza a quantidade de operações de I/O, que costumam ser os maiores custos em bancos de dados de grande porte.
+A B-Tree é uma estrutura autobalanceada projetada para gerenciar grandes volumes de informação em storage. Trata-se de uma árvore multi-way em que cada nó pode conter várias chaves e múltiplos ponteiros. Isso a torna mais larga e menos profunda do que árvores binárias, otimizando o acesso a dados em disco ao reduzir a profundidade da travessia.
 
-Quando você busca uma chave, o sistema carrega apenas os poucos blocos de disco necessários para percorrer o caminho do nó raiz até o nó onde a chave ou o ponteiro para o dado está localizado. Essa estratégia permite que, mesmo em tabelas gigantescas, as buscas sejam rápidas e com poucas operações.
+Os dados ficam ordenados dentro dos nós, permitindo buscas, escritas, atualizações e deleções em tempo logarítmico. O armazenamento é construído para que cada nó caiba em um bloco de disco, minimizando operações de I/O — normalmente o maior custo em bancos de grande porte.
+
+Ao buscar uma chave, o sistema carrega apenas os poucos blocos necessários para percorrer o caminho da raiz até o nó que contém a chave ou o ponteiro para o dado. Assim, mesmo em tabelas enormes, as buscas permanecem rápidas e com poucas operações.
 
 ## Indexação por Hashing
-A indexação baseada em hashing é uma técnica que permite localizar itens e valores em uma tabela através de valores exatos, ou exact-matches. Ao contrário de estruturas como as B‑trees (ou Árvores B+), que são otimizadas para buscas de intervalo (range queries) e minimizam operações de I/O de disco através de saltos logarítmicos, a indexação por hashing é projetada para buscas diretas e instantâneas.
 
-Três conceitos fundamentais para a aplicação desse tipo de indexação são as funções hash, as tabelas hash e os buckets. Uma função hash é responsável por providenciar uma forma determinística e consistente de converter um dado (a “chave”) em um endereço numérico. Ou seja, aplicando a função hash sobre uma string como hash("fidelis"), ela resultaria em um identificador numérico para esse dado, como por exemplo 10. Se essa operação for repetida um milhão de vezes com a mesma entrada, o resultado deverá ser sempre 10. Esse valor numérico identifica o bucket específico na tabela hash onde o dado será armazenado ou procurado.
+A indexação por hashing localiza valores por meio de correspondências exatas (exact-matches). Diferente das B-Trees, otimizadas para range queries e saltos logarítmicos, o hashing é projetado para buscas diretas e praticamente instantâneas.
 
-Em um contexto de resolução de colisões por encadeamento separado, um bucket não armazena um único dado, mas atua como um ponteiro para uma estrutura secundária, geralmente uma lista encadeada (ou, em implementações otimizadas, uma árvore binária balanceada para cadeias longas). Por exemplo, quando você calcula hash("fidelis") e o valor resultante aponta para o bucket 10 da sua tabela hash, o dado associado a “fidelis” será inserido nessa estrutura. Se esse bucket já conter outros dados, é porque outras chaves, como hash("tarsila"), hash("sasha") e hash("saori"), também colidiram e resultaram no mesmo bucket 10. Ao inserir o valor de fidelis nessa lista, o dado referente será adicionado sequencialmente ao final dessa lista (ou inserido em ordem, se a lista for mantida ordenada internamente).
+Três conceitos sustentam essa técnica: funções hash, tabelas hash e buckets. A função hash converte de forma determinística uma chave em um endereço numérico — aplicar `hash("fidelis")` deve produzir sempre o mesmo resultado, indicando o bucket onde o dado será guardado ou procurado.
 
-- Antes: bucket[10] -> [ ("tarsila", "foo") -> ("sasha", "bar") -> ("saori", "ping") ]
-- Depois: bucket[10] -> [ ("tarsila", "foo") -> ("sasha", "bar") -> ("saori", "ping") -> ("fidelis", "pong") ]
+Quando há colisões, uma estratégia comum é o encadeamento separado: o bucket aponta para uma estrutura secundária, geralmente uma lista encadeada (ou uma árvore balanceada em cadeias longas). Se várias chaves resultam no mesmo bucket, seus valores são armazenados nessa lista, adicionados sequencialmente ao final (ou em ordem, se a lista for mantida ordenada).
 
-
-A busca pelo valor de uma chave específica também segue essa lógica. Quando precisamos recuperar o valor associado a uma chave, a mesma função hash é aplicada à chave, e o valor hash resultante aponta diretamente para o bucket exato onde o dado está armazenado. Isso possibilita que a engine do banco de dados recupere o dado de forma quase instantânea, realizando apenas uma breve travessia na pequena lista de dados localizada naquele bucket (no caso de colisões), sem a necessidade de múltiplas operações de leitura em disco.
+A recuperação segue a mesma lógica: aplica-se a função hash à chave, chega-se diretamente ao bucket correto e percorre-se a pequena lista local para encontrar o valor. Isso permite recuperação quase instantânea, sem múltiplas leituras em disco.
 
 ## Índices Invertidos
-Os Índices Invertidos, ou Inverted Indexes, são estruturas de dados de busca que permitem encontrar documentos completos através de termos de busca específicos e dinâmicos, possibilitando executar processos de “full‑text search” em grandes volumes de dados. Ao invés das estruturas convencionais que mapeiam um documento ou entidade para um valor ou termo, um índice invertido faz o trabalho oposto: ele mapeia termos, palavras ou tokens para os respectivos documentos onde aparecem, permitindo buscas em textos e valores longos por meio de termos simples. Essa técnica é característica de bancos orientados a documento, como Elasticsearch e Apache Solr, mas também pode ser implementada em bancos relacionais que possuam features de full‑text search, como PostgreSQL, SQL Server e Oracle.
+
+Os Índices Invertidos são estruturas que permitem encontrar documentos completos a partir de termos de busca específicos, viabilizando full-text search em grandes volumes. Ao contrário das estruturas que mapeiam um documento para um valor, o índice invertido faz o caminho oposto: mapeia termos, palavras ou tokens para os documentos onde aparecem. A técnica é típica de bancos orientados a documentos, como Elasticsearch e Apache Solr, mas também existe em relacionais com suporte a full-text search, como PostgreSQL, SQL Server e Oracle.
 
 ![](./images/inverted-index.png)
 
-Esse tipo de estrutura facilita imensamente a implementação de engines de busca em dados desestruturados ou semi‑estruturados, como catálogos, listas de produtos de e‑commerce, buscas por termos em contratos jurídicos e agregadores de logs. Imagine usar um motor de busca que precise escanear todos os atributos de todas as linhas de uma tabela em busca de padrões de texto: esse processo seria extremamente lento e custoso computacionalmente em grandes volumes de dados. Os índices invertidos resolvem isso. Eles funcionam como um catálogo de biblioteca ou arquivo de documentos: em vez de folhear cada livro para achar um termo específico, você consulta o catálogo — o índice invertido — que o direciona diretamente aos documentos que contêm aquela palavra, tornando a busca mais rápida e eficiente.
+Esse modelo facilita enormemente engines de busca sobre dados desestruturados ou semiestruturados — catálogos, produtos de e-commerce, contratos jurídicos e logs. Em vez de escanear todos os atributos de todas as linhas (algo lento e custoso), o índice invertido funciona como o catálogo de uma biblioteca: aponta diretamente para os documentos que contêm o termo buscado.
 
-Por exemplo, em uma loja online, ao buscar por “geladeira verde 2 portas”, o índice invertido pode localizar rapidamente todos os produtos cujo campo de descrição (ou outros campos indexados) contenha as palavras “geladeira”, “verde” e “2 portas”, independentemente de como esses termos estejam dispostos ou em quais atributos do documento (seja um campo JSON ou uma coluna de texto) eles apareçam.
-
-A construção de um índice invertido nas engines geralmente envolve uma pipeline de processamento no momento da gravação e indexação dos dados, incluindo: pré‑processamento (normalização do texto), tokenização (divisão em tokens de palavras individuais) e, por fim, a criação do índice que lista todos os documentos em que cada token aparece.
-
-
+Em uma loja online, ao pesquisar "geladeira verde 2 portas", o índice invertido localiza rapidamente os produtos cujos campos indexados contenham esses termos, independentemente de sua ordem ou de em quais atributos aparecem. A construção desse índice envolve uma pipeline executada no momento da gravação: pré-processamento (normalização do texto), tokenização (divisão em tokens) e a criação do índice que associa cada token aos documentos correspondentes.
 
 # Arquitetura
-A escolha do banco de dados é uma representação direta da arquitetura do sistema. Sistemas distribuídos, no geral, envolvem escolhas que impactam diretamente o desempenho, disponibilidade, escalabilidade e consistência de uma parte, ou do sistema como um todo. O delimitador do sucesso dessas escolhas é a tecnologia correta para a persistência, que deve levar em conta suas características e requisitos funcionais e não funcionais. A escolha equivocada de um banco de dados pode acarretar inúmeros problemas de performance e confiabilidade se não considerarmos suas limitações. Dado isso, aqui listaremos os cenários mais comuns e sugestões iniciais para discussões de arquitetura.
+
+A escolha do banco de dados reflete diretamente a arquitetura do sistema. Em ambientes distribuídos, essa decisão impacta desempenho, disponibilidade, escalabilidade e consistência — de uma parte ou do todo. Selecionar a tecnologia de persistência correta exige considerar requisitos funcionais e não funcionais, pois uma escolha equivocada pode gerar problemas sérios de performance e confiabilidade. As seções a seguir listam os cenários mais comuns e sugestões iniciais para discussões de arquitetura.
 
 ## Cenários Transacionais
-Cenários em que precisamos realizar duas ou mais operações dentro de um banco de dados, envolvendo uma ou mais tabelas, caracterizam um ambiente transacional quando todas as operações devem ser concluídas em sua totalidade para garantir o sucesso da transação. Cada operação é tratada como um contrato: ou é concluída com sucesso e de forma integral, ou é revertida completamente, garantindo que o estado do domínio permaneça sempre válido e confiável para todos os consumidores na malha de dados. Esses cenários exigem consistência forte, permitindo leituras imediatas das últimas escritas.
 
-Os cenários transacionais são ideais para funcionalidades críticas, como atualizações de saldo mediante o registro de uma transação ou ajuste de estoque em um e‑commerce após compra e pagamento. Essas implementações demandam atomicidade e garantias ACID, e as implementações mais comuns são bancos relacionais que fornecem esse comportamento por padrão.
+Cenários transacionais envolvem duas ou mais operações que precisam ser concluídas integralmente para que a transação tenha sucesso. Cada operação funciona como um contrato: ou se conclui por completo, ou é totalmente revertida, mantendo o estado do domínio sempre válido. Esses cenários demandam consistência forte, permitindo ler imediatamente a última escrita.
 
-Os bancos transacionais normalmente são a fonte mais confiável para eventos de negócio, como criação de pedido, confirmação de pagamento ou registro de um novo cliente. A diretriz arquitetônica para essas engines não é a velocidade ou o volume, mas a integridade e consistência inquestionáveis dos dados, muitas vezes combinadas com camadas de cache (modelo chave‑valor) ou CQRS para otimizar cenários de leitura intensiva, isolando a golden source transacional de picos de acesso sem comprometer sua disponibilidade.
+São ideais para funcionalidades críticas, como atualização de saldo ou ajuste de estoque após uma compra. Exigem atomicidade e garantias ACID, motivo pelo qual os bancos relacionais — que oferecem esse comportamento por padrão — são as implementações mais comuns. Costumam ser a fonte mais confiável para eventos de negócio, como criação de pedido ou confirmação de pagamento.
 
-A estratégia de indexação mais comum é a implementação de B‑Trees, pois facilitam buscas rápidas em chaves primárias e índices secundários. Entretanto, as características atômicas acarretam maior latência em escritas, principalmente em cenários distribuídos: quanto mais réplicas, maior o tempo de commit, pois o dado precisa ser confirmado no quórum de nós antes de concluir a transação.
+A diretriz aqui não é velocidade ou volume, mas integridade e consistência inquestionáveis — frequentemente combinadas com camadas de cache (chave-valor) ou CQRS para absorver leitura intensiva sem comprometer a golden source transacional. A estratégia de indexação mais comum é a B-Tree, que acelera buscas por chave primária e índices secundários.
 
-As soluções clássicas de bancos SQL escalam verticalmente sem impacto na latência de commit, porém exigem hardware cada vez mais caro. Iniciativas NewSQL escalam horizontalmente, mas pagam o preço de protocolos de consenso (Raft/Paxos), que adicionam latência e aumentam o consumo de rede e CPU entre os nós.
+O preço da atomicidade é maior latência de escrita, sobretudo em ambientes distribuídos: quanto mais réplicas, maior o tempo de commit, já que o dado precisa ser confirmado pelo quórum. Bancos SQL clássicos escalam verticalmente sem afetar a latência de commit, mas exigem hardware caro; iniciativas NewSQL escalam horizontalmente, ao custo de protocolos de consenso (Raft/Paxos) que adicionam latência e consumo de rede e CPU.
 
 ## Cenários de Write‑Intensive
-Cenários Write‑Intensive, ou escrita intensiva, são sistemas em que a taxa de escrita supera consideravelmente a de leitura. São aplicações que precisam ingerir volume contínuo e massivo de dados, garantindo que nenhuma informação seja perdida, mesmo abrindo mão de consistência forte e lidando com réplicas desatualizadas por períodos.
 
-Exemplos incluem processamentos assíncronos corporativos, agregadores de logs, captação de dados de IoT e feeds de redes sociais. Para suportar alta taxa de escrita, a arquitetura geralmente adota NoSQL, projetado para escalabilidade horizontal e escritas rápidas. Internamente, usam modelos append‑only (LSM‑Trees) e replicação assíncrona.
+Cenários write-intensive são aqueles em que a taxa de escrita supera consideravelmente a de leitura. São aplicações que precisam ingerir um fluxo contínuo e massivo de dados sem perder informação, mesmo abrindo mão de consistência forte e convivendo com réplicas temporariamente desatualizadas.
+
+Exemplos incluem processamentos assíncronos, agregadores de logs, captação de dados de IoT e feeds de redes sociais. Para sustentar alta escrita, a arquitetura costuma adotar NoSQL projetado para escalabilidade horizontal, com modelos append-only (LSM-Trees) e replicação assíncrona.
 
 ![](./images/write-intensive.png)
 
-
-Diferente das B‑Trees, que podem exigir I/O custoso para escritas e atualizações, as LSM‑Trees transformam cada escrita em operação sequencial de append, armazenando em memória e, depois, em disco de forma organizada, sem bloquear a solicitação até a confirmação nos nós. Essa arquitetura favorece consistência eventual, pois o sistema não espera replicação completa antes de responder ao cliente. Engines otimizadas para esse cenário incluem DynamoDB, Cassandra e ScyllaDB. Implementações on‑premises permitem ajustar o quórum entre latência, disponibilidade e consistência.
+Ao contrário das B-Trees, que podem exigir I/O custoso em escritas e atualizações, as LSM-Trees transformam cada escrita em uma operação sequencial de append, armazenando primeiro em memória e depois em disco, sem bloquear a resposta até a confirmação em todos os nós. Isso favorece a consistência eventual, já que o sistema não aguarda a replicação completa antes de responder. Engines como DynamoDB, Cassandra e ScyllaDB se destacam aqui, e implementações on-premises permitem ajustar o quórum para equilibrar latência, disponibilidade e consistência.
 
 ## Cenários de Read‑Intensive
-Cenários Read‑Intensive, ou leitura intensiva, possuem necessidades inversas aos Write‑Intensive, sendo ambientes onde a quantidade de leituras se sobressai sobre as escritas. O objetivo é maximizar o throughput de consulta e minimizar latências de leitura. Exemplos: feeds de redes sociais, catálogos de produtos, listagens de usuários e consultas de endereços.
+
+Cenários read-intensive são o oposto: ambientes em que as leituras predominam sobre as escritas. O objetivo é maximizar o throughput de consulta e minimizar a latência de leitura. Exemplos típicos são feeds de redes sociais, catálogos de produtos, listagens de usuários e consultas de endereços.
 
 ![](./images/read-intensive.png)
 
-
-Podemos realizar uma combinação de diversos métodos que iremos aprodundar em outros textos. Réplicas asseguram escalabilidade de leitura, permitindo que os nós escalem horizontalmente de forma dinâmica. As otimizações mais comuns combinam um banco primário consistente (por exemplo, PostgreSQL ou MySQL) com réplicas de leitura e camadas de cache (Redis, Memcached). Também podemos realizar processos de CQRS para otimizar dados capturados num caminho otimizado para escrita e convertê-los para modelos otimizados para leitura.
-
+A solução combina diversas técnicas. Réplicas de leitura garantem escalabilidade horizontal, distribuindo a carga de consulta. As otimizações mais comuns unem um banco primário consistente (PostgreSQL ou MySQL) a réplicas de leitura e camadas de cache (Redis, Memcached). Também é possível aplicar CQRS, capturando dados em um caminho otimizado para escrita e convertendo-os em modelos otimizados para leitura.
 
 # Referências
 

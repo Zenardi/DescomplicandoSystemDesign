@@ -1,3 +1,7 @@
+# System Design - Storage, RAID e Sistemas de Arquivos
+
+![](../images/storage-raid.png)
+
 - [System Design - Storage, RAID e Sistemas de Arquivos](#system-design---storage-raid-e-sistemas-de-arquivos)
 - [Definindo Storage e Armazenamento](#definindo-storage-e-armazenamento)
 - [Dimensões em Storage](#dimensões-em-storage)
@@ -17,137 +21,140 @@
   - [RAID 6 (Striping com Dupla Paridade)](#raid-6-striping-com-dupla-paridade)
   - [RAID 10 (Combinação de RAID 1 com RAID 0)](#raid-10-combinação-de-raid-1-com-raid-0)
 
-# System Design - Storage, RAID e Sistemas de Arquivos
+> **Nota:** Este documento é um material de estudo baseado no artigo original **"System Design - Storage, RAID e Sistemas de Arquivos"**, de **Matheus Fidelis**, publicado em [fidelissauro.dev/storage](https://fidelissauro.dev/storage/). As ilustrações pertencem ao autor original. Recomenda-se a leitura do artigo completo na fonte.
 
-![](../images/storage-raid.png)
-
-O formato desse capítulo foi pensado para ser um “dump” de informações relacionadas a storage e armazenamento. Talvez a melhor forma de consumir esse material seja lê-lo duas vezes em sequência, pois muitas das informações presentes nos tópicos se cruzam em algum momento. Entender as capacidades de storage nos sistemas modernos tem se tornado uma preocupação de segundo, até terceiro plano nos projetos de software. Encontrar a solução ideal para o problema relacionado ao armazenamento normalmente é entregue de maneira transparente pelos provedores de nuvem ou plataformas onde provisionamos nossas soluções. Porém, entender os pormenores e detalhes de como, de fato, funciona um processo de armazenamento pode nos ajudar a economizar dinheiro, tempo e algumas noites de sono em cenários críticos e com crescimento expressivo de demanda.
-
-Ele foi estruturado em 3 partes mais importantes: uma delas focando em **métricas e dimensões que são pertinentes aos temas de armazenamento e storage em uso produtivo, tipos e modelos de storage e suas implementações arquiteturais e por fim os modelos de RAID que são amplamente utilizados e quais seus prós e contras em componentes de persistência.**
+---
 
 # Definindo Storage e Armazenamento
-O termo Storage, ou armazenamento, refere-se à persistência de dados de forma organizada e escalável, de forma que possam ser recuperados e acessados de forma segura e performática. Dentro de um contexto técnico, o armazenamento pode ocorrer em diversos dispositivos físicos, como discos rígidos tradicionais como os HDDs, unidades de estado sólido, conhecidos como SSDs, e sistemas de armazenamento de rede, como as soluções de NFS.
 
-Dentro da arquitetura de sistemas, as preocupações com Storage vão além da capacidade de armazenar dados por longos períodos de tempo, pois também incluem trade-offs e decisões-chave estratégicas sobre desempenho, segurança, latência e escalabilidade. Dentro das inúmeras opções de storage que temos acesso em ambientes modernos, precisamos considerar opções que variam suas ponderações entre Persistência (capacidade de manter dados intactos, mesmo após falhas de hardware), Capacidade de expansão (facilidade de aumentar e diminuir partições de armazenamento sem interrupções de serviços e montagens), Redundância de recuperação (estratégias para evitar perda de dados e garantir a recuperação rápida dos dados em caso de falhas de software e hardware), Desempenho e IOPs (capacidade do storage em questão de atender demandas específicas em termos de performance e latência das operações de escrita e leitura dos dados).
+Storage (ou armazenamento) é a prática de persistir dados de maneira organizada e escalável, de modo que possam ser recuperados depois com segurança e bom desempenho. Na prática, isso acontece sobre dispositivos variados: discos mecânicos (HDD), unidades de estado sólido (SSD) ou sistemas de armazenamento acessados pela rede, como o NFS.
 
-Quando olhamos com a ótica de sistemas distribuídos, precisamos buscar abordagens onde os dados são armazenados em diversos pontos e são gerenciados de forma descentralizada e replicados entre diversos nodes em diversos servidores, evitando ao máximo o forte acoplamento em um único host. Em sistemas modernos, as opções que precisam ser consideradas devem fazer uso intensivo de conceitos de sharding, replicação, resiliência e disponibilidade, sem perdas significativas de performance e segurança com opções que vamos abordar ao decorrer do texto.
+Em arquitetura de sistemas, pensar em storage vai muito além de "guardar bytes por muito tempo". Envolve trade-offs estratégicos entre **persistência** (manter o dado íntegro mesmo após falhas de hardware), **capacidade de expansão** (crescer ou reduzir partições sem interromper o serviço), **redundância para recuperação** (evitar perda e restaurar rápido após incidentes) e **desempenho/IOPS** (atender à latência e à vazão exigidas nas operações de leitura e escrita).
 
-
+Sob a ótica de sistemas distribuídos, o ideal é fugir do acoplamento a um único host: dados são espalhados e gerenciados de forma descentralizada, replicados entre vários nós e servidores. Isso traz à mesa conceitos como sharding, replicação, resiliência e disponibilidade — tudo sem sacrificar de forma significativa performance e segurança, temas que o capítulo aprofunda nas seções seguintes.
 
 # Dimensões em Storage
-Antes de considerarmos os conceitos e estratégias importantes dentro das disciplinas de storage e armazenamento, precisamos entender alguns conceitos que servem de base para avaliar essas arquiteturas e dimensionar o seu funcionamento. Dentro de Storage, temos algumas métricas que podem nos ajudar a levantar requisitos e sugerir soluções performáticas na medida em que a solução necessita, sem investimentos desnecessários, superdimensionamento ou perdas de performance e disponibilidade. Veremos as principais métricas a seguir.
+
+Antes de discutir estratégias de armazenamento, vale fixar as métricas que servem de base para avaliar e dimensionar essas arquiteturas. São elas que ajudam a levantar requisitos e a propor soluções na medida certa — nem subdimensionadas (gerando gargalos) nem superdimensionadas (desperdiçando dinheiro). As próximas subseções cobrem as principais.
 
 ## Throughput em Storage
-O Throughput, como já vimos anteriormente, pode ser descrito como o “número de operações que um sistema consegue realizar dentro de um determinado período de tempo”. Em storage, representa a quantidade total de dados que estão sendo transferidos para a unidade de armazenamento dentro de um período, geralmente sendo metrificado como megabytes por segundo (MB/s) ou gigabytes por segundo (GB/s).
 
-Discos que possuam capacidade de throughput alta podem ser utilizados para sistemas com volumes massivos de dados e com grande quantidade de leitura e escrita, possibilitando que o mesmo consiga trabalhar ativamente grandes quantidades de solicitações sem enfileiramento ou latência adicional.
+Throughput é o "número de operações que o sistema realiza num intervalo de tempo". Aplicado a storage, representa o volume total de dados transferidos para a unidade de armazenamento em dado período, normalmente expresso em megabytes por segundo (MB/s) ou gigabytes por segundo (GB/s).
+
+Discos com throughput elevado são adequados a cargas com volumes massivos e leitura/escrita intensas, pois conseguem absorver muitas solicitações simultâneas sem gerar enfileiramento ou latência extra.
 
 ## Bandwidth em Storage
-O Bandwidth, Largura de Banda, representa, no geral, a quantidade máxima de dados que um canal de comunicação pode trafegar entre um ou mais componentes. Dentro de storage, ele representa o teto de throughput que podemos atingir entre as operações de leitura e escrita, sendo medido da mesma forma que o throughput atual, megabytes por segundo (MB/s) ou gigabytes por segundo (GB/s).
+
+Bandwidth (largura de banda) é a quantidade máxima de dados que um canal de comunicação consegue trafegar entre componentes. No contexto de storage, funciona como o teto do throughput possível nas operações de leitura e escrita, e é medido na mesma unidade do throughput real: MB/s ou GB/s.
 
 ## I/O e IOPS em Storage
-O I/O ou Input/Output representa, de forma isolada, uma operação de escrita e leitura que esteja sendo realizada entre um sistema e o volume de armazenamento ao qual o mesmo tenha acesso. Todas as vezes em que um sistema precisa persistir arquivos ou linhas de dados para serem tratados em disco, isso caracteriza uma operação de Input. Cada vez que esse sistema precisa recuperar dados no storage para processar ou exibir, o mesmo realiza uma operação de Output.
 
-Para metrificar a capacidade e desempenho dessas operações, utilizamos a medida de IOPS, ou Input/Output Operations Per Second, a qual representa o número dessas solicitações de escrita e leitura que estão sendo executadas dentro de um segundo. Os volumes de armazenamento possuem essa descrição da quantidade máxima de IOPS que conseguem suportar, e recomenda-se metrificar e observar esse volume atual dessas operações para encontrarmos pontos de throttling, saturação ou se o sistema está próximo, ou excedendo, o volume de IOPS suportado, para realizarmos o dimensionamento adequado.
+Um I/O (Input/Output) é uma operação isolada de leitura ou escrita entre o sistema e o volume. Sempre que a aplicação persiste arquivos ou registros no disco, temos uma operação de entrada (Input); sempre que recupera dados para processar ou exibir, temos uma operação de saída (Output).
 
-
+Para medir a capacidade dessas operações usamos o IOPS (Input/Output Operations Per Second), ou seja, quantas leituras/escritas ocorrem por segundo. Cada volume tem um teto de IOPS suportado, e é recomendável monitorar o volume real dessas operações para detectar throttling, saturação ou proximidade do limite — insumo essencial para dimensionar a solução corretamente.
 
 # Tipos e Modelos de Storage
-Dentro da arquitetura de software o sistema de armazenamento de arquivos pode ser estruturado de diversas formas dependendo das necessidades e requisitos que o produto em questão necessita. Esses requisitos podem levar em conta diferentes níveis de durabilidade, performance, escalabilidade e segurança. Independente do tipo escolhido para solução, alguns conceitos de arquitetura precisam estar afiados para tomarmos a melhor decisão arquitetural sobre a persistência dos dados. O objetivo dessa sessão é ilustrar alguns dos conceitos mais importantes que podem ser utilizados estruturar e compreender a camada de persistência da solução.
+
+A camada de armazenamento pode ser estruturada de várias formas, conforme os requisitos de durabilidade, performance, escalabilidade e segurança do produto. Independentemente do modelo escolhido, alguns conceitos de arquitetura precisam estar claros para se decidir bem sobre a persistência. Esta seção apresenta os principais modelos usados para estruturar e compreender essa camada.
 
 ## DAS - Direct-Attached Storage
+
 ![](../images/das.png)
 
-Os DAS, ou Direct-Attached Storages, são o modelo mais tradicional de armazenamento, pois são dispositivos e volumes montados diretamente em um servidor através de interfaces SATA, USB ou NVMe. Essa modalidade é uma das mais simples, utilizada onde o desempenho e o acesso direto são critérios de muita importância na solução.
+O DAS (Direct-Attached Storage) é o modelo mais tradicional: dispositivos e volumes conectados diretamente a um servidor via interfaces como SATA, USB ou NVMe. É uma das abordagens mais simples e indicada quando desempenho e acesso direto são prioridade.
 
-Nesse modelo, os discos são alocados diretamente no host que será usado, sem latência adicional vinda de intermediações de dispositivos de rede ou troca de protocolos complexos, sendo uma solução inteligente para aplicações e componentes que são sensíveis a acessos frequentes e intensos no filesystem.
+Como os discos ficam no próprio host, não há latência adicional de rede nem troca de protocolos complexos — ótimo para aplicações sensíveis a acessos frequentes e intensos ao filesystem.
 
-Apesar das altas vantagens de latência e performance, a arquitetura DAS possui conhecidas dificuldades de escalabilidade horizontal, pois normalmente não possui suporte para montagem em múltiplos servidores e necessita de adições físicas de novos volumes para expandir a capacidade — muitas vezes exigindo a migração manual dos dados —, dificultando a operação e apresentando claras limitações de tamanho e custo.
+O ponto fraco é a escalabilidade horizontal: o DAS normalmente não suporta montagem em múltiplos servidores e exige adição física de novos volumes para crescer, muitas vezes com migração manual dos dados. Isso complica a operação e impõe limites claros de tamanho e custo.
 
 ## NAS - Network Attached Storage
 
 ![](../images/nas.png)
 
-Ao contrário da arquitetura DAS, o NAS, ou Network Attached Storage, refere-se a dispositivos ou sistemas que dispõem de seus dados de forma diretamente conectada à rede local, permitindo assim que múltiplos clientes se conectem ao mesmo volume e acessem e modifiquem os mesmos dados de forma simultânea, com o uso de protocolos de rede como o NFS (Network File System) e SMB (Server Message Block). Um NAS pode ser implementado desde redes domésticas, sistemas de compartilhamento de diretórios corporativos, até volumes de aplicações produtivas. Em resumo, o NAS é conhecido pela facilidade de implementação, gerenciamento centralizado e facilidade de acesso aos dados.
+Diferente do DAS, o NAS (Network Attached Storage) disponibiliza seus dados diretamente pela rede local, permitindo que vários clientes acessem e modifiquem o mesmo volume simultaneamente por meio de protocolos como NFS (Network File System) e SMB (Server Message Block). Ele aparece desde redes domésticas e compartilhamento corporativo de diretórios até volumes de aplicações produtivas, sendo valorizado pela facilidade de implementação, gerenciamento centralizado e acesso simples aos dados.
 
-Também ao contrário dos DAS, o desempenho e a performance das implementações de NAS são limitados à latência de rede e ao bandwidth disponível, ainda mais se houver demandas previstas de leitura e escrita de forma intensiva. Os NAS normalmente são construídos fazendo uso de arquitetura de File Storages hierárquicos.
+Também ao contrário do DAS, o desempenho do NAS fica limitado à latência da rede e ao bandwidth disponível — algo crítico em cargas com leitura/escrita intensa. Os NAS costumam ser construídos sobre File Storages hierárquicos.
 
 ## Block Storage
+
 ![](../images/block.png)
 
-Os Block Storages são sistemas de arquivos que nos permitem armazenar informações dispersas em forma de blocos por todo o volume. Os Block Storages, ou Storage de Blocos, são o que podemos considerar como mais próximo de um modelo tradicional, representando o próprio disco rígido sob gestão de um formato como FAT-32, Ex-FAT, ext4 etc., onde é possível acessá-los diretamente pelo sistema operacional e montá-los como um drive. Discos Rígidos (HDD) ou Solid-State Drives (SSD) diretamente ligados aos servidores também são considerados Block Storages. O servidor responsável por gerenciar os blocos pode formatá-los e utilizá-los como sistemas de arquivos.
+O Block Storage armazena informações em blocos espalhados pelo volume. É o modelo mais próximo do "disco rígido tradicional": representa o próprio disco sob um sistema de arquivos como FAT-32, exFAT ou ext4, podendo ser acessado pelo sistema operacional e montado como um drive. HDDs e SSDs ligados diretamente ao servidor também são Block Storages, e o servidor que gerencia esses blocos pode formatá-los e usá-los como sistema de arquivos.
 
-Cada um dos blocos dos discos é endereçado de forma única e organizado de forma individual dentro do sistema de arquivos escolhido, como se fosse o próprio disco rígido isolado, porém podendo ser tratado de forma virtual. Isso permite também que o sistema de arquivos aloque dados menores onde for mais conveniente, aproveitando o espaço de forma mais eficiente e performática. Isso abre possibilidade para que um volume muito maior possa ser particionado com dois ou mais sistemas de arquivos virtualmente isolados entre si, porém fisicamente alocados no mesmo dispositivo. Os dados são divididos em blocos de tamanhos fixos, que podem variar entre alguns kilobytes, megabytes ou gigabytes — tamanho determinado na configuração do particionamento, o que pode limitar a escalabilidade horizontal.
+Cada bloco é endereçado de forma única e tratado individualmente, como se fosse um disco isolado, mas de maneira virtual. Isso permite alocar dados menores onde for mais eficiente e até particionar um volume grande em dois ou mais sistemas de arquivos isolados, fisicamente no mesmo dispositivo. Os blocos têm tamanho fixo (de alguns kilobytes a gigabytes), definido na configuração do particionamento — característica que pode limitar a escalabilidade horizontal.
 
 ## File Storage
-Os File Storages, também conhecidos como file-level ou file-based storage, são sistemas com estruturas hierárquicas de diretórios e seus respectivos arquivos associados. Os arquivos são associados a pastas, que podem conter uma série de outros arquivos, e essas pastas podem estar dentro de outras pastas, formando uma estrutura em “árvore”. A junção do nome do arquivo com a estrutura hierárquica da pasta forma o identificador único daquele arquivo, impedindo que, dentro do mesmo nível da hierarquia, existam dois ou mais arquivos com o mesmo nome.
+
+O File Storage (também file-level ou file-based) organiza os dados em uma estrutura hierárquica de diretórios e arquivos. Arquivos ficam dentro de pastas, que podem conter outras pastas, formando uma "árvore". O identificador único de cada arquivo nasce da combinação do nome com o caminho hierárquico, impedindo que dois arquivos com o mesmo nome coexistam no mesmo nível.
 
 ![](../images/file-storage.png)
 
-Cada arquivo e pasta dentro de um File Storage possui metadados importantes associados a ele, que permitem uma melhor gestão pelo usuário, possibilitando buscas, ordenações e gestão a partir de informações como nome, tamanho, data de criação, data de modificação, donos e grupos, vindos do próprio sistema operacional ou de sistemas de autenticação corporativos.
+Cada arquivo e pasta carrega metadados relevantes — nome, tamanho, datas de criação e modificação, donos e grupos — vindos do próprio sistema operacional ou de sistemas de autenticação corporativos, o que facilita busca, ordenação e gestão.
 
-Eles, inicialmente, são concebidos para serem desacoplados e fornecerem métodos de acesso compartilhado entre diversos clientes através de um protocolo específico de rede, como NFS (Network File System) ou SMB (Server Message Block). Esses sistemas são configurados por meio de aplicações de RAID, e são anexados a sistemas NAS (Network-Attached Storage). De acordo com a especificação dos mesmos, podem possuir escalabilidade e elasticidade altas e seguras.
+Esses sistemas costumam ser pensados para acesso compartilhado e desacoplado entre vários clientes via protocolos de rede como NFS ou SMB. São tipicamente configurados com apoio de RAID e anexados a sistemas NAS, podendo oferecer alta escalabilidade e elasticidade de forma segura, conforme a especificação.
 
 ## Object Storage
 
 ![](../images/object-storage.png)
 
-Quando levamos em conta a utilização de nuvens públicas, somos apresentados com maior frequência aos Object Storages. O Object Storage, ou Armazenamento de Objetos, é uma abordagem altamente escalável e, muitas vezes, implementada com APIs abertas e escaláveis que nos permitem armazenar grandes quantidades de dados de forma totalmente desacoplada da aplicação.
+Em nuvens públicas, o modelo que mais aparece é o Object Storage (armazenamento de objetos): uma abordagem altamente escalável, frequentemente exposta por APIs abertas, que permite guardar grandes volumes de dados totalmente desacoplados da aplicação.
 
-Quando comparado a modelos tradicionais que vimos anteriormente — também conhecidos como “file storages” — e que organizam seus dados em hierarquias de diretórios no sistema de arquivos, o Object Storage trata os dados de forma individual. Cada objeto possui seu conteúdo, mas também uma série de metadados que permitem que sejam organizados, recuperados e manipulados através de APIs e comandos claros, por meio dos identificadores únicos de cada objeto.
+Enquanto os file storages tradicionais organizam dados em hierarquias de diretórios, o Object Storage trata cada dado como um objeto individual. Cada objeto reúne seu conteúdo e um conjunto de metadados, e é organizado, recuperado e manipulado por APIs e comandos claros a partir de um identificador único.
 
-Tarefas de alta demanda de gestão de arquivos, como replicação, particionamento, backups e gestão de ciclo de vida do dado, são realizadas de forma transparente, aumentando de forma exponencial aspectos de escalabilidade, durabilidade e disponibilidade. Exemplos práticos muito utilizados de armazenamento de objetos são o Amazon S3, Azure Blob Storage, Google Cloud Storage, e soluções open-source como MinIO e Ceph.
+Tarefas pesadas de gestão de arquivos — replicação, particionamento, backups e ciclo de vida do dado — acontecem de forma transparente, elevando muito a escalabilidade, a durabilidade e a disponibilidade. Exemplos práticos incluem Amazon S3, Azure Blob Storage e Google Cloud Storage, além de soluções open-source como MinIO e Ceph.
 
-Os Object Storages possuem limitações similares às dos NAS, com a exceção de que as operações de leitura e escrita, do ponto de vista da aplicação, não são realizadas de forma local, mas sim por intermediações entre cliente e servidor do storage, utilizando o mínimo possível de operações de I/O do disco de cada aplicação, tornando-o ideal para arquiteturas cloud native altamente sensíveis à escalabilidade horizontal e com alto desacoplamento.
-
+Suas limitações lembram as do NAS, mas com uma diferença: do ponto de vista da aplicação, leitura e escrita não são locais — passam por intermediação cliente-servidor do storage, usando o mínimo de I/O do disco local. Isso o torna ideal para arquiteturas cloud native sensíveis à escalabilidade horizontal e com alto desacoplamento.
 
 # RAID - Redundant Array of Independent Disks
-O termo “RAID” vem de Redundant Array of Independent Disks, e refere-se a um conjunto de estratégias para combinar múltiplos volumes de discos físicos em um único sistema lógico de armazenamento. Escrita, leitura e suas estratégias variam o foco em aumentar resiliência, tolerância a falhas, desempenho e integridade dos dados. Temos vários tipos de implementações de RAID; vamos tratar algumas delas a seguir.
+
+RAID (Redundant Array of Independent Disks) reúne estratégias para combinar múltiplos discos físicos em um único sistema lógico de armazenamento. Cada variante equilibra de forma diferente resiliência, tolerância a falhas, desempenho e integridade dos dados. A seguir, alguns dos modelos mais usados.
 
 ## RAID 0 (Striping)
-O RAID 0 aplica uma arquitetura denominada como “striping”, onde os dados são distribuídos igualmente entre dois ou mais discos ou volumes. A principal característica do RAID 0 é a extrema otimização em termos de escrita e leitura, já que as mesmas ocorrem paralelamente entre todos os discos envolvidos, somando toda a taxa de transferência de todos os volumes. Em contrapartida, se um único disco do RAID falhar, todos os dados são perdidos, o que torna o mesmo inadequado para cenários onde temos dados críticos de longa duração.
+
+O RAID 0 usa "striping": os dados são distribuídos igualmente entre dois ou mais discos. Sua marca é o ganho expressivo de leitura e escrita, já que as operações ocorrem em paralelo entre todos os discos, somando a taxa de transferência de cada volume. O custo é a fragilidade: a falha de um único disco implica perda de todos os dados, o que o torna inadequado para informações críticas e de longa duração.
 
 ![](../images/raid0.png)
 
-A extensão do RAID 0 é contínua e expansível para o número de volumes anexados a ele. Por exemplo, se temos 4 discos de 10 terabytes cada, significa que o volume total do nosso RAID será de 40 terabytes de armazenamento, que será distribuído igualmente entre todos os participantes do volume.
+A capacidade total é a soma contínua de todos os volumes anexados. Por exemplo, quatro discos de 10 TB resultam em 40 TB úteis, distribuídos igualmente entre os participantes.
 
 ![](../images/raid0_1.png)
 
 ## RAID 1 (Mirroring)
-Enquanto o RAID 0 foca sua arquitetura na diminuição de latência e aumento de performance aos custos de disponibilidade, o RAID 1 aplica o conceito de “Mirroring”, ou Espelhamento, onde cada disco participante possui um espelho exato de todos os seus dados em outro disco. Essa replicação é realizada de forma contínua para fornecer proteção e disponibilidade em caso de falha de algum dos volumes. Caso um dos discos apresente problemas, o outro assume imediatamente, sem nenhum tipo de interrupção ou perda.
+
+Enquanto o RAID 0 prioriza performance ao custo da disponibilidade, o RAID 1 aplica "mirroring" (espelhamento): cada disco tem uma cópia exata de seus dados em outro disco, replicada continuamente. Se um disco falha, o espelho assume na hora, sem interrupção ou perda.
 
 ![](../images/raid1.png)
 
-O RAID 1 tem trade-offs conhecidos de performance, mas, em contraponto, oferece maior confiabilidade, sendo o ideal para volumes que comportem sistemas operacionais, bancos de dados ou outros tipos de aplicações críticas, já que o mesmo dado é replicado e armazenado mais de uma vez.
-
+O RAID 1 abre mão de parte da performance em troca de maior confiabilidade. É ideal para volumes que hospedam sistemas operacionais, bancos de dados e outras aplicações críticas, já que o mesmo dado fica armazenado mais de uma vez.
 
 ## RAID 5 (Striping com Paridade Distribuída)
-O RAID 5 oferece uma melhor solução contra os trade-offs do RAID 0 e RAID 1, dando um melhor desempenho de escrita e leitura sem sacrificar disponibilidade e segurança. Assim como o RAID 0, ele atua realizando suas escritas de forma distribuída entre os volumes, mas, em compensação, mantém metadados de paridade distribuídos entre todos os volumes para que, em caso de falha de um dos mesmos, a informação possa ser rapidamente reconstituída e restaurada.
+
+O RAID 5 oferece um meio-termo melhor que RAID 0 e RAID 1: bom desempenho de leitura e escrita sem abrir mão de disponibilidade e segurança. Como o RAID 0, distribui as escritas entre os volumes, mas mantém metadados de paridade espalhados por todos eles, de modo que, na falha de um disco, a informação possa ser reconstruída.
 
 ![](../images/raid5.png)
 
-Importante ressaltar que a construção de storages em RAID 5 necessita de no mínimo 3 discos, e seu volume total se constitui na soma de todos os volumes, menos a capacidade de um disco, pois a proporcionalidade do mesmo é utilizada para armazenamento das referências de paridade, mesmo que a mesma seja distribuída entre todos os discos.
+Vale notar que o RAID 5 exige no mínimo 3 discos, e sua capacidade total equivale à soma dos volumes menos a capacidade de um disco — proporção reservada para a paridade (ainda que distribuída entre todos).
 
-Por exemplo, se seu storage tiver 5 discos de 10 terabytes, a capacidade total será de 40 terabytes. Isso também significa que o mesmo só pode tolerar a perda de uma unidade de disco por vez. Em caso de perda de um disco, a paridade pode ser utilizada para reconstituir os dados, porém a performance é reduzida até a reconstrução do dado e a reposição do disco.
+Por exemplo, cinco discos de 10 TB resultam em 40 TB úteis. Ele tolera a perda de apenas uma unidade por vez: nesse caso, a paridade reconstrói os dados, mas a performance cai até a reconstrução e a reposição do disco.
 
 ![](../images/raid5_1.png)
 
 ## RAID 6 (Striping com Dupla Paridade)
-O RAID 6 trabalha com distribuição de paridade semelhante ao RAID 5, porém possui uma camada adicional de paridade distribuída. Essa paridade permite que, ao invés de um, dois discos possam falhar simultaneamente sem perda de dados. Os critérios de desempenho são razoavelmente reduzidos no RAID 6 devido a essa camada extra de disponibilidade, porém é extremamente recomendado para sistemas críticos e com grande volume de dados a longo prazo.
 
+O RAID 6 funciona como o RAID 5, mas com uma camada adicional de paridade distribuída. Isso permite que dois discos falhem simultaneamente sem perda de dados. O desempenho é um pouco menor por causa dessa camada extra, mas é altamente recomendado para sistemas críticos e com grandes volumes de dados de longo prazo.
 
 ![](../images/raid6.png)
 
-O cálculo total do storage funciona de forma parecida com o RAID 5 também, porém o RAID 6 precisa, ao invés de um, de dois volumes adicionais, e o seu volume total se constitui da soma de todos os volumes, menos a capacidade de dois discos.
+O cálculo de capacidade é semelhante ao do RAID 5, porém o RAID 6 reserva dois volumes em vez de um: a capacidade total é a soma de todos os discos menos a capacidade de dois.
 
-Seguindo o mesmo exemplo, se o storage tiver 5 discos de 10 terabytes, a capacidade total será de 30 terabytes, podendo tolerar a falha de até 2 volumes sem perdas ou corrupção de dados.
+Seguindo o mesmo exemplo, cinco discos de 10 TB resultam em 30 TB úteis, tolerando a falha de até 2 volumes sem perda ou corrupção de dados.
 
 ## RAID 10 (Combinação de RAID 1 com RAID 0)
-O RAID 10, ou RAID 1+0, é uma combinação dos algoritmos de mirroring do RAID 1 e da arquitetura de striping do RAID 0. Primeiramente, os dados são distribuídos em blocos entre vários discos, como realizado pelo RAID 0, e em seguida os mesmos são replicados para o disco espelho, tal qual proposto pelo RAID 1.
 
-Esse método acrescenta uma alta disponibilidade e é resiliente contra falhas simultâneas de disco, desde que não sejam ambos da mesma faixa de espelhamento. A desvantagem principal é o alto custo, visto que a capacidade total é reduzida pela metade, pois 50% dos volumes são utilizados para redundância.
+O RAID 10 (ou RAID 1+0) combina o espelhamento do RAID 1 com o striping do RAID 0. Primeiro os dados são distribuídos em blocos entre vários discos (como no RAID 0); em seguida, são replicados para os discos espelho (como no RAID 1).
+
+O resultado é alta disponibilidade e resiliência contra falhas simultâneas, desde que os discos afetados não pertençam ao mesmo par de espelhamento. A desvantagem é o custo: metade da capacidade total é consumida pela redundância.
 
 ![](../images/raid10.png)
 
-O RAID 10 é extremamente aconselhável para sistemas financeiros, hospitalares e cargas transacionais críticas.
-
+O RAID 10 é fortemente recomendado para sistemas financeiros, hospitalares e cargas transacionais críticas.
