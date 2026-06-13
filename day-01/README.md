@@ -40,227 +40,392 @@
 * [HTTP/2](#http2)
 * [HTTP/3 (QUIC)](#http3-quic)
 
+> **Nota:** Este documento é um material de estudo baseado no artigo original
+> **"System Design - Protocolos e Comunicação de Rede"**, de **Matheus Fidelis**,
+> publicado em [fidelissauro.dev/protocolos-de-rede](https://fidelissauro.dev/protocolos-de-rede/).
+> As ilustrações pertencem ao autor original. Recomenda-se a leitura do artigo
+> completo na fonte.
 
-Neste capítulo, abordaremos de forma simplificada os conceitos essenciais dos principais tópicos de comunicação de rede sob a perspectiva de System Design. Compreender os protocolos de comunicação é de extremo valor, e pode representar um divisor de águas para aprimorar tópicos de performance e resiliência. Entender os fundamentos de protocolos como TCP e UDP, assim como outros que são desenvolvidos a partir deles, nos capacita a tomar decisões arquiteturais, projetar estratégias eficazes, melhorar níveis de performance e tempo de resposta ao aplicar suas características mais vantajosas de maneira adequada.
+---
 
-Observando meus colegas e os profissionais de engenharia com quem tive a oportunidade de trabalhar ao longo dos anos, percebi que o entendimento da camada de rede frequentemente representa uma lacuna significativa no entendimento da topologia de sistemas. Este artigo é baseado em discussões e sessões de design nas quais tive o prazer de participar ao longo desses anos, compilando de maneira acessível os tópicos práticos e teóricos mais relevantes. O objetivo é que a informação aqui apresentada seja facilmente compreendida e aplicada no cotidiano daqueles que dedicarem tempo a esta leitura. Espero que encontrem grande valor neste conteúdo.
+Este material reúne, de forma resumida, os fundamentos de comunicação de rede vistos
+pela ótica de System Design. Dominar como os protocolos funcionam é um diferencial
+concreto: influencia diretamente decisões de arquitetura, performance e resiliência.
+A partir de bases como TCP e UDP, conseguimos entender protocolos mais sofisticados e
+aplicar cada característica no contexto certo.
+
+A motivação do conteúdo é cobrir uma lacuna comum entre engenheiros: a camada de rede
+costuma ser um ponto cego na hora de raciocinar sobre a topologia de um sistema. O
+objetivo aqui é apresentar teoria e prática de maneira acessível e aplicável no
+dia a dia.
 
 # Modelo OSI
-O Modelo OSI (Open Systems Interconnection) é um modelo conceitual desenvolvido pela International Organization for Standardization (ISO) na década de 1980, com o objetivo de padronizar as funções de sistemas de telecomunicações, componentes de rede e protocolos. Representando uma abstração com base acadêmica, o modelo serve como fundamento para o entendimento de redes de alta disponibilidade, especificação de componentes de rede e criação, além de troubleshooting de protocolos de comunicação e conexões entre serviços. É importante compreender como funciona esse modelo teórico antes de entrarmos de fato em implementações de protocolos, para conseguirmos mentalmente classificar onde cada um deles opera entre as camadas propostas por ele. Normalmente as camadas mais altas do modelo são implementadas com base em software.
+
+O Modelo OSI (Open Systems Interconnection) é uma referência conceitual criada pela ISO
+nos anos 1980 para padronizar as funções de redes, componentes e protocolos. Embora seja
+uma abstração de origem acadêmica, ele continua sendo a base mental para projetar redes,
+especificar componentes e fazer troubleshooting de conexões. Entender esse modelo antes
+de mergulhar nas implementações ajuda a classificar mentalmente em qual camada cada
+protocolo opera. As camadas mais altas costumam ser implementadas em software.
 
 ![](../images/osi.png)
 
-O Modelo OSI é dividido em sete camadas, cada uma responsável por funções específicas:
+O modelo se divide em sete camadas, cada uma com responsabilidades próprias.
 
 ## Camada 1: Física
-A primeira camada é responsável pela transmissão e recepção de dados brutos não tratados sobre um meio físico. Define especificações elétricas, mecânicas, procedurais e funcionais para ativar, manter e desativar conexões físicas. Inclui cabos de rede, cabos de cobre, fibra óptica e aplicações Wi-Fi, englobando todos os meios físicos de entrada e saída para a rede. Basicamente resumida em dispositivos palpáveis.
+
+Cuida da transmissão dos bits crus sobre um meio físico, definindo características
+elétricas, mecânicas e funcionais das conexões. Abrange tudo o que é palpável na rede:
+cabos de cobre, fibra óptica, antenas Wi-Fi e demais meios de entrada e saída de sinal.
 
 ## Camada 2: Enlace
-A segunda camada fornece transferência de dados confiável entre dois componentes de rede adjacentes, detectando e corrigindo erros do nível físico. Inclui implementações de Ethernet para transmissão de dados em LANs, PPP (Point-to-Point Protocol) para conexões diretas entre dois nós e seus endereços físicos (MAC Address), que identifica dispositivos unicamente.
+
+Garante transferência confiável entre dois nós adjacentes, detectando e corrigindo erros
+originados na camada física. É onde vivem o Ethernet (redes LAN), o PPP (ligações ponto a
+ponto) e o endereço físico MAC, que identifica unicamente cada dispositivo.
 
 ## Camada 3: Rede
-A terceira camada controla a operação da sub-rede, decidindo o encaminhamento de dados com base nos endereços lógicos e nas condições das redes. Utiliza roteamento para enviar pacotes através de múltiplas redes, com protocolos como IP, fornecendo endereçamento lógico através de IPV4 e IPV6. O protocolo ARP usa uma abordagem de broadcast permitindo que dispositivos em uma rede descubram o endereço MAC (físico) associado a um endereço IP (lógico), o que é essencial para o encaminhamento de pacotes da camada de rede para a camada de enlace de dados.
+
+Responsável por decidir o caminho dos dados entre redes, usando endereços lógicos e
+roteamento. É a camada do protocolo IP (IPv4 e IPv6). O ARP atua aqui resolvendo, via
+broadcast, qual endereço MAC corresponde a um IP, o que é essencial para encaminhar
+pacotes da camada de rede para a de enlace.
 
 ## Camada 4: Transporte
-Gerencia a transferência de dados entre sistemas finais, segmentando dados em pacotes e controlando o fluxo de tráfego. Destacam-se os protocolos TCP, que entrega pacotes de forma confiável e ordenada, e UDP, que oferece conexões rápidas, porém menos confiáveis.
+
+Gerencia a entrega de dados entre os sistemas finais, segmentando-os em pacotes e
+controlando o fluxo. Os dois protocolos centrais são o TCP, que entrega de forma confiável
+e ordenada, e o UDP, mais rápido porém sem garantias.
 
 ## Camada 5: Sessão
-Responsável por iniciar, gerenciar e finalizar conexões entre aplicações, frequentemente usada em serviços com conexões autenticadas de longa duração.
+
+Cuida de abrir, manter e encerrar conexões entre aplicações. É bastante usada em serviços
+com sessões autenticadas e de longa duração.
 
 ## Camada 6: Apresentação
-Traduz dados do formato da rede para o formato aceito pelas aplicações, realizando criptografia, compressão e conversão de dados. Funciona como uma “Camada de Tradução”, implementando protocolos de segurança como SSL/TLS e suportando formatos de dados como JPEG, GIF e PNG.
+
+Traduz os dados entre o formato da rede e o formato esperado pelas aplicações, tratando de
+criptografia, compressão e conversão. Funciona como uma camada de tradução, abrigando
+protocolos como SSL/TLS e formatos como JPEG, GIF e PNG.
 
 ## Camada 7: Aplicação
-Fornece serviços de rede para aplicações do usuário, incluindo transferência de arquivos e conexões de software. É a camada mais próxima do usuário, atuando como interface entre o software de aplicação e as funções de rede. Implementa protocolos como HTTP, HTTPS, Websockets, gRPC, além de suportar sessões de SSH e transferências FTP.
+
+É a camada mais próxima do usuário, servindo de interface entre o software e a rede. Aqui
+vivem protocolos como HTTP, HTTPS, WebSockets e gRPC, além de sessões SSH e transferências
+FTP.
 
 # Os Protocolos de Comunicação
-Entrando agora de fato nos protocolos de comunicação, vamos entender algumas das implementações mais importantes e mais comuns dentro do dia a dia da engenharia de software e usuários de aplicações de rede, resumidamente qualquer pessoa do planeta Terra que possua conexões com a internet. Temos várias implementações diferentes com diversas vantagens e desvantagens quando olhamos um mapa de protocolos existentes, ainda levando em consideração que alguns protocolos são construídos utilizando outros protocolos mais estabelecidos como base, como é caso do UDP e do TCP. Inicialmente vamos olhar como funcionam essas duas implementações tratando os mesmos como protocolos base para depois detalhar protocolos mais complexos que se utilizam dos mesmos para cumprir seus papéis.
+
+Entrando nos protocolos propriamente ditos, o foco passa a ser as implementações mais
+comuns no cotidiano de quem usa redes — ou seja, praticamente qualquer pessoa conectada à
+internet. Existem inúmeras implementações com vantagens e desvantagens distintas, e muitas
+delas são construídas sobre protocolos mais básicos. TCP e UDP são justamente essas bases,
+e por isso vêm primeiro: entendê-los é pré-requisito para os protocolos mais complexos.
 
 ## Definindo um Protocolo
-A comunicação entre dispositivos é o objetivo principal do funcionamento de uma rede, interna ou externa. Na construção dessa comunicação, está um conjunto de regras e padrões conhecidos como protocolos. Um protocolo é, conceitualmente, um acordo que define o formato e a sequência das mensagens trocadas entre dois ou mais sistemas. Essas regras determinam como os dados são enviados, recebidos, e interpretados, garantindo que as informações sejam compartilhadas de maneira compreensível entre dispositivos distintos e aplicações de software.
+
+Comunicar dispositivos é o propósito de uma rede, e essa comunicação só funciona graças a
+um conjunto de regras chamado protocolo. Conceitualmente, um protocolo é um acordo que
+define o formato e a ordem das mensagens trocadas entre sistemas, estabelecendo como os
+dados são enviados, recebidos e interpretados para que máquinas e softwares distintos se
+entendam.
 
 ## Protocolos Base
-Para compreender detalhadamente os protocolos e tecnologias de comunicação modernas, é importante primeiro revisitar os protocolos de rede de baixo nível que servem como sua base. Antes de explorar protocolos como HTTP/2, HTTP/3, gRPC e AMQP, precisamos entender os mecanismos de conexão fundamentais, principalmente o TCP e o UDP, que são essenciais para o desenvolvimento dessas tecnologias avançadas.
 
-
+Antes de explorar tecnologias modernas como HTTP/2, HTTP/3, gRPC e AMQP, é preciso revisar
+os protocolos de baixo nível que servem de alicerce. Os mecanismos fundamentais de conexão
+— sobretudo TCP e UDP — são o que tornam possível construir essas camadas mais avançadas.
 
 ## Protocolo IP, IPv4 e IPv6
-O Protocolo de Internet (IP) opera na camada de rede do modelo OSI (camada 3) e é o coração da comunicação de dados na Internet, permitindo que dispositivos diferentes se conectem e compartilhem informações em uma rede interna ou externa. Este protocolo define endereços IP únicos para cada dispositivo na rede, garantindo que os dados enviados de um ponto cheguem corretamente ao seu destino. Existem duas versões principais deste protocolo em uso: IPv4 e IPv6.
+
+O Protocolo de Internet (IP) opera na camada 3 do OSI e é o núcleo da comunicação de dados
+na internet, permitindo que dispositivos diferentes troquem informações. Ele atribui
+endereços únicos a cada dispositivo, garantindo que os dados cheguem ao destino correto.
+Há duas versões principais em uso: IPv4 e IPv6.
 
 ## IPv4
-IPv4, ou Internet Protocol version 4, é a versão mais antiga e ainda a mais utilizada do protocolo IP. Ela utiliza um formato de endereço de 32 bits, o que resulta em cerca de 4,3 bilhões de endereços IP possíveis, ou exatamente 4.294.967.296 endereços possíveis. Embora este número possa parecer grande, no início da Internet grandes blocos de endereços IP foram distribúidos para empresas, universidades e agencias governamentais. Com o crescimento da Internet, o aumento no número de dispositivos conectados esgotaram os endereços IPv4 disponíveis, levando à necessidade de uma solução mais robusta. O IPv4 suporta várias técnicas para mitigar a escassez de endereços, incluindo NAT (Network Address Translation) e a alocação de IPs privados para redes locais.
+
+O IPv4 é a versão mais antiga e ainda dominante. Usa endereços de 32 bits, o que resulta
+em cerca de 4,3 bilhões de endereços possíveis. No início da internet, grandes blocos foram
+distribuídos a empresas, universidades e governos; com a explosão de dispositivos
+conectados, esse espaço se esgotou. Para mitigar a escassez, surgiram técnicas como NAT
+(Network Address Translation) e o uso de faixas de IPs privados em redes locais.
 
 ## IPv6
-IPv6, ou Internet Protocol version 6, foi desenvolvido para resolver o problema da escassez de endereços do IPv4. Com um formato de endereço de 128 bits, o IPv6 possui um espaço de endereçamento praticamente ilimitado, oferecendo trilhões de trilhões de endereços IP, chegando ao número de 340.282.366.920.938.463.463.374.607.431.768.211.456 de endereços. Esta expansão não apenas resolve o problema de escassez de endereços, mas também simplifica o processamento de pacotes em roteadores e oferece melhor segurança integrada, com suporte nativo para criptografia e comunicações seguras através do IPsec (Internet Protocol Security).
+
+O IPv6 nasceu para resolver a falta de endereços do IPv4. Com endereços de 128 bits,
+oferece um espaço praticamente ilimitado (na casa dos 340 undecilhões de endereços). Além
+de eliminar a escassez, simplifica o processamento de pacotes nos roteadores e traz
+segurança nativa via IPsec, com suporte a criptografia.
 
 ## Dual Stack
-A comunicação entre redes que utilizam IPv4 e IPv6, dois esquemas de endereçamento IP distintos, obrigatóriamente requer um mecanismo de transição ou interoperação, pois os dois protocolos são incompatíveis em termos de endereçamento direto. Para esse tipo de cenário, onde os dois protocolos precisam coexistir, a estratégia de Dual Stack pode ser utilizada.
 
-Com essa configuração, um dispositivo pode se comunicar tanto com redes IPv4 quanto com redes IPv6, escolhendo o protocolo apropriado com base no destino da comunicação. Essa é considerada uma das soluções mais simples e eficazes para a transição, mas requer que o hardware e o software suportem ambos os protocolos.
+Como IPv4 e IPv6 são incompatíveis em endereçamento direto, redes que precisam usar os dois
+exigem um mecanismo de transição. A estratégia de Dual Stack atende esse cenário de
+coexistência.
 
-
+Com Dual Stack, o mesmo dispositivo fala tanto com redes IPv4 quanto IPv6, escolhendo o
+protocolo conforme o destino. É uma das soluções mais simples e eficazes de transição, mas
+exige que hardware e software suportem ambos os protocolos.
 
 # UDP - User Datagram Protocol
-O UDP, ou User Datagram Protocol, é um protocolo da camada de transporte (camada 4) notavelmente simples, que possibilita a transmissão de dados entre hosts na rede de maneira não confiável e sem a necessidade de estabelecer uma conexão prévia. Diferentemente de outros protocolos de rede, o UDP sacrifica a confiabilidade em favor da performance, eliminando o processo de estabelecimento, manutenção, gerenciamento e encerramento de conexões. Isso permite que os dados sejam enviados ao destinatário sem o custo desse processamento extra, mas sem garantias de recebimento ou integridade.
+
+O UDP é um protocolo da camada de transporte extremamente simples, que transmite dados
+entre hosts sem estabelecer conexão prévia e sem garantias de entrega. Ele troca
+confiabilidade por performance: dispensa todo o trabalho de abrir, manter e encerrar
+conexões, enviando os dados diretamente — porém sem assegurar recebimento ou integridade.
 
 ![](../images/udp.png)
 
-O protocolo UDP segmenta os dados a serem enviados em pacotes menores chamados Datagrams. Utilizando Datagramas, o UDP permite a transmissão de dados independentes que não requerem entrega em uma ordem ou prioridade específica, nem dependem de confirmação de recebimento. Essa característica torna o UDP adequado para aplicações que demandam comunicação em tempo real, mas que podem tolerar certa perda ou corrupção de dados.
+O UDP fragmenta os dados em pacotes chamados datagrams, que são independentes e não
+dependem de ordem, prioridade ou confirmação. Isso o torna ideal para aplicações de tempo
+real que toleram alguma perda ou corrupção de dados.
 
-Protocolos e arquiteturas que exigem envio e recebimento de dados com complexidade próxima ao tempo real, e que podem suportar perdas e corrupções, geralmente são construídos sobre o UDP. Analogamente, o funcionamento do UDP pode ser comparado a entregadores que deixam correspondências debaixo do portão, na calçada ou na janela das casas, prosseguindo para as próximas entregas sem confirmar se o destinatário recebeu a mensagem.
+Arquiteturas que precisam de comunicação próxima ao tempo real e suportam perdas costumam
+ser construídas sobre UDP. Uma boa analogia: é como o entregador que deixa a correspondência
+embaixo do portão e segue para a próxima entrega, sem confirmar se alguém recebeu.
 
 # TCP - Transmission Control Protocol
-Diferentemente do UDP, o TCP (Transmission Control Protocol/Internet Protocol) é um protocolo orientados à conexão. Ele é responsável por abrir, manter, verificar a saúde e encerrar a conexão, assegurando que os dados enviados cheguem ao destino de forma íntegra, confiável e na ordem correta. Atuando na Camada de Transporte (camada 4), o TCP estabelece uma conexão antes de qualquer transmissão de dados entre os hosts, utilizando mecanismos de controle de erro e de fluxo para garantir a correta ordem e a integridade dos dados enviados.
 
-O modelo TCP emprega termos como ACK, SYN, SYN-ACK e FIN para descrever o gerenciamento de suas conexões. Existem outras flags, como URG, PSH e RST, mas focaremos em um fluxo simplificado para entender como uma conexão TCP funciona.
+Ao contrário do UDP, o TCP é orientado à conexão. Ele abre, mantém, monitora e encerra a
+conexão, garantindo que os dados cheguem íntegros, confiáveis e na ordem correta. Atuando
+na camada 4, estabelece a conexão antes de qualquer transmissão e usa controle de erro e
+de fluxo para assegurar integridade e ordenação.
+
+O modelo utiliza flags como ACK, SYN, SYN-ACK e FIN para gerenciar o ciclo de vida da
+conexão. Existem outras (URG, PSH, RST), mas o foco aqui é um fluxo simplificado.
 
 ![](../images/tcp.png)
 
-Todas as ações dentro do ciclo de vida de uma conexão TCP são confirmadas por ACKs (Acknowledgments).
+Todas as ações dentro de uma conexão TCP são confirmadas por ACKs (Acknowledgments).
 
-O início de uma conexão TCP exige uma série de confirmações entre o cliente e o servidor para assegurar sequencialidade e confiabilidade. Esse processo é conhecido como “three-way handshake”, ilustrado pela sequência de três ações: SYN, SYN-ACK e ACK, daí o termo “three-way handshake”.
+O início da conexão usa o chamado three-way handshake, uma sequência de três passos (SYN,
+SYN-ACK e ACK) que garante sincronização e confiabilidade entre cliente e servidor.
 
-No início, o cliente inicia o processo enviando um segmento TCP com a flag SYN (synchronize) marcada para o servidor, indicando a intenção de estabelecer uma conexão. Este processo inicial envolve um número de sequência conhecido como ISN (Initial Sequence Number), utilizado para sincronização e controle de fluxo.
+O cliente começa enviando um segmento com a flag SYN, sinalizando a intenção de conectar e
+carregando um número de sequência inicial (ISN) usado para sincronização e controle de fluxo.
 
-Após este primeiro contato, o servidor responde ao cliente com um segmento TCP contendo as flags SYN e ACK (acknowledgment). O ACK confirma o recebimento do SYN do cliente, enquanto o SYN do servidor indica sua própria solicitação de sincronização, efetivamente repetindo o processo, mas na direção inversa. Este segmento inclui tanto o número de sequência do servidor quanto o número de reconhecimento, que é o ISN do cliente incrementado de um.
+O servidor responde com SYN e ACK: o ACK confirma o SYN do cliente, e o SYN do servidor
+inicia a sincronização no sentido inverso. Esse segmento traz o número de sequência do
+servidor e o reconhecimento do ISN do cliente incrementado de um.
 
-Após receber o SYN do servidor, o cliente envia um segmento de ACK de volta ao servidor, confirmando o recebimento do SYN-ACK do servidor. Este ACK também contém o número de sequência inicial do cliente (agora incrementado) e o número de sequência inicial do servidor incrementado de um. Com este passo, a conexão é formalmente estabelecida, permitindo que os dados comecem a ser transmitidos.
+Por fim, o cliente devolve um ACK confirmando o SYN-ACK do servidor, com os números de
+sequência atualizados. A partir daí a conexão está formalmente estabelecida e os dados
+podem fluir.
 
-Com a conexão estabelecida, os dados são enviados entre cliente e servidor em segmentos TCP. Cada segmento é numerado sequencialmente, possibilitando que o receptor reordene segmentos que cheguem fora de ordem e detecte quaisquer dados perdidos. O receptor envia um ACK para cada segmento recebido, indicando o próximo número de sequência que espera receber. Segmentos que não são confirmados com um ACK são enviados novamente, garantindo assim a entrega confiável e a integridade dos dados.
+Durante a transmissão, cada segmento recebe um número sequencial, o que permite ao receptor
+reordenar segmentos fora de ordem e identificar perdas. Para cada segmento recebido, o
+receptor envia um ACK indicando o próximo número esperado; segmentos não confirmados são
+retransmitidos, garantindo entrega confiável.
 
-Para encerrar uma conexão TCP, ambas as partes devem fechar a sessão de sua respectiva direção através de um processo conhecido como “four-way handshake”. O cliente inicia o encerramento enviando um segmento com a flag FIN marcada, sinalizando que não tem mais dados a enviar. Após receber um ACK do servidor e um segmento com a flag FIN, indicando que o servidor também concluiu a transmissão de dados, o cliente envia o último ACK, finalizando a conexão.
+O encerramento usa o four-way handshake: cada lado fecha sua direção. O cliente envia um
+FIN sinalizando que não tem mais dados; após receber o ACK e o FIN do servidor, devolve o
+ACK final e a conexão se encerra.
 
-Comparado ao UDP, o TCP oferece maior confiabilidade, embora com mais burocracia, o que pode resultar em uma velocidade reduzida. A maioria dos protocolos de comunicação entre serviços e componentes de software é construída sobre o TCP, justamente pela sua confiabilidade.
+Comparado ao UDP, o TCP é mais confiável, embora essa burocracia possa reduzir a velocidade.
+A maioria dos protocolos de comunicação entre serviços é construída sobre TCP, justamente
+por essa confiabilidade.
 
-Analogamente, se o protocolo UDP pode ser comparado a um entregador que deixa correspondências sem confirmação de recebimento, o TCP seria como um entregador que exige sua assinatura, foto e confirmação pessoal para entregar a correspondência em mãos.
+Voltando à analogia: se o UDP é o entregador que deixa a carta sem confirmação, o TCP é o
+entregador que só entrega em mãos mediante assinatura, foto e confirmação do destinatário.
 
 ## Escolhendo Entre TCP e UDP para Construção e Uso de Protocolos
-A decisão entre usar UDP ou TCP para desenvolver protocolos depende das exigências específicas da aplicação quanto à confiabilidade, ordem, integridade dos dados e eficiência. O UDP é preferido para aplicações que demandam entrega rápida de dados e podem tolerar perdas de pacotes, enquanto o TCP é escolhido para aplicações que requerem entrega de dados confiável e ordenada. Essas características são de extrema importância ao implementar soluções que dependem de conexões de rede eficientes e confiáveis para cumprir seus objetivos.
+
+A escolha entre TCP e UDP depende dos requisitos da aplicação quanto a confiabilidade,
+ordenação, integridade e eficiência. O UDP é preferido quando a prioridade é velocidade e
+há tolerância à perda de pacotes; o TCP é escolhido quando a entrega precisa ser confiável
+e ordenada. Acertar nessa decisão é determinante para soluções que dependem de conexões
+de rede eficientes.
 
 # SSL/TLS - Transport Layer Security
-O TLS (Transport Layer Security) é um protocolo crítico para a segurança na internet e em redes corporativas, projetado para prover comunicação segura entre cliente e servidor. Sucessor do SSL (Secure Sockets Layer), seu objetivo principal é assegurar a privacidade e a integridade dos dados durante a transferência de informações entre sistemas, através de criptografia, garantindo que os dados enviados de um ponto a outro na rede permaneçam inacessíveis a interceptadores.
 
-O funcionamento do TLS se dá por meio de um “handshake”, onde cliente e servidor estabelecem parâmetros da sessão, como a versão do protocolo e os métodos de criptografia a serem utilizados, por meio de uma troca de chaves públicas e privadas. Essa troca resulta na criação de uma chave de sessão única, utilizada para criptografar os dados transmitidos, assegurando assim a segurança da comunicação. Ao término da sessão, a comunicação pode ser finalizada de forma segura, com a possibilidade de renegociar os parâmetros para futuras sessões.
+O TLS (Transport Layer Security) é o protocolo central de segurança na internet e em redes
+corporativas, garantindo comunicação privada e íntegra entre cliente e servidor por meio de
+criptografia. Sucessor do SSL, ele assegura que os dados em trânsito permaneçam
+inacessíveis a interceptadores.
 
-Existem várias versões do TLS, com aprimoramentos contínuos em segurança e desempenho. As versões mais adotadas atualmente são TLS 1.2 e TLS 1.3, sendo a última a mais recente e segura, oferecendo vantagens como um processo de “handshake” mais ágil e eficiente em comparação com as versões anteriores.
+Seu funcionamento se dá por um handshake: cliente e servidor negociam versão do protocolo e
+métodos de criptografia, trocando chaves públicas e privadas. Dessa troca nasce uma chave
+de sessão única, usada para cifrar os dados trafegados. Ao final, a sessão é encerrada de
+forma segura, podendo renegociar parâmetros para sessões futuras.
+
+Existem várias versões, com aprimoramentos contínuos de segurança e desempenho. As mais
+adotadas hoje são TLS 1.2 e TLS 1.3, sendo a 1.3 a mais recente e segura, com um handshake
+mais rápido e eficiente.
 
 # Demais Protocolos e Aplicações de Rede
-Os Protocolos de Aplicação são uma parte importante da arquitetura de redes internas e externas, permitindo a comunicação entre diferentes sistemas e aplicações que tem padrões específicos que precisam ser respeitados. Eles definem um conjunto de regras e padrões que governam a troca de dados entre servidores e clientes num gama muito grande de contextos. Estes protocolos operam na camada mais alta do modelo OSI, a Camada de Aplicação, onde o foco se desloca da transferência de dados pura para a maneira como os dados são solicitados e apresentados ao usuário de acordo com a tecnologia utilizada.
 
-Se devido a alguma necessidade específica de tecnologia você precisa implementar seu próprio protocolo de comunicação criando suas próprias regras, validações e comportamentos utilizando como base os protocolos basicos como TCP e UDP, esse seu protocolo pode ser considerado para a camada de aplicação. Se você está utilizando um protocolo específico para troca de mensagens asincronas, esse protocolo de comunicação entre o cliente e o servidor de mensagens, por ser algo construído em cima de uma comunicação TCP, está na camada de aplicação. Vamos entender algumas das principais tecnologias e protocolos que funcionam nessa camada que tende a ser as mais presentes no dia a dia de engenharia e construções de soluções de praticamente todos os tipos de arquitetura. A tendência é que vários deles além desse capítulo sejam abordados de forma mais detalhada, como veremos nos capítulos de mensageria e comunicações sincronas. Nesta sessão o objetivo é detalhar outros protocolos comuns presentes na grande maioria das implementações arquiteturais de redes.
+Os protocolos de aplicação são peça importante da arquitetura de redes, permitindo que
+sistemas distintos se comuniquem seguindo padrões específicos. Eles definem as regras de
+troca de dados entre clientes e servidores numa enorme variedade de contextos e operam na
+camada mais alta do OSI, onde o foco deixa de ser a transferência pura e passa a ser como
+os dados são solicitados e apresentados.
 
+Quando uma necessidade técnica leva você a criar seu próprio protocolo sobre bases como TCP
+ou UDP, esse protocolo é considerado de camada de aplicação. O mesmo vale para protocolos de
+mensageria assíncrona construídos sobre TCP. As próximas seções detalham algumas das
+tecnologias de aplicação mais presentes no dia a dia da engenharia; muitas delas serão
+aprofundadas em capítulos futuros sobre mensageria e comunicações síncronas.
 
 # DNS - Domain Name Service
-O Sistema de Nomes de Domínio, ou Domain Name Service (DNS) é uma premissa fundamental da internet, atuando como uma “lista telefônica” da internet e da sua rede interna. Sem o DNS, teríamos que memorizar os endereços IP complexos para acessar sites, o que seria impraticável tanto em IPV4 quanto impossível para IPV6. Em vez disso, o DNS nos permite digitar nomes de domínio amigáveis, como fidelissauro.dev, e automaticamente encontrar o endereço IP correto para se conectar ao site ou host desejado.
+
+O DNS (Domain Name Service) é uma peça fundamental da internet, funcionando como a "lista
+telefônica" da rede. Sem ele, seria preciso decorar endereços IP — impraticável no IPv4 e
+inviável no IPv6. O DNS permite digitar nomes amigáveis, como fidelissauro.dev, e resolver
+automaticamente o IP correto para a conexão.
 
 ## Funcionamento Lógico do DNS
-O processo do DNS começa quando você digita um URL no seu navegador. O navegador consulta um servidor DNS para encontrar o endereço IP correspondente ao nome do domínio. Este processo envolve várias etapas:
 
-**Consulta ao DNS Local**: Primeiro, o navegador verifica se o endereço IP está armazenado em cache localmente. Se não estiver, a consulta é enviada ao DNS Resolver, geralmente fornecido pelo seu provedor de internet.
-
-**Resolver para Servidores Raiz**: O Resolver consulta um dos servidores raiz do DNS para descobrir quem gerencia o TLD (top-level domain, como .com, .net, .org) do domínio solicitado.
-
-**Consulta aos Servidores de Nomes de Domínio (TLD Servers)**: O servidor TLD aponta para o servidor de nomes autoritativo do domínio, que conhece o endereço IP correspondente.
+O processo começa quando uma URL é digitada no navegador, que então consulta um servidor DNS
+para descobrir o IP correspondente. As etapas principais são: primeiro a **consulta ao DNS
+local**, verificando se o IP já está em cache; caso não esteja, a consulta segue ao DNS
+Resolver (geralmente do provedor). Em seguida o **Resolver consulta os servidores raiz**
+para descobrir quem gerencia o TLD do domínio (como .com, .net, .org). Por fim, o servidor
+TLD aponta para o **servidor autoritativo** do domínio, que conhece o IP final.
 
 ## Resolução do DNS na Prática
-“O que acontece quando você digita google.com no seu navegador?” - Essa pergunta ganhou até um aspecto cômico nas entrevistas de system design nos ultimos anos. Mas a ideia é propor um case prático para finalmente respondê-la de uma forma completa, aproveitando o que já entendemos sobre o DNS. O que aconteceria se digitassemos https://demo.fidelissauro.dev no navegador?
+
+A clássica pergunta de entrevista "o que acontece quando você digita google.com no
+navegador?" virou quase um meme em System Design. Usando o que já vimos sobre DNS, dá para
+respondê-la com um caso prático: o que aconteceria ao digitar https://demo.fidelissauro.dev?
 
 ![](../images/dns.png)
 
-**1. Consulta ao Servidor Raiz:** Tudo começa com os servidores raiz do DNS. Existem 13 conjuntos de servidores raiz DNS, identificados de a.root-servers.net até m.root-servers.net, que são a base da hierarquia do DNS, e representam o ponto final de cada endereço DNS que são abstraídos ao máximo, mas que na verdade existem. Sim, no caso o google.com na verdade é o google.com..
+**1. Consulta ao Servidor Raiz:** tudo começa nos servidores raiz. Existem 13 conjuntos de
+servidores raiz (de a.root-servers.net até m.root-servers.net), que formam a base da
+hierarquia e representam o ponto final — abstraído — de todo endereço DNS. O resolver começa
+perguntando à raiz quem é responsável pelo TLD .dev.
 
-Quando um resolver DNS (geralmente operado por seu provedor de internet) precisa resolver demo.fidelissauro.dev, ele começa perguntando a um desses servidores raiz (.) onde encontrar informações sobre o TLD (top-level domain), que neste caso é .dev..
+**2. Consulta ao Servidor TLD do .dev:** a raiz responde com o endereço dos servidores DNS
+do TLD .dev. O resolver então pergunta a esses servidores quem controla o domínio
+fidelissauro.dev, e recebe o endereço do servidor autoritativo.
 
-```
-- "Olá root server (.), por um acaso você conhece quem é o .dev.?
-- Claro, os servidores DNS desse cara são os seguintes: xx.xx.xx.xx"
-- Ok, muito obrigado!*
-```
+**3. Consulta ao Servidor Autoritativo de fidelissauro.dev:** o servidor autoritativo conhece
+todos os detalhes do domínio, incluindo os IPs de subdomínios. O resolver pergunta onde está
+demo.fidelissauro.dev e recebe o IP final.
 
-**2. Consulta ao Servidor Top-Level Domain para .dev:** O servidor raiz responde com o endereço dos servidores DNS responsáveis pelo TLD .dev. O resolver então faz uma consulta a um desses servidores para encontrar quem controla o domínio fidelissauro.dev.
-```
-- "Olá senhor TLD do .dev., por um acaso você conhece quem é o fidelissauro.dev?
-- "Conheço sim, gente fina! Você pode encontrá-lo no servidor de DNS xx.xxx.xx.xxx"
-- "Muito agradecido!*
-```
+**4. Conexão de Fato:** com o IP em mãos, o cliente finalmente se conecta ao serviço. Todo
+esse processo é otimizado por cache em vários níveis — resolvers, navegadores e servidores de
+nomes guardam respostas anteriores. Em domínios acessados com frequência, a informação já
+costuma estar em cache, acelerando muito a resolução.
 
-**3. Consulta ao Servidor de Nomes Autoritativo para fidelissauro.dev:** Os servidores de Top-Level Domain respondem com o endereço dos servidores de nomes (DNS servers) Autoritativos para fidelissauro.dev. Estes servidores de DNS autoritativos são responsáveis por conhecer todos os detalhes sobre o domínio, incluindo os endereços IP de quaisquer subdomínios. O resolver então pergunta a eles onde encontrar demo.fidelissauro.dev.
-
-```
-- "Olá senhor fidelissauro.dev., o demo.fidelissauro.dev está? Gostaria de falar com ele
-- Você pode encontrá-lo no endereço 123.123.123.123, mande um abraço!
-- Certo, vou me conectar com ele!
-```
-
-**4. Conexão de Fato:** Após o servidor autoritativo finalmente responder onde o host demo.fidelissauro.dev está, o cliente pode se conectar com o serviço de fato. Este processo é otimizado por meio de cache em vários níveis. Resolvers de DNS, navegadores e até mesmo os próprios servidores de nomes armazenam respostas de consultas anteriores para reduzir a latência e o tráfego na rede. Ao acessar um domínio frequentemente, é provável que as informações de DNS já estejam armazenadas em cache, acelerando significativamente o processo de resolução, poupando todo esse processo.
+> O artigo original ilustra cada etapa com diálogos bem-humorados entre o resolver e os
+> servidores (raiz, TLD e autoritativo), reforçando didaticamente o vai e vem de perguntas
+> e respostas até chegar ao IP do host.
 
 # DHCP - Dynamic Host Configuration Protocol
-O Protocolo de Configuração Dinâmica de Host (Dynamic Host Configuration Protocol) é um protocolo de rede que permite a servidores com essa responsabilidade designar automaticamente um endereço IP e outras informações a dispositivos que se conectam na rede. O DHCP é usado para a gestão de endereços IP em redes grandes e pequenas, facilitando a conectividade e reduzindo conflitos de endereços. É utilizado principalmente em projetos de networking que possibilitam a entrada e saída de hosts com certa frequência, sem a necessidade de alocar IP’s fixos e evitar conflitos de 2 dispositivos tentarem utilizar o mesmo IP.
+
+O DHCP (Dynamic Host Configuration Protocol) permite que servidores atribuam automaticamente
+endereços IP e demais configurações aos dispositivos que entram na rede. Ele simplifica a
+gestão de IPs em redes de qualquer tamanho, evitando conflitos de endereços duplicados e
+dispensando a alocação manual de IPs fixos — especialmente útil onde hosts entram e saem com
+frequência.
 
 ![](../images/dhcp.png)
 
-Quando um dispositivo - cliente DHCP - se conecta a uma rede, ele solicita informações de configuração de rede a um servidor DHCP. O processo segue quatro etapas básicas, conhecidas como **DORA** (*Discovery, Offer, Request, Acknowledgment*).
+Quando um cliente DHCP se conecta à rede, ele solicita configuração a um servidor DHCP. O
+processo tem quatro etapas conhecidas pela sigla **DORA** (*Discovery, Offer, Request,
+Acknowledgment*): no **Discovery** o cliente envia um DHCPDISCOVER procurando servidores;
+no **Offer** os servidores respondem com DHCPOFFER oferecendo um IP e configurações; no
+**Request** o cliente envia DHCPREQUEST aceitando a oferta de um servidor específico; e no
+**Acknowledgment** o servidor confirma com DHCPACK, concluindo a configuração.
 
-**1. Discovery:** O cliente envia um pacote DHCPDISCOVER para a rede, procurando por servidores DHCP disponíveis.
-
-**2. Offer:** Servidores DHCP na rede respondem ao cliente com um pacote DHCPOFFER, oferecendo um endereço IP disponível e outras configurações de rede.
-
-**3. Request:** O cliente responde a uma das ofertas com um pacote DHCPREQUEST, indicando sua intenção de aceitar os parâmetros oferecidos por um servidor específico.
-
-**4. Acknowledgment:** O servidor confirma a alocação do endereço IP ao cliente com um pacote DHCPACK, completando o processo de configuração.
-
-O DHCP elimina a necessidade de configurar manualmente os parâmetros de rede em cada dispositivo, gerencia dinamicamente o pool de endereços IP, reutilizando endereços de dispositivos que não estão mais na rede. É um protocolo “default” que já é abstraído em players de núvem pública, mas tendem a ser considerado quando precisamos projetar soluções a nível de networking além do software. Na sua casa, o seu roteador wi-fi provavelmete está atuando como um servidor DHCP. Sem ele você precisaria configurar manualmente o IP de cada disposítivo que se conecta na rede.
+O DHCP elimina a configuração manual de cada dispositivo e gerencia dinamicamente o pool de
+IPs, reaproveitando endereços de quem saiu da rede. É um protocolo "default", já abstraído
+em nuvens públicas, mas relevante ao projetar redes além do software. Em casa, o roteador
+Wi-Fi normalmente atua como servidor DHCP — sem ele, seria preciso configurar manualmente
+o IP de cada dispositivo.
 
 # NTP - Network Time Protocol
-O Network Time Protocol (NTP) é um protocolo de rede utilizado para sincronizar relógios de computadores através de redes de dados com latências variáveis. Ele opera dentro da camada de aplicação do conjunto de protocolos da Internet, utilizando o protocolo de transporte UDP na porta 123. Ele é construído sobre uma arquitetura cliente-servidor, onde múltiplos clientes (computadores que precisam de sincronização de tempo) fazem requisições a um ou mais servidores NTP. Estes servidores estão conectados a fontes de tempo de alta precisão, como relógios atômicos, GPS ou rádio relógios.
 
-A precisão do tempo é crítica para muitas aplicações em redes de computadores. Transações financeiras, comunicações seguras, sistemas de banco de dados distribuídos e redes de telecomunicações são apenas alguns exemplos onde a sincronização de relógios entre diferentes sistemas é vital. O NTP permite que essas aplicações funcionem de forma coesa, garantindo que todos os sistemas estejam “no mesmo tempo”, evitando problemas de ordem de operações, registros de log inconsistentes e falhas de segurança.
+O NTP (Network Time Protocol) sincroniza relógios de computadores através de redes com
+latências variáveis. Opera na camada de aplicação, sobre UDP na porta 123, num modelo
+cliente-servidor: múltiplos clientes consultam servidores NTP conectados a fontes de tempo
+de alta precisão, como relógios atômicos, GPS ou rádio.
+
+A precisão temporal é crítica em diversos cenários: transações financeiras, comunicações
+seguras, bancos de dados distribuídos e telecomunicações. O NTP mantém todos os sistemas
+"no mesmo tempo", evitando problemas de ordem de operações, logs inconsistentes e falhas de
+segurança.
 
 # SSH - Secure Shell
-O SSH, (Secure Shell), é um protocolo de rede criptográfico utilizado para comunicação e operações de rede seguras. O SSH permite o acesso controlado e criptografado a dispositivos remotos, sendo o método padrão para administração remota de sistemas Linux/Unix junto a uma ampla gama de diversos dispositivos de rede. Além do acesso remoto, o SSH pode criar túneis seguros para encapsular outros protocolos de rede, permitindo a segurança de transferências de arquivos (via SCP ou SFTP), encaminhamento de portas, entre outros.
 
-O SSH é o protocolo mais utilizado por adminstradores de sistema para configuração e manutenção de servidores, e existem ferramentas de gestão de configuração que utilizam do SSH para conectar, configurar e gerenciar o estado dos hosts em escala.
+O SSH (Secure Shell) é um protocolo criptográfico para comunicação e operações de rede
+seguras. Permite acesso remoto controlado e cifrado a dispositivos, sendo o método padrão de
+administração de sistemas Linux/Unix e de inúmeros equipamentos de rede. Além do acesso
+remoto, cria túneis seguros para encapsular outros protocolos, viabilizando transferências
+de arquivos (SCP, SFTP) e encaminhamento de portas.
 
-O SSH opera na camada de aplicação, utilizando o protocolo TCP, geralmente na porta 22. Ele emprega uma combinação de criptografia assimétrica para o estabelecimento de conexão e troca de chaves, e criptografia simétrica para a sessão de comunicação propriamente dita, garantindo confidencialidade, integridade dos dados e autenticação.
+É o protocolo mais usado por administradores para configurar e manter servidores, e há
+ferramentas de gestão de configuração que se apoiam nele para gerenciar hosts em escala.
 
-**1. Estabelecimento de Conexão:** O cliente SSH inicia uma conexão com o servidor. Eles negociam a versão do protocolo, um algoritmo de criptografia compartilhado e trocam chaves públicas.
-
-**2. Autenticação:** O usuário no cliente SSH é autenticado pelo servidor. Isso pode ser feito através de senha, chaves de criptografia públicas/privadas, ou métodos de autenticação mais avançados como Kerberos.
-
-**3. Sessão Segura:** Uma vez autenticados, cliente e servidor estabelecem um canal criptografado. Comandos e dados podem então ser trocados com segurança, com a criptografia protegendo contra a interceptação e alteração dos dados.
+O SSH opera na camada de aplicação, sobre TCP, geralmente na porta 22. Combina criptografia
+assimétrica (no estabelecimento e troca de chaves) com criptografia simétrica (na sessão),
+garantindo confidencialidade, integridade e autenticação. O fluxo passa por três momentos:
+**1. Estabelecimento de Conexão**, em que cliente e servidor negociam versão e algoritmo e
+trocam chaves públicas; **2. Autenticação**, em que o usuário é validado por senha, chaves
+pública/privada ou métodos avançados como Kerberos; e **3. Sessão Segura**, com um canal
+cifrado em que comandos e dados trafegam protegidos contra interceptação e alteração.
 
 # Telnet
-Telnet é um protocolo de rede utilizado para proporcionar uma comunicação baseada em texto interativa bidirecional e permite aos usuários acessar e gerenciar remotamente dispositivos ou servidores através da Internet ou redes locais. Apesar de ter sido amplamente substituído por protocolos mais seguros, como SSH, Telnet ainda é usado em certos contextos, especialmente em ambientes de teste, educação, e em sistemas legados, ou pra testes de conexões de rede.
 
-Telnet opera na camada de aplicação e utiliza o protocolo TCP para estabelecer uma conexão entre o cliente e o servidor. O protocolo é projetado para funcionar de forma independente da plataforma, o que significa que não existem limitação de versões, sistemas operacionais e afins.
+O Telnet é um protocolo de comunicação textual interativa e bidirecional que permite acessar
+e gerenciar dispositivos remotos. Embora largamente substituído pelo SSH, ainda aparece em
+ambientes de teste, ensino, sistemas legados e em testes de conectividade de rede.
 
-O uso do Telnet não é recomendado para execução de manutenções e configurações de fato, mas é uma ótima ferramenta de troubleshooting de rede e testes de conectividades em portas específicas.
+Opera na camada de aplicação sobre TCP e foi projetado para ser independente de plataforma,
+sem limitações de versão ou sistema operacional.
 
-A principal limitação do Telnet é sua falta de segurança. O protocolo não possui nenhum mecanismo de criptografia, o que significa que todas as informações, incluindo nomes de usuário, senhas e outros dados sensíveis, são transmitidas em texto claro. Isso torna o Telnet extremamente vulnerável a interceptações e ataques de *“man-in-the-middle”*, onde um atacante pode facilmente capturar e ler os dados transmitidos.
+Não é recomendado para manutenções e configurações reais, mas é uma excelente ferramenta de
+troubleshooting e verificação de conectividade em portas específicas.
 
-
+Sua principal limitação é a falta de segurança: não há criptografia, então tudo — inclusive
+usuários e senhas — trafega em texto claro. Isso o torna extremamente vulnerável a
+interceptação e a ataques *man-in-the-middle*.
 
 # Protocolos HTTP/1, HTTP/2 e HTTP/3
-Ao examinar o protocolo **HTTP** (*Hypertext Transfer Protocol*) sob a perspectiva de System Design, é importante entender seu impacto na arquitetura, desempenho, escalabilidade e segurança de aplicações modernas. Operando na **Camada 7 do Modelo OSI**, ou **Camada de Aplicação**, o HTTP é predominantemente baseado em conexões TCP para gerenciar solicitações, constituindo a espinha dorsal da internet e da comunicação entre sistemas modernos.
 
-O HTTP/2 e HTTP/3 representam evoluções do protocolo HTTP, criadas para **melhorar a eficiência da comunicação, reduzir latências e otimizar o desempenho** em relação às versões anteriores, HTTP/1.1 e HTTP/1.0. Essas versões iniciais dominaram a internet e as redes corporativas por muitos anos.
+Analisar o **HTTP** (*Hypertext Transfer Protocol*) sob a ótica de System Design significa
+entender seu impacto em arquitetura, desempenho, escalabilidade e segurança. Operando na
+**Camada 7 do OSI** e apoiado predominantemente em TCP, o HTTP é a espinha dorsal da
+internet e da comunicação entre sistemas modernos.
 
-O HTTP opera em um modelo de **solicitação e resposta entre cliente e servidor**, onde o cliente faz uma solicitação e o servidor responde. Este paradigma é simples, extensível e compatível com várias arquiteturas de aplicação, incluindo sistemas monolíticos e microserviços. Contudo, a natureza síncrona do HTTP pode introduzir latência e tempo de resposta em troca da simplicidade de implementação, exigindo otimizações para aprimorar o desempenho das solicitações em ambientes de larga escala.
+HTTP/2 e HTTP/3 são evoluções voltadas a **melhorar eficiência, reduzir latência e otimizar
+desempenho** frente ao HTTP/1.0 e HTTP/1.1, versões que dominaram a web por muitos anos.
 
-A escolha de utilizar o protocolo HTTP para comunicação em decisões de engenharia permeiam arquiteturas que **precisam de uma resposta sincrona de suas dependências**, onde sistemas dependentes necessitam que um dado ou ação sejam executadas e entregues no momento que são solicitados, sem a possibilidade de ser executado por um comando ou solicitação assincrona. Extenderemos essa explicação no capítulo que tratam padrões de comunicação, onde abordaremos temas como o REST.
+O HTTP segue o modelo de **solicitação e resposta** entre cliente e servidor: o cliente pede,
+o servidor responde. É um paradigma simples e extensível, compatível com monólitos e
+microsserviços, mas sua natureza síncrona pode introduzir latência, exigindo otimizações em
+larga escala.
 
-
+Escolher HTTP costuma fazer sentido em arquiteturas que **precisam de resposta síncrona** das
+dependências, em que o dado ou a ação têm de ser entregues no momento da solicitação. Esse
+tema, incluindo REST, será aprofundado no capítulo sobre padrões de comunicação.
 
 ## Estruturas de Requisições e Respostas HTTP
-Entender a estrutura de uma requisição HTTP é fundamental na arquitetura de sistemas. Embora simples e comum na rotina de engenheiros e arquitetos, compreender detalhadamente suas partes pode facilitar troubleshooting, melhorar a segurança e otimizar a performance. Vamos explorar os principais componentes: Body, Headers, Cookies e Status Codes.
+
+Compreender a anatomia de uma requisição HTTP é essencial na arquitetura de sistemas. Mesmo
+sendo algo rotineiro, conhecer suas partes em detalhe facilita o troubleshooting, melhora a
+segurança e otimiza a performance. Os principais componentes são Body, Headers, Cookies e
+Status Codes.
 
 ### Body
-O Body, ou corpo, de uma requisição ou resposta HTTP contém os dados transmitidos entre cliente e servidor. Em requisições, o body pode incluir informações para que o servidor execute funções específicas, como detalhes de um formulário, payloads em JSON ou arquivos de mídia. Na resposta, geralmente contém o recurso solicitado pelo cliente, seja um documento HTML, um objeto JSON, ou outros formatos de dados, definidos pelos headers de Content-Type.
+
+O Body é o corpo da mensagem e carrega os dados trocados entre cliente e servidor. Em
+requisições, pode conter dados de formulário, payloads JSON ou arquivos de mídia. Em
+respostas, costuma trazer o recurso solicitado — um documento HTML, um objeto JSON ou outros
+formatos definidos pelo header Content-Type.
 
 ### Headers
-Os Headers, ou cabeçalhos, são elementos presentes tanto em requisições quanto em respostas, fornecendo informações e metadados sobre a transação HTTP em que estão inseridos. Podem especificar o tipo de conteúdo no body (Content-Type), a autenticação necessária (Authorization), instruções de cache (Cache-Control), entre outros metadados. Os headers são fundamentais para configurar e controlar a comunicação HTTP, enriquecendo a interação entre cliente e servidor com informações detalhadas sobre a transação.
 
-A possibilidade da criação dos headers que vão trafegar entre cliente servidor fica a conta do direcionamento de engenharia, e não precisam necessariamente serem descritos em ordem ou possuem uma obrigatoriedade e padrão formal. Porém por convenção, alguns deles são extremamente comuns e estão presentes na maioria das aplicações. Alguns deles sendo:
+Os Headers são metadados presentes em requisições e respostas. Indicam o tipo de conteúdo
+(Content-Type), a autenticação (Authorization), diretivas de cache (Cache-Control) e muito
+mais. São fundamentais para configurar e controlar a comunicação, enriquecendo a interação
+entre cliente e servidor.
+
+A definição de quais headers trafegam fica a cargo da engenharia; não há ordem obrigatória
+nem um padrão formal rígido, mas alguns são tão comuns que aparecem na maioria das
+aplicações. A tabela abaixo resume os mais frequentes:
 
 | Header | Descrição |
 | :--- | :--- |
@@ -281,10 +446,17 @@ A possibilidade da criação dos headers que vão trafegar entre cliente servido
 | **Access-Control-Allow-Origin** | Especifica os domínios que podem acessar os recursos em uma resposta de origem cruzada. |
 
 ### Cookies
-Cookies são dados enviados pelo servidor para o navegador do usuário, armazenados e reenviados pelo navegador em futuras requisições ao mesmo servidor. Principalmente usados para manter o estado da sessão (como autenticação do usuário ou personalização), os cookies facilitam a manutenção do registro de estado do cliente sem necessidade de reautenticação a cada nova solicitação.
+
+Cookies são dados que o servidor envia ao navegador para serem armazenados e reenviados em
+requisições futuras ao mesmo servidor. Servem principalmente para manter o estado da sessão
+(autenticação, personalização), permitindo preservar o contexto do cliente sem exigir
+reautenticação a cada nova solicitação.
 
 ### Status Codes
-Os Status Codes, ou códigos de status, são números de três dígitos enviados pelo servidor em resposta a uma requisição, indicando o resultado. São fundamentais para REST, informando o cliente sobre o sucesso ou falha da operação. Veja alguns comuns:
+
+Os Status Codes são números de três dígitos que o servidor devolve indicando o resultado da
+requisição. São essenciais para REST, comunicando sucesso ou falha. As classes principais
+são:
 
 | Código | Classe | Descrição |
 | :--- | :--- | :--- |
@@ -295,36 +467,70 @@ Os Status Codes, ou códigos de status, são números de três dígitos enviados
 | **5xx** | Erro do Servidor | Falhas no processamento pelo servidor, indicam problemas internos ou sobrecarga. |
 
 # HTTP/1.x
-O HTTP/1.1, lançado em 1997, trouxe melhorias significativas em relação ao HTTP 1.0 (que não vou abordar aqui em detalhes devido a descontinuidade) para se adaptar às novas formas de uso da internet e das aplicações web. Uma mudança fundamental foi a introdução de **conexões persistentes**, eliminando a necessidade de estabelecer uma nova conexão TCP para cada requisição, o que aumentou a eficiência da comunicação de forma drastica no lado do servidor e do cliente, evitando a abertura de sockets de forma desenfreada.
+
+O HTTP/1.1, lançado em 1997, trouxe avanços importantes sobre o HTTP/1.0 para acompanhar o
+crescimento da web. A mudança mais marcante foram as **conexões persistentes**, que
+eliminaram a necessidade de abrir uma nova conexão TCP a cada requisição, reduzindo
+drasticamente a abertura descontrolada de sockets e aumentando a eficiência de cliente e
+servidor.
 
 ![](../images/http11.png)
 
-Esta versão também implementou o conceito de **Pipelining**, permitindo o envio de várias requisições em sequência sem aguardar pela resposta da anterior. Esse recurso visava aprimorar a utilização da conexão.
+Essa versão também introduziu o **Pipelining**, permitindo enviar várias requisições em
+sequência sem esperar a resposta da anterior, com o objetivo de aproveitar melhor a conexão.
 
-Do ponto de vista da performance, melhorias no caching e no gerenciamento de estado com cookies contribuíram para a redução significativa do número de requisições repetidas ao servidor.
+Em performance, melhorias de caching e a gestão de estado com cookies reduziram bastante o
+número de requisições repetidas ao servidor.
 
-Contudo, o HTTP/1.1 enfrentava problemas como o “**head-of-line blocking**” (I), onde a espera por uma resposta impedia o processamento de requisições subsequentes. Esse e outros desafios levaram à evolução do protocolo em direção a melhorias subsequentes.
+Ainda assim, o HTTP/1.1 sofria com o **head-of-line blocking**, em que a espera por uma
+resposta travava o processamento das requisições seguintes. Esse e outros limites motivaram
+as versões posteriores do protocolo.
 
 # HTTP/2
-Lançado em 2015, o HTTP/2 foi desenvolvido para superar as limitações do HTTP/1.1, aprimorando a formatação, priorização e transporte de dados. Essas otimizações abriram caminho para a implementação de protocolos adicionais e métodos de comunicação mais avançados, enriquecendo as estratégias de System Design.
 
-Uma inovação chave do HTTP/2 é a multiplexação, que permite o envio simultâneo de requests e responses pela mesma conexão TCP. Isso elimina o problema de “head-of-line blocking” (HOL blocking) encontrado no HTTP/1.1, onde o processamento de requisições sequenciais poderia ser bloqueado pela espera de uma resposta.
+Lançado em 2015, o HTTP/2 surgiu para superar as limitações do HTTP/1.1, aprimorando
+formatação, priorização e transporte de dados. Essas otimizações abriram espaço para métodos
+de comunicação mais avançados e estratégias mais ricas de System Design.
 
-Outra funcionalidade relevante no desenvolvimento de aplicações web é a priorização de requisições. No HTTP/2, é possível definir a prioridade das requisições, permitindo que servidores otimizem a entrega de recursos aos clientes de acordo com a importância designada.
+A inovação central é a **multiplexação**, que permite enviar várias requisições e respostas
+simultaneamente pela mesma conexão TCP, eliminando o head-of-line blocking que afligia o
+HTTP/1.1.
 
-Além disso, a característica de Server Push do HTTP/2 possibilita que servidores enviem recursos ao navegador antes mesmo de serem explicitamente solicitados pelo cliente, melhorando a eficiência da carga de páginas e a experiência do usuário.
+Outra novidade relevante é a **priorização de requisições**: é possível atribuir prioridades,
+permitindo que o servidor otimize a entrega de recursos conforme a importância.
+
+Há ainda o **Server Push**, que permite ao servidor enviar recursos ao navegador antes mesmo
+de serem solicitados, melhorando o carregamento das páginas e a experiência do usuário.
 
 ![](../images/http2.png)
 
 # HTTP/3 (QUIC)
-O HTTP/3 representa a iteração mais avançada do protocolo até o presente momento da escrita desse capítulo, trazendo inovações significativas, especialmente na camada de transporte (camada 4), ao **substituir o TCP pelo QUIC (Quick UDP Internet Connections)**. Baseando-se no UDP ao invés do TCP, essa mudança marca um avanço disruptivo na implementação do protocolo.
 
-Desenvolvido originalmente pelo Google e adotado pelo HTTP/3 através da Internet Engineering Task Force (IETF), o QUIC oferece várias melhorias sobre o TCP, destacando-se em latência, segurança e eficiência na transmissão de dados.
+O HTTP/3 é a iteração mais avançada do protocolo até o momento, com inovações sobretudo na
+camada de transporte ao **substituir o TCP pelo QUIC (Quick UDP Internet Connections)**.
+Apoiar-se no UDP em vez do TCP é uma mudança disruptiva na implementação.
 
-Apesar das preocupações iniciais, o QUIC alcança objetivos de redução de latência mantendo handshakes criptografados e mecanismos de recuperação de erros, comparáveis aos do TCP, porém com uma performance de comunicação aprimorada.
+Criado originalmente pelo Google e padronizado pela IETF, o QUIC entrega ganhos de latência,
+segurança e eficiência sobre o TCP.
+
+Apesar das preocupações iniciais, o QUIC reduz latência mantendo handshakes criptografados e
+mecanismos de recuperação de erros comparáveis aos do TCP, porém com comunicação mais
+performática.
 
 ![](../images/http3.png)
 
-O QUIC diminui a latência de conexão por meio de um handshake criptografado mais eficiente. Enquanto o TCP necessita de um processo de troca prolongado para estabelecer uma conexão segura, o QUIC otimiza este processo combinando o handshake do controle de transmissão com o TLS, diminuindo as etapas necessárias para iniciar a conexão. A multiplexação, introduzida no HTTP/2, é aprimorada no HTTP/3, permitindo uma execução mais eficaz sem bloqueios, facilitando o tráfego de dados e arquivos por uma conexão UDP, em detrimento da TCP.
+O QUIC diminui a latência da conexão ao combinar, num único passo, o handshake de transporte
+com o do TLS, encurtando o processo que no TCP exige várias trocas para estabelecer uma
+conexão segura. A multiplexação, herdada do HTTP/2, é aprimorada e passa a operar sem
+bloqueios sobre uma conexão UDP.
 
-A implementação do HTTP/3 com o QUIC é particularmente vantajosa para diversos tipos de aplicativos, especialmente aqueles que demandam transmissões de dados rápidas e seguras, como streaming de vídeo, jogos online e comunicações em tempo real. Uma característica notável do QUIC é sua habilidade de manter conexões ativas mesmo com a mudança de redes (por exemplo, de Wi-Fi para dados móveis), devido à identificação por conexão ID, ao invés de endereços IP e portas, facilitando a continuidade das sessões sem interrupções.
+O HTTP/3 com QUIC é especialmente vantajoso para aplicações que exigem transmissões rápidas e
+seguras, como streaming de vídeo, jogos online e comunicação em tempo real. Um destaque do
+QUIC é manter a conexão ativa mesmo ao trocar de rede (por exemplo, de Wi-Fi para dados
+móveis), pois identifica a sessão por um connection ID em vez de IP e porta, evitando
+interrupções.
+
+# Referências
+
+- **Artigo original:** Matheus Fidelis — *Protocolos e Comunicação de Rede* —
+  [https://fidelissauro.dev/protocolos-de-rede/](https://fidelissauro.dev/protocolos-de-rede/)

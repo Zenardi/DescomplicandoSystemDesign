@@ -18,134 +18,141 @@
   - [Resiliência na Camada de Comunicação](#resiliência-na-camada-de-comunicação)
 - [Referências](#referências)
 
+> **Nota:** Este documento é um material de estudo baseado no artigo original
+> **"System Design - Service Mesh"**, de **Matheus Fidelis**, publicado em
+> [fidelissauro.dev/service-mesh](https://fidelissauro.dev/service-mesh).
+> As ilustrações pertencem ao autor original. Recomenda-se a leitura do artigo
+> completo na fonte.
+
+---
 
 ![System Design - Service Mesh](images/mesh-capa.png)
 
-Esse capítulo, assim como vários outros que seguem uma linha mais concisa e resumida, surgiu a partir de um resumo de uma aula que dei sobre o tema. As inúmeras propostas e abordagens do mercado sobre o que se espera — ou não — de um service mesh me motivaram a reunir esta revisão bibliográfica conceitual, com a proposta, mais uma vez, de colocar os pés no chão e retornar às origens dos patterns de engenharia.
+O conteúdo nasceu da síntese de uma aula sobre o tema e busca reorganizar, de forma conceitual, o que o mercado costuma esperar de um service mesh. A intenção é voltar às origens dos patterns de engenharia e tratar a malha de serviço de maneira pé-no-chão, longe das discussões puramente de produto.
 
-Entendemos que, em diversos níveis, a implementação adequada de service meshes tende a ser altamente benéfica para diferentes tipos de arquiteturas de solução, agregando valor em termos de resiliência, disponibilidade e inteligência para sistemas distribuídos. Portanto, o objetivo final deste capítulo é esclarecer, de uma vez por todas, o que é uma malha de serviço e onde esse tipo de pattern é melhor empregado, abstraindo ao maximo as implementações diretas, focando diretamente no conceito.
+Bem aplicada, a malha de serviço agrega resiliência, disponibilidade e inteligência a sistemas distribuídos de diferentes naturezas. Por isso o foco aqui é entender, de forma definitiva, o que é esse pattern e em quais cenários ele rende mais, abstraindo as implementações específicas para concentrar atenção no conceito.
 
 # Definindo Service Mesh
 
-O Service Mesh, ou Malha de Serviço, é, antes de qualquer coisa, um pattern de networking. Um Service Mesh existe para oferecer mecanismos, diretamente na camada de rede, capazes de lidar com a alta complexidade de comunicação entre diversos microserviços e componentes de um ambiente distribuído, fornecendo funcionalidades de métricas, observabilidade, segurança, controle e resiliência de forma desacoplada da aplicação, de maneira padronizada e transparente, de forma que os seus atores nem saibam que estão numa malha de serviço.
+Antes de tudo, o Service Mesh (Malha de Serviço) é um pattern de **networking**. Ele entrega, diretamente na camada de rede, mecanismos para lidar com a complexidade de comunicação entre muitos microserviços de um ambiente distribuído. Métricas, observabilidade, segurança, controle e resiliência passam a ser oferecidos de forma padronizada, transparente e desacoplada da aplicação — a ponto de os próprios participantes nem perceberem que estão dentro de uma malha.
 
 ![Malha de Serviço](images/malha-de-servico.png)
 
-O termo “malha de serviço” faz alusão a uma malha ou rede formada por muitos componentes que se comunicam entre si — sejam eles microserviços ou suas dependências diretas — consumidos por diversas fontes a todo momento de forma padronizada ou não.
+O nome "malha" remete à teia de componentes que conversam entre si — microserviços e suas dependências — consumidos por várias fontes o tempo todo, de modo padronizado ou não.
 
 ![No-Mesh](images/no-mesh.drawio.png)
 
-Atuando diretamente na camada de comunicação e nos protocolos de rede, um Service Mesh permite operar em uma dimensão onde, em vez de cada serviço da malha implementar isoladamente seus próprios mecanismos de segurança, balanceamento de carga, autenticação, autorização, observabilidade e resiliência — como retries, circuit breakers e service discovery — essas responsabilidades são centralizadas de forma transparente em uma camada de comunicação dedicada a essas finalidades, sem que a aplicação precise lidar diretamente com elas. Isso pode ocorrer por meio da interceptação do tráfego via proxies ou em camadas mais baixas, diretamente no kernel do sistema.
+Atuando sobre os protocolos de rede, o Service Mesh evita que cada serviço reimplemente isoladamente segurança, balanceamento, autenticação, autorização, observabilidade e resiliência (retries, circuit breakers, service discovery). Essas responsabilidades migram para uma camada de comunicação dedicada e transparente, seja interceptando o tráfego com proxies, seja operando em camadas mais baixas, no próprio kernel.
 
 ![With Mesh](images/mesh.drawio.png)
 
-O pattern de Service Mesh nos permite estender as capacidades de conexões simples como TCP, HTTP ou gRPC. Na maioria dos cenários, o fato de um componente estabelecer conexão com outro para acionar para solicitar dados ou executar comandos ocorre de forma “natural” na rede. Os Service Meshes permitem interceptar essas conexões e adicionar uma série de comportamentos e funcionalidades adicionais, elevando os níveis de segurança, resiliência e observabilidade em um nível abstraído da aplicação.
+Na prática, o pattern estende conexões comuns como TCP, HTTP ou gRPC. Quando um componente abre conexão com outro para pedir dados ou executar comandos, o mesh intercepta essa conexão e injeta comportamentos extras, elevando segurança, resiliência e observabilidade num nível abstraído da aplicação.
 
-Uma forma simples e direta de entender a proposta do Service Mesh em um ambiente complexo de microserviços é perceber sua capacidade de tratar a rede como software, definindo seus comportamentos, mecanismos e níveis de segurança de forma declarativa e configurável.
+Uma boa forma de captar a ideia é enxergar a rede como software: seus comportamentos, mecanismos e níveis de segurança passam a ser definidos de maneira declarativa e configurável.
 
 # Componentes de um Service Mesh
 
-As implementações de Service Mesh normalmente são subdivididas em dois componentes principais: **Control Plane** (Plano de Controle) e **Data Plane** (Plano de Dados). Independentemente do modelo de uso ou da forma como o Service Mesh foi construído, esses dois conceitos tendem a permanecer presentes em algum nível. Ambos são complementares e definem o que, como e onde as regras definidas serão executadas.
+As implementações costumam se dividir em dois componentes centrais: **Control Plane** (Plano de Controle) e **Data Plane** (Plano de Dados). Independentemente do modelo adotado, esses dois conceitos aparecem em algum nível e são complementares — definem o que, como e onde as regras serão executadas.
 
 ![Control Plane Data Plane](images/control-plane-data-plane.drawio.png)
 
-Essa separação permite que as regras de comunicação entre os microserviços sejam gerenciadas de forma centralizada e, em seguida, propagadas para todos os componentes da malha, sem a necessidade de que cada microserviço seja atualizado ou modificado individualmente, tornando a comunicação completamente segregada e transparente.
+Essa separação permite gerenciar as regras de comunicação de forma centralizada e, em seguida, propagá-las a todos os componentes da malha, sem precisar atualizar cada microserviço individualmente. A comunicação fica completamente segregada e transparente.
 
 ## Control Plane (Camada de Controle)
 
-O Control Plane, ou Plano de Controle, define e armazena, em uma camada persistente, todas as regras criadas para a malha de comunicação. Quando definimos, por exemplo, uma regra de roteamento para selecionar qual microserviço será responsável por atender determinada requisição baseada em host, header ou path, ou uma autorização para que um serviço se comunique com outro, ou ainda uma política de chaveamento de tráfego entre versões de um mesmo serviço, essas regras são armazenadas no Control Plane, juntamente com um mecanismo que permite sua consulta imediata pelos agentes do Data Plane, que são os responsáveis por aplicá-las na prática.
+O Control Plane define e persiste todas as regras da malha. Roteamentos baseados em host, header ou path; autorizações de comunicação entre serviços; políticas de chaveamento de tráfego entre versões — tudo isso fica armazenado nele, junto a um mecanismo que disponibiliza essas regras para consulta imediata pelos agentes do Data Plane, que são quem as aplica de fato.
 
 ## Data Plane (Camada de Execução)
 
-Uma vez que as políticas estão definidas e disponíveis no Control Plane, essas regras são encaminhadas aos agentes do Data Plane, que se encarregam de executá-las de fato. Idealmente, o Data Plane deve modificar o comportamento das comunicações de rede de forma totalmente transparente e abstrata para a aplicação, de modo que não seja necessário nenhum tipo de reinicialização ou alteração direta no serviço.
+Com as políticas definidas no Control Plane, elas são encaminhadas aos agentes do Data Plane, responsáveis pela execução real. O ideal é que o Data Plane altere o comportamento das comunicações de forma totalmente transparente, sem exigir reinicialização ou mudança direta no serviço.
 
-Os agentes do Data Plane normalmente operam por meio de proxies, que atuam como intermediários entre os serviços, interceptando chamadas sem que as aplicações estejam cientes dessa camada adicional. Todas as requisições entre os serviços e suas dependências passam por esses proxies intermediários, que determinam para onde cada requisição deve ser encaminhada, verificam se ela tem autorização para ocorrer e coletam métricas em todas as dimensões possíveis, com base em regras previamente configuradas.
+Esses agentes costumam operar como proxies intermediários entre os serviços, interceptando chamadas sem que as aplicações saibam. Toda requisição entre um serviço e suas dependências passa por esse proxy, que decide o destino, valida a autorização e coleta métricas conforme as regras previamente configuradas.
 
 # Modelos de Service Mesh
 
-Ao explorar as possibilidades de mercado, em essência, todas as opções de service mesh vão ter seus prós e contras, mas vão servir pra praticamente a mesma finalidade de oferecer features adicionais na camada de rede. O “como” isso é implementado pode variar um pouco, sendo um detalhe muito importante na tomada de decisão de adoção desse tipo de arquitetura. Neste tópico vamos listar algumas das abordagens mais comuns que encontramos nos modelos de uso, para que seja possível conhecer qual o tipo de implementação faz mais sentido para o ambiente, produto ou plataforma onde vamos implementar a malha de serviço.
+Ao olhar o mercado, todas as opções têm prós e contras, mas servem essencialmente ao mesmo fim: adicionar features na camada de rede. O que varia é o **como** isso é implementado — detalhe decisivo na hora de adotar a arquitetura. A seguir, as abordagens mais comuns, para ajudar a escolher o tipo de implementação que faz sentido para cada ambiente, produto ou plataforma.
 
 ## Modelo Client e Server
 
-O modelo Client-Server é, talvez, o modelo mais rudimentar de Service Mesh, pois exige a implementação direta na aplicação, especificando os endereços do Control Plane para que a aplicação renove, periodicamente, suas configurações e políticas em memória.
+É talvez o modelo mais rudimentar, porque exige implementação direta na aplicação: ela precisa conhecer os endereços do Control Plane para renovar periodicamente suas configurações e políticas em memória.
 
 ![Client-Server](images/sdk.drawio.png)
 
-Esse modelo é implementado por meio de bibliotecas e SDKs distribuídos especificamente para as linguagens utilizadas na aplicação. Nesse cenário, a responsabilidade de lidar com as atualizações e de implementar os comportamentos desejados no Data Plane recai sobre a própria aplicação, que executa essas tarefas diretamente em seu tempo de execução.
+A entrega se dá por bibliotecas e SDKs específicos para cada linguagem. Assim, a própria aplicação assume a responsabilidade de atualizar e aplicar os comportamentos do Data Plane em tempo de execução.
 
-Normalmente, esse modelo é mais limitado em funcionalidades de resiliência e segurança que operam fora da aplicação, o que o torna menos abstraído e mais acoplado à lógica interna do serviço.
+Por consequência, é um modelo mais limitado em resiliência e segurança fora da aplicação, ficando menos abstraído e mais acoplado à lógica interna do serviço.
 
 ## Sidecars
 
-A forma mais comum de implementação do Data Plane é por meio da aplicação de sidecars junto à aplicação. Em ambientes de containers, isso significa implementar um container adicional dentro da menor unidade de medida do orquestrador, que será encarregado de receber as solicitações de entrada e saída de tráfego e decidir como elas serão roteadas para o destino original. Esse sidecar é responsável por buscar proativamente as políticas mais atualizadas no Control Plane e aplicar as regras de interceptação sem que a aplicação, de fato, tenha ciência disso.
+A forma mais comum de implementar o Data Plane é via sidecars acoplados à aplicação. Em containers, isso significa adicionar um container extra dentro da menor unidade do orquestrador, encarregado de receber o tráfego de entrada e saída e decidir o roteamento. O sidecar busca proativamente as políticas mais recentes no Control Plane e aplica as regras de interceptação sem que a aplicação perceba.
 
-Em um exemplo prático utilizando o Kubernetes, cada pod do serviço recebe um container adicional executando um proxy que intercepta as requisições de entrada e saída de tráfego e toma decisões antes de encaminhá-las para o container da aplicação propriamente dito. A aplicação recebe esse request já interceptado, autorizado e eventualmente modificado, sem saber que todas essas operações foram realizadas.
+No Kubernetes, por exemplo, cada pod ganha um container adicional rodando um proxy que intercepta as requisições e decide antes de repassá-las ao container da aplicação. Esta recebe o request já interceptado, autorizado e eventualmente modificado, sem saber de nada disso.
 
 ![Sidecar](images/sidecar.drawio.png)
 
-Resumidamente, toda a comunicação de entrada e saída passa por esse proxy, que aplica regras de balanceamento, retries, autenticação (mTLS), circuit breaking e coleta de métricas. Esse tipo de abordagem, apesar de ser a mais comum, também é a mais custosa do ponto de vista computacional, pois requer um componente adicional alocado em cada uma das réplicas do serviço.
+Toda a comunicação passa por esse proxy, que aplica balanceamento, retries, autenticação (mTLS), circuit breaking e coleta de métricas. Apesar de ser a abordagem mais difundida, é também a mais custosa computacionalmente, já que exige um componente adicional em cada réplica do serviço.
 
 ## Sidecarless / Proxyless
 
-As alternativas Sidecarless, ou Proxyless, são propostas mais modernas para a implementação de Service Meshes, principalmente por retomarem a proposta original de serem um pattern focado em networking. No modelo proxyless, as funções que antes eram desempenhadas pelo proxy sidecar são incorporadas diretamente em componentes de rede ou no kernel, sendo compartilhadas entre os serviços. Isso elimina a necessidade de um componente dedicado para cada instância do serviço, reduzindo o consumo de CPU, memória e a latência adicional introduzida por uma camada intermediária.
+As propostas Sidecarless (ou Proxyless) são mais modernas e retomam a essência do pattern voltado a networking. Nesse modelo, as funções antes desempenhadas pelo proxy sidecar passam para componentes de rede ou para o kernel, compartilhados entre os serviços. Isso elimina o componente dedicado por instância, reduzindo CPU, memória e a latência da camada intermediária.
 
 ![Sidecarless](images/sidecarless.drawio.png)
 
-As alternativas Sidecarless são, por natureza, mais econômicas em termos de recursos computacionais e mais performáticas, pois são construídas diretamente na camada de rede ou operam capturando eventos no kernel do host onde a solução está executando, injetando trechos de código para tomar decisões sobre chamadas de sistema capturadas.
+São, por natureza, mais econômicas e performáticas, pois operam na própria camada de rede ou capturando eventos no kernel do host, injetando trechos de código para decidir sobre as chamadas de sistema interceptadas.
 
-Por possuírem uma natureza mais próxima do sistema operacional, essas soluções tendem a oferecer mais funcionalidades e garantias em camadas mais baixas da rede, como a camada 4 (transporte), enquanto apresentam algumas limitações nas funcionalidades típicas da camada 7 (aplicação) da pilha OSI. Para suprir a ausência de funcionalidades mais avançadas encontradas no modelo com sidecar, é comum a adoção de proxies compartilhados que assumem responsabilidades específicas da camada 7, como retries, circuit breakers, controle de requisições, limitação de protocolos, entre outras.
+Por ficarem mais próximas do sistema operacional, oferecem mais garantias em camadas baixas (camada 4, transporte), mas têm limitações nas funcionalidades típicas da camada 7 (aplicação). Para cobrir essa lacuna, é comum usar proxies compartilhados que assumem responsabilidades de L7, como retries, circuit breakers, controle de requisições e limitação de protocolos.
 
 # Funcionalidades Comuns dos Service Meshes
 
-Como dito anteriormente, o principal objetivo de se adotar um pattern de malha de serviço é poder adicionar comportamentos diretamente na camada da de comunicação entre as aplicações. e esses comportamentos podem se desdobrar em vários funcionalidades muito conhecidas que trabalham de forma totalmente abstraída e transparente para as aplicações que compõe a malha de servico. Aqui estaremos listando algumas que já apareceram em capítulos anteriores, mas dessa vez sendo abordados diretamente no service mesh.
+O objetivo principal de adotar uma malha é incorporar comportamentos diretamente na camada de comunicação entre as aplicações. Esses comportamentos se desdobram em funcionalidades já conhecidas, agora aplicadas de forma transparente para os serviços da malha. A seguir, algumas delas — várias já vistas em capítulos anteriores — agora sob a ótica do service mesh.
 
 ## Roteamento de Tráfego Inteligente
 
-Service Meshes permitem definir regras sofisticadas de roteamento de tráfego entre serviços. É possível, por exemplo, encaminhar requisições com base em cabeçalhos, paths, versões ou pesos de tráfego. Isso viabiliza estratégias como deployments canary, blue-green, ou roteamento por contexto, como device, geolocalização ou tipo de cliente.
+A malha permite definir regras sofisticadas de roteamento entre serviços, encaminhando requisições por cabeçalhos, paths, versões ou pesos de tráfego. Isso viabiliza estratégias como canary, blue-green ou roteamento por contexto (device, geolocalização, tipo de cliente).
 
 ![Mesh](images/Scale-Mesh_Routing.drawio.png)
 
-Uma das principais características de Service Meshs que atuam principalmente em Layer 7 é a capacidade de definir e trabalhar com regras complexas e sofisticadas de roteamento entre aplicações. É possível realizar roteamento de forma granular, por exemplo, encaminhar requisições com base em cabeçalhos, paths, versões ou pesos de tráfego. Esse tipo de capacidade nos permite elaborar estratégias mais inteligentes de Deployment, permitindo a execução de Canary Releases, Blue/Green Deployments, Traffic Mirror e etc.
+Essa granularidade é uma marca dos meshes que atuam em camada 7. Trabalhar com regras complexas de roteamento abre caminho para deployments mais inteligentes — Canary Releases, Blue/Green, Traffic Mirror, entre outros.
 
 ## Balanceamento de Carga Dinâmico
 
-O balanceamento de carga é um dos conceitos mais básicos ao se falar de sistemas distribuídos, performance, capacidade, escalabilidade e resiliência. Dentro de um Service Mesh, o balanceamento de carga deixa de ser responsabilidade de um componente intermediário e centralizado, passando a ser gerenciado diretamente pela própria camada de comunicação.
+Balanceamento de carga é um dos pilares de sistemas distribuídos no que toca performance, capacidade, escalabilidade e resiliência. Dentro da malha, ele deixa de depender de um componente intermediário centralizado e passa a ser gerenciado pela própria camada de comunicação.
 
 ![mesh balancing](images/mesh-balancing.drawio.png)
 
-Dessa forma, é possível realizar checagens de saúde proativas e aplicar, de forma granular, diversos algoritmos de balanceamento — como Least Request, Round Robin, IP-Hash e Least Connection — em cada microserviço de forma isolada, otimizando pontualmente os diferentes tipos de cenários encontrados em ambientes distribuídos. Para que isso funcione de forma eficiente, o Service Mesh deve possuir funcionalidades adicionais de descoberta de serviço para que seja possível registrar os participantes do contexto de cada microserviço.
+Com isso, dá para fazer health checks proativos e aplicar algoritmos variados — Least Request, Round Robin, IP-Hash, Least Connection — de forma isolada por microserviço, otimizando cada cenário. Para funcionar bem, o mesh precisa de service discovery, que registra os participantes do contexto de cada serviço.
 
 ## Observabilidade e Telemetria Transparente
 
-Por ser possível interceptar e adicionar comportamentos customizados diretamente nas conexões e requisições entre os componentes da malha, podemos incluir métricas de latência, taxa de erro, throughput e tempo de resposta dessas interações de forma mais fidedigna e transparente, sem a necessidade de componentes adicionais ou o risco de métricas tendenciosas.
+Como é possível interceptar e enriquecer as conexões entre os componentes, a malha coleta métricas de latência, taxa de erro, throughput e tempo de resposta de forma fidedigna e transparente, sem componentes extras e sem o risco de métricas tendenciosas.
 
 ![Telemetry Mesh](images/telemetry-mesh.drawio.png)
 
-Essa mesma capacidade nos permite gerar spans de tracing distribuído automaticamente, de forma desacoplada das aplicações. O objetivo é obter fontes mais confiáveis para troubleshooting, detecção de anomalias e análise de performance em ambientes complexos.
+A mesma capacidade gera spans de tracing distribuído automaticamente, desacoplados das aplicações, fornecendo fontes confiáveis para troubleshooting, detecção de anomalias e análise de performance.
 
-A Telemetria e a observabilidade de dia zero tende, a ser um dos ganhos mais valiosos e instantâneas das malhas de serviço.
+Observabilidade e telemetria de dia zero costumam ser um dos ganhos mais valiosos e imediatos de uma malha de serviço.
 
 ## Segurança, Autenticação e Autorização
 
-O Control Plane e o Data Plane de um Service Mesh podem dispor de mecanismos para mapear e identificar quais são os membros de determinados grupos de microserviços. A partir disso, durante a interceptação do tráfego, é possível aplicar controles de acesso granulares, totalmente gerenciados na camada de comunicação. Com isso, torna-se viável restringir acessos ou permitir que apenas determinados microserviços possam se comunicar entre si, bem como consumir endpoints e métodos específicos de forma controlada.
+Control Plane e Data Plane podem mapear quais serviços pertencem a determinados grupos. Durante a interceptação do tráfego, aplicam controles de acesso granulares na camada de comunicação, restringindo quem fala com quem e quais endpoints e métodos podem ser consumidos.
 
-Quando projetamos plataformas que hospedam muitos serviços de diferentes produtos, times ou clientes, esse tipo de controle permite segregar e isolar cargas de trabalho específicas, garantindo segurança e isolamento de forma altamente performática e transparente — negando ou permitindo acessos diretamente na camada de rede.
+Em plataformas que hospedam muitos serviços de produtos, times ou clientes diferentes, esse controle permite segregar e isolar cargas de trabalho, negando ou permitindo acessos diretamente na rede, de forma performática e transparente.
 
 ## Criptografia de Tráfego e mTLS
 
-Outra vantagem importante no quesito segurança, ao falarmos de Service Mesh, é a possibilidade de trafegar pacotes utilizando protocolos de criptografia em ambas as pontas das conexões, de forma transparente e abstraída. Ao adotar mTLS por padrão, é possível garantir que toda a comunicação entre os serviços seja criptografada diretamente em trânsito, impedindo que payloads sensíveis sejam interceptados, alterados ou envenenados por componentes maliciosos — estejam eles dentro ou fora da malha.
+Outro ganho de segurança é trafegar pacotes criptografados em ambas as pontas, de forma transparente. Com mTLS por padrão, toda a comunicação entre serviços é cifrada em trânsito, impedindo que payloads sensíveis sejam interceptados, alterados ou envenenados por componentes maliciosos, dentro ou fora da malha.
 
-O mTLS também valida a identidade da origem e do destino antes que a conexão de fato ocorra, além de permitir a troca de chaves criptográficas diretamente entre os componentes intermediários, como os sidecars, retirando essa responsabilidade da aplicação.
+O mTLS também valida a identidade de origem e destino antes da conexão e permite a troca de chaves diretamente entre componentes intermediários, como os sidecars, tirando essa responsabilidade da aplicação.
 
-Uma boa implementação de mTLS no contexto de Service Mesh deve ser a mais transparente possível para as aplicações, sem exigir configuração manual de certificados ou alterações nas chamadas no nível de código. O Control Plane é responsável por gerenciar a emissão, rotação e revogação dos certificados, enquanto o Data Plane deve aplicá-los diretamente nos componentes intermediários — sejam eles instruções no kernel ou proxies em modelos com sidecar — executando as regras de forma totalmente transparente para os serviços.
+Uma boa implementação deve ser transparente: nada de configurar certificados manualmente ou alterar código. O Control Plane gerencia emissão, rotação e revogação dos certificados, enquanto o Data Plane os aplica nos componentes intermediários — instruções no kernel ou proxies sidecar — de forma invisível aos serviços.
 
 ## Resiliência na Camada de Comunicação
 
-Ao atuar diretamente na camada de rede, o Service Mesh pode ajudar provendo mecanismos nativos e abstraídos para lidar com falhas e instabilidades na comunicação entre os serviços. De forma totalmente transparente à implementação dos microserviços, é possível aplicar estratégias de retries customizadas, com controle sobre a quantidade de tentativas e os intervalos entre elas, timeouts configuráveis para evitar conexões presas indefinidamente, circuit breakers que interrompem chamadas para destinos com falhas persistentes, e fallbacks que permitem a execução de comportamentos alternativos em caso de falhas, sem que as aplicações sequer percebam que esses mecanismos estão em ação.
+Atuando na rede, a malha oferece mecanismos nativos e abstraídos contra falhas e instabilidades na comunicação. De forma transparente, é possível aplicar retries customizados (número de tentativas e intervalos), timeouts configuráveis para evitar conexões presas, circuit breakers que cortam chamadas a destinos com falhas persistentes e fallbacks com comportamentos alternativos — tudo sem que as aplicações percebam.
 
 ![Retry Mesh](images/retry-mesh.png)
 
-Além disso, podemos também aplicar injeção de falhas intencionais na comunicação entre microserviços, com o objetivo de testar e validar as estratégias de resiliência adotadas, promovendo um ambiente mais preparado para permanecer disponível em situações adversas com os patterns de Fault Injection.
+Também é possível injetar falhas intencionais na comunicação entre microserviços para testar e validar as estratégias de resiliência, preparando o ambiente para se manter disponível em situações adversas por meio de Fault Injection.
 
 ![Mesh Fault Injection](images/mesh-fault-injection.drawio.png)
 

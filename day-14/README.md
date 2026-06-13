@@ -26,343 +26,412 @@
   - [Escalabilidade de Software](#escalabilidade-de-software)
 - [Referências](#referências)
 
+> **Nota:** Este documento é um material de estudo baseado no artigo original
+> **"System Design - Performance, Capacidade e Escalabilidade"**, de
+> **Matheus Fidelis**, publicado em
+> [fidelissauro.dev/performance-capacidade-escalabilidade](https://fidelissauro.dev/performance-capacidade-escalabilidade/).
+> As ilustrações pertencem ao autor original. Recomenda-se a leitura do artigo
+> completo na fonte.
+
+---
 
 ![System Design - Performance, Capacidade e Escalabilidade](images/capa-performance.png)
 
-Esse é mais um artigo da série sobre System Design. Nele, vamos abordar três tópicos: Capacidade, Performance e Escalabilidade (não necessariamente nessa ordem), sempre com uma perspectiva conceitual de System Design. Ao escrever este capítulo, me questionei se deveria dividí-lo em três textos separados. Contudo, fiquei tão satisfeito com o resultado que não consegui tomar essa decisão. À medida que criava tópicos, estudava e coletava referências, uma estranha sensação de querer que este capítulo nunca terminasse surgiu. Com base nisso, levantei muitos outros tópicos para explorar e abordar nos próximos artigos.
+Este material reúne três temas que, embora distintos, se entrelaçam o tempo
+todo em System Design: **performance**, **capacidade** e **escalabilidade**. A
+abordagem é conceitual, com foco em entender como cada pilar influencia os
+demais. São assuntos densos o suficiente para renderem textos separados, mas
+ganham profundidade quando estudados em conjunto.
 
 # Definindo Performance
 
-Performance, em termos simplistas, refere-se a quão rápido e eficiente um sistema ou algoritmo pode ser ao processar uma única transação. Isso pode ser medido de forma isolada ou em meio a um grande volume de outras transações. A aplicação prática da “performance” envolve diversos termos técnicos e complexidades dentro das disciplinas que compõem a engenharia de software em geral, sendo mais perceptível pelos usuários finais de nossas soluções.
+Performance é, de forma resumida, a medida de **quão rápido e eficiente** um
+sistema ou algoritmo consegue processar uma única transação — seja isolada,
+seja em meio a um grande volume de operações simultâneas. É a faceta mais
+percebida pelo usuário final, ainda que envolva uma série de termos técnicos e
+complexidades das disciplinas de engenharia de software.
 
-A performance deve ser considerada em relação aos requisitos funcionais e não funcionais do sistema. Por exemplo, um sistema projetado para processamento de dados em tempo real terá diferentes expectativas de performance em comparação a um sistema de armazenamento de dados de longo prazo.
+A avaliação de performance precisa sempre ser interpretada à luz dos
+**requisitos funcionais e não funcionais** do sistema. Um serviço de
+processamento em tempo real carrega expectativas de desempenho bem diferentes
+das de um sistema voltado ao armazenamento de longo prazo. Não existe número
+"bom" no vácuo: o que vale é o contexto.
 
 ## Métricas de Performance
 
 ![Metricas de Performance](images/performance-metricas.png)
 
-É de extrema importancia entender como o desempenho do sistema varia sob diferentes condições, como picos de carga, falhas de componentes ou mudanças no padrão de uso.
+Compreender como o sistema se comporta sob diferentes condições — picos de
+carga, falhas de componentes, mudanças no padrão de uso — é essencial. Para
+isso, dependemos de **monitoramento contínuo de indicadores-chave** (KPIs,
+service levels, etc.). Observar essas métricas de forma sequencial, ao longo de
+vários períodos, gera insumo para decisões de design, manutenção, operação,
+comparação de benchmarks e priorização de melhorias.
 
-A avaliação de performance de um sistema ou algoritmo requer mecanismos de monitoramento de indicadores chave, também conhecidos como KPIs, Service Levels, entre outros. Observar essas métricas de forma sequencial e contínua por vários períodos de tempo pode trazer ideias valiosas sobre como o sistema está operando e dar autonomia para os times de engenharia tomarem decisões sobre design, manutenção e operação do mesmo, além de fornecer dados para identificar tendências, fazer comparação de benchmarks, projetar e prever capacidade e identificar e priorizar quais partes precisam de melhoria de forma mais urgente.
+Algumas métricas são praticamente universais; outras nascem de necessidades
+específicas de negócio. Identificar quais vale a pena acompanhar é um trabalho
+contínuo, fortemente ligado à maturidade e às "horas de voo" do software.
 
-Existem várias métricas importantes na hora de avaliar um sistema, algumas são padrões quase universais e podem ser aplicadas em quase todos os cenários, enquanto outras são provenientes de negócios e necessidades mais específicas que só são aplicadas e fazem sentido em contextos muito específicos. Saber identificar oportunidades de métricas a serem monitoradas representa um trabalho árduo e contínuo que depende muito da maturidade e das “horas de voo” de um software.
-
-Para este texto, vamos trabalhar com o “feijão com arroz” das métricas de performance, também conhecidas no mercado como `Four Golden Signals`.
-
-Os “Four Golden Signals” são um conceito dentro do monitoramento e observabilidade de sistemas, popularizado pelo Google no livro “[Site Reliability Engineering](https://sre.google/sre-book/table-of-contents/)” (SRE). Eles representam as quatro métricas mais importantes que você deve monitorar para entender a saúde de um sistema distribuído. Essas métricas ajudam os engenheiros a detectar problemas rapidamente e a manter sistemas estáveis e eficientes. Essas métricas são `Saturação`, `Tráfego`, `Tempo de Resposta` e `Taxa de Erros`.
-
-Não vamos abordar essas métricas do ponto de observabilidade, pois mais adiante teremos um capítulo dedicado a esse tema onde vamos abordar esse e mais alguns conceitos de forma mais profunda, mas sim do ponto de vista de performance.
+Para este estudo, o foco recai sobre o conjunto básico conhecido como **Four
+Golden Signals**, popularizado pelo Google no livro
+[Site Reliability Engineering](https://sre.google/sre-book/table-of-contents/).
+São as quatro métricas centrais para entender a saúde de um sistema
+distribuído: **Saturação**, **Tráfego**, **Tempo de Resposta** e **Taxa de
+Erros**. Aqui elas são vistas sob a ótica de performance, e não de
+observabilidade — tema reservado para um capítulo próprio.
 
 ### Utilização e Saturação de Recursos
 
-A `Utilização` de Recursos refere-se a quanto do recurso disponível está sendo usado. Um recurso é considerado `Saturado` quando a sua taxa de utilização se aproxima do máximo valor possível ou esperado. Um sistema pode estar saturado em termos de CPU, memória, disco ou mesmo um pool de conexões de rede. Medir a saturação ajuda a prever problemas de desempenho e a entender quando é necessário escalar recursos.
+A **utilização** indica quanto de um recurso disponível está em uso. Quando
+essa taxa se aproxima do limite máximo possível ou esperado, dizemos que o
+recurso está **saturado**. A saturação pode ocorrer em CPU, memória, disco ou
+até em um pool de conexões de rede, e acompanhá-la ajuda a antecipar problemas
+de desempenho e a saber quando escalar.
 
-Algoritmos que fazem uso intensivo de recursos computacionais como CPU, Memória, Disco e Rede costumam ser muito sensíveis a otimizações e degradações desses recursos. Ter visibilidade da taxa de utilização em relação às capacidades disponíveis desses recursos em um sistema é essencial para determinar a saúde do serviço e fornecer insights sobre otimização, custos e desempenho.
+Algoritmos intensivos em CPU, memória, disco e rede são especialmente sensíveis
+a otimizações e degradações. Medir a saturação serve para responder perguntas
+como "a partir de qual percentual de CPU meu tempo de resposta começa a sofrer?"
+ou "a partir de qual I/O de disco meu banco começa a degradar as consultas?".
+Conseguir respondê-las com clareza é um sinal de maturidade da equipe.
 
-O objetivo de avaliar a saturação, juntamente com outras métricas de desempenho, é poder identificar gargalos de recursos como, por exemplo, “a partir de qual porcentagem de uso de CPU meu tempo de resposta e taxa de erro começam a ser afetados?” ou “a partir de qual uso de I/O de escrita e leitura de disco meu banco de dados começa a degradar o tempo de consulta?”. Responder a essas perguntas de forma eficiente evidencia a maturidade e a senioridade de equipes e produtos.
-
-Podemos representar matematicamente a utilização e saturação de um recurso computacional por meio de uma fórmula simples:
-
-$$
-Utilização de Recurso = (\frac{Recurso Utilizado}{Recurso Disponível}) \times 100
-$$
-
-Vamos imaginar um caso em que precisamos analisar o uso de memória alocada para um sistema. Basicamente, presumimos um cenário em que temos disponível para executar um algoritmo `2 GB` de RAM, ou `2048 MB`. Após coletar métricas e observar o algoritmo em execução, foi constatado que o uso atual dessa memória disponível está em `1 GB`, ou `1024 MB`.
-
-$$
-Utilização de Memória = (\frac{1024}{2048}) \times 100 \\
-Utilização de Memória = 50\%
-$$
-
-De acordo com o cálculo no cenário hipotético, a utilização de memória do sistema está em 50% da capacidade disponível. Um recurso pode estar saturado e começar a afetar o desempenho do sistema mesmo antes da utilização chegar a 100%. Analisar a utilização de recursos é importante para otimizar o desempenho de um serviço e fornecer informações necessárias para criar sistemas mais econômicos, eficientes e performáticos.
+A utilização pode ser expressa pela razão entre recurso consumido e recurso
+disponível, multiplicada por 100. No exemplo do artigo, um sistema com 2 GB de
+RAM disponíveis usando 1 GB apresenta 50% de utilização. Vale o alerta: um
+recurso pode degradar a performance **antes mesmo de chegar a 100%** de
+utilização.
 
 ### Throughput, ou Tráfego
 
-O `Throughput`, de maneira geral, descreve o número de operações que um sistema consegue realizar dentro de um determinado período de tempo. Ele mede quantas unidades de trabalho (como transações ou requisições) um determinado sistema ou algoritmo pode processar por unidade de tempo, como requisições por segundo, vendas por minuto, arquivos por dia ou eventos por mês. É uma métrica de extrema importancia para entender a capacidade e o desempenho de aplicações. Em sistemas projetados para lidar com protocolos web, o Throughput é contabilizado a partir de quantas requisições HTTP a aplicação recebeu e respondeu.
+O **throughput** descreve o número de operações que um sistema consegue
+realizar em um dado intervalo de tempo — requisições por segundo, vendas por
+minuto, arquivos por dia, eventos por mês. Em aplicações web, costuma ser
+contabilizado pela quantidade de requisições HTTP recebidas e respondidas.
 
-A fórmula utilizada para calcular o throughput pode ser representada matematicamente da seguinte forma:
-
-$$
-Throughput = \frac{Unidades de Trabalho Processadas}{Tempo}
-$$
-
-Desenhando um cenário hipotético onde um sistema recebeu `6.000` requisições no último minuto, podemos calcular o throughput por segundo da seguinte forma:
-
-$$
-Throughput = \frac{6000}{60} \\
-Throughput = 100.00 rps
-$$
-
-Representar matematicamente o throughput do sistema é muito valioso em termos de performance, pois nos ajuda a entender até que ponto nosso sistema consegue atender requisições antes de começar a afetar suas métricas de aceitação de tempo de resposta e taxa de erros. Podemos utilizar o throughput dentro de períodos lógicos de tempo para efetuar operações de escalabilidade dinâmica, como veremos na seção de escalabilidade.
+A métrica é obtida dividindo as unidades de trabalho processadas pelo tempo. Um
+sistema que recebeu 6.000 requisições no último minuto, por exemplo, tem um
+throughput de 100 rps. Representar isso matematicamente ajuda a saber até que
+ponto o sistema atende à demanda antes de comprometer tempo de resposta e taxa
+de erros — e serve de base para acionar estratégias de escalabilidade dinâmica.
 
 ### Tempo de Resposta
 
-O `Tempo de Resposta` é o tempo total que leva desde o envio de uma solicitação até o recebimento da resposta. Ele inclui tanto a latência (tempo de ida e volta da rede) quanto o tempo de processamento no servidor, sendo uma soma de ambos na maioria dos casos. Em um contexto de usuário final, é o tempo que leva desde que um usuário realiza uma ação (como clicar em um link ou pressionar uma tecla) até que ele veja o resultado dessa ação, e portanto é medido entre um client um servidor. Em sistemas escaláveis, é importante que o tempo de resposta não aumente significativamente à medida que a utilização da aplicação se eleva.
+O **tempo de resposta** é o intervalo total entre o envio de uma solicitação e
+o recebimento da resposta. Ele soma a **latência** (ida e volta na rede) e o
+**tempo de processamento** no servidor. Do ponto de vista do usuário, é o tempo
+entre executar uma ação e ver o resultado. Em sistemas escaláveis, o ideal é
+que esse valor não cresça de forma significativa à medida que a carga aumenta.
 
-A `Latência` pode ser definida como o atraso de rede ou o tempo que uma solicitação leva para viajar do remetente ao receptor. Em outras palavras, é o atraso entre o início de uma ação e o início da reação, podendo ser influenciado pela distância física entre os comunicantes, pela velocidade do meio de transmissão e por qualquer atraso introduzido por dispositivos intermediários, como roteadores.
+A latência representa o atraso de rede — influenciado por distância física,
+meio de transmissão e dispositivos intermediários como roteadores. Já o tempo
+de processamento é o que o servidor leva para tratar a requisição depois de
+recebê-la. Medido a partir do cliente, o tempo de resposta é simplesmente o
+timestamp da resposta menos o timestamp da requisição.
 
-O `Tempo de Processamento` é o tempo que um sistema leva para processar uma solicitação após recebê-la. Esse termo é frequentemente usado para descrever o tempo necessário para que uma CPU ou servidor processe uma tarefa específica.
-
-O cálculo do tempo de resposta pode ser representado da seguinte forma, a partir do cliente, subtraindo o tempo de início da requisição do tempo final da resposta observada:
-
-$$
-Tempo de Resposta = Timestamp da Resposta - Timestamp da Requisição
-$$
-
-Todas as três variáveis apresentadas podem ser observadas e medidas independentemente e em diversos pontos da operação, de acordo com as necessidades do ambiente, inclusive sendo uma boa prática para executar troubleshooting mais granular em investigações de problemas, como identificar em que ponto exato da transação ocorreu a degradação em questão.
+Cada um desses componentes pode ser observado isoladamente e em pontos
+distintos da operação. Essa granularidade é valiosa em troubleshooting, pois
+permite localizar exatamente onde a degradação aconteceu.
 
 ### Taxa de Erros
 
-Uma das principais métricas que podem ser utilizadas para avaliar performance, capacidade e disponibilidade de sistemas é a taxa de erros. Essa métrica pode ser utilizada junto com métricas de tempo de resposta e throughput para tirar conclusões valiosas a respeito do comportamento de um sistema.
+A **taxa de erros** é a porcentagem de requisições que falham em relação ao
+total processado. Combinada a tempo de resposta e throughput, ela permite
+conclusões importantes sobre o comportamento do sistema. Um sistema bem
+planejado deve **manter ou reduzir** sua taxa de erro mesmo quando a carga
+cresce.
 
-A taxa de erros corresponde à porcentagem de todas as requisições que resultam em um erro em relação ao total de requisições. Entendemos que um sistema escalável, com capacidade planejada, deve manter ou reduzir sua taxa de erro à medida que a carga aumenta.
-
-Para calcular a taxa de erros de um sistema, geralmente usamos uma fórmula simples que relaciona o número de eventos de erro com o número total de eventos ou tentativas. A taxa de erros é frequentemente expressa como uma porcentagem. Aqui está a fórmula básica:
-
-$$
-Taxa de Erro = (\frac{Número de Erros}{Número Total de Tentativas ou Eventos}) \times 100
-$$
-
-Suponha que você tenha um sistema que processou 1.000 transações, das quais 50 resultaram em erros. A taxa de erros seria calculada da seguinte forma:
-
-$$
-Taxa de Erro = (\frac{50}{1000}) \times 100 \\
-Taxa de Erro = 5.0\%
-$$
-
-Essa métrica é particularmente útil para avaliar a confiabilidade e a qualidade de sistemas de software, especialmente em ambientes de produção onde a estabilidade é crítica. Acompanhar a taxa de erros ao longo do tempo pode ajudar a identificar tendências, avaliar o impacto de mudanças ou atualizações no sistema e determinar áreas que podem precisar de melhorias.
+O cálculo é direto: número de erros dividido pelo total de tentativas,
+multiplicado por 100. No exemplo, 50 erros em 1.000 transações resultam em 5%.
+Acompanhar essa métrica ao longo do tempo ajuda a identificar tendências,
+avaliar o impacto de mudanças e priorizar áreas que precisam de melhoria —
+especialmente em produção, onde a estabilidade é crítica.
 
 ### Utilizando Percentis em Métricas de Performance
 
-Os percentis são medidas que dividem uma amostra de dados ordenados em cem partes iguais. São amplamente utilizados em estatísticas para entender a distribuição dos dados e representam ferramentas valiosas na análise de performance, oferecendo uma visão mais aprofundada do comportamento em cenários específicos. Em certos cenários, apoiar-se apenas na média pode ser insuficiente para analisar a performance de uma funcionalidade, sistema ou transação. Os percentis são particularmente úteis em conjuntos de dados como tempos de execução de operações em bancos de dados, tempos de resposta e utilização de recursos. Eles podem revelar insights valiosos que a média pode ocultar, como outliers e picos que normalmente não são refletidos por ela.
+Percentis dividem um conjunto ordenado de dados em cem partes iguais e oferecem
+uma visão muito mais rica do que a média isolada. Em análises de tempo de
+resposta, execução de queries e uso de recursos, eles revelam **outliers e
+picos** que a média costuma esconder.
 
-Um percentil é um valor abaixo do qual uma certa percentagem dos dados cai. Por exemplo, ao analisar tempos de resposta, o `90º percentil` ou `p90` é o valor abaixo do qual 90% das respostas são mais rápidas. Um p90 de 800ms indica que 90% das requisições são atendidas em até 800ms. Utilizar percentis permite aos engenheiros identificar e analisar variações extremas, como casos em que o sistema se comporta lentamente. Percentis altos (como 95º ou 99º) são extremamente úteis para identificar comportamentos anormais e extremos do sistema que podem estar afetando negativamente a experiência de uso.
+Um percentil é o valor abaixo do qual cai determinada porcentagem dos dados. O
+**p90** de 800ms, por exemplo, indica que 90% das respostas são mais rápidas do
+que isso. Percentis altos, como p95 e p99, são ótimos para flagrar
+comportamentos anormais e extremos que prejudicam a experiência do usuário.
 
 ![Percentis](images/Percentis.png)
 
-Além de considerar apenas o tempo médio de resposta, analisar os percentis (como 50º, 95º, 99º) em conjunto com a média pode fornecer uma compreensão mais precisa do comportamento real do sistema sob diferentes condições.
-
-Imagine um cenário onde estamos medindo o tempo de resposta de um sistema web em uma janela de tempo específica. Após coletar os dados, observamos que o tempo médio de resposta é de 200ms, um tempo considerado ótimo. No entanto, ao analisar os percentis, descobrimos que o 95º percentil é de 700ms e o 99º percentil é de 1000ms. Isso indica que, embora a maioria das requisições seja rápida, existe um número significativo de casos onde a resposta é muito mais lenta do que a média sugere. Avaliar o comportamento desses outliers pode ser de grande valor para o planejamento de capacidade, identificação de gargálos e ajustes de performance.
+O artigo ilustra o ponto com um cenário onde a média de resposta é de 200ms —
+aparentemente excelente. Ao olhar os percentis, porém, o p95 é de 700ms e o p99
+chega a 1000ms. Ou seja, embora a maioria das requisições seja rápida, há um
+volume relevante de respostas bem mais lentas do que a média sugere. Avaliar
+esses outliers é fundamental para planejar capacidade e identificar gargalos.
 
 # Definindo Capacidade
 
 ![Definindo Capacidade](images/capacidade-2.png)
 
-A capacidade, ou “capacity”, no contexto da engenharia de software, refere-se à quantidade máxima de trabalho que o sistema pode receber e processar de maneira eficaz em um determinado período de tempo. É uma forma de medir e encontrar o limite atual do sistema, incluindo recursos como CPU, memória, armazenamento e largura de banda de rede, bem como a performance de algoritmos. Quando olhamos para a capacidade, monitorar os recursos e dependências pertinentes ao sistema é tão importante quanto monitorar o desempenho, principalmente quando trabalhamos em oportunidades de projetar sistemas pensados para curto, médio e longo prazo.
+Capacidade é a **quantidade máxima de trabalho** que um sistema consegue
+receber e processar de forma eficaz em um dado período. É a forma de descobrir o
+limite atual do sistema, considerando CPU, memória, armazenamento, rede e
+também a performance dos algoritmos. Ao pensar em prazos de curto, médio e longo
+prazo, monitorar recursos e dependências é tão importante quanto monitorar
+desempenho.
 
-Este conceito é fundamental na arquitetura e no design de sistemas, bem como no planejamento da infraestrutura geral dos componentes de software. A capacidade abrange vários aspectos do sistema, que vão desde a habilidade do sistema de processar dados ou transações, o que está vinculado diretamente ao poder de processamento computacional e a velocidade, eficácia e eficiência - desse processamento, até a capacidade de suportar uma quantidade de usuários ou processos simultaneamente, sem degradação do desempenho e conseguindo se adaptar a cargas de trabalho crescentes, aumentando recursos conforme necessário para manter a experiência constante dos usuários em meio a variações dos cenários de carga.
+O conceito é central na arquitetura e no planejamento de infraestrutura. Ele
+abrange tanto a habilidade de processar dados e transações — ligada ao poder
+computacional e à eficiência — quanto a de suportar muitos usuários simultâneos
+sem degradar, adaptando-se a cargas crescentes para manter a experiência
+constante.
 
-Pensar e medir a capacidade de sistemas envolve não apenas o dimensionamento adequado dos recursos computacionais do sistema, mas também a implementação de estratégias para monitoramento, observabilidade, gerenciamento de desempenho, automações e escalabilidade.
+Trabalhar capacidade não se resume a dimensionar recursos. Envolve também
+**estratégias de monitoramento, observabilidade, gestão de desempenho,
+automações e escalabilidade**.
 
 ## Gargalos de Capacidade
 
-Dentro do contexto de capacidade de software, “gargalos” referem-se a pontos no sistema onde o desempenho ou a capacidade são limitados devido a um componente específico que não consegue lidar eficientemente com a carga atual. Esses gargalos podem afetar negativamente a capacidade geral do sistema de funcionar de maneira otimizada e podem ocorrer em várias áreas, incluindo hardware, software ou na arquitetura de rede. Isso pode incluir CPU, memória, espaço em disco ou capacidade de rede insuficientes, entre várias outras coisas. Por exemplo, um servidor com CPU sobrecarregada não conseguirá processar requisições rapidamente. Erroneamente, profissionais de diversos níveis de senioridade podem associar gargalos sistêmicos à infraestrutura da aplicação, porém é muito mais comum cenários onde código mal otimizado, algoritmos ineficientes ou gerenciamento de concorrência (como deadlocks ou uso excessivo de bloqueios) podem limitar a capacidade do sistema e se tornar gargalos muito difíceis de lidar e superar no dia a dia de times de engenharia.
+Gargalos são pontos onde o desempenho ou a capacidade ficam limitados por um
+componente que não dá conta da carga. Eles podem surgir em hardware, software
+ou na arquitetura de rede. Um erro comum, mesmo entre profissionais
+experientes, é associar gargalos apenas à infraestrutura — quando, na prática,
+**código mal otimizado, algoritmos ineficientes e problemas de concorrência**
+(deadlocks, excesso de locks) costumam ser limitadores ainda mais difíceis de
+superar.
 
-Um design de sistema que não distribui a carga de maneira eficiente pode, invariavelmente, criar gargalos. Por exemplo, um ponto central de processamento de uma rotina em que a arquitetura deveria ter a capacidade de quebrar essa carga em várias partes e tornar-la distribuída.
+Um design que não distribui bem a carga acaba criando gargalos por conta
+própria, como um ponto central de processamento que deveria ter sido dividido
+em partes. Em essência, o gargalo se manifesta quando a **demanda supera a
+capacidade**.
 
-$$
-Gargalo = Demanda > Capacidade
-$$
-
-Identificar e resolver gargalos é o ponto chave para otimizar a performance e a escalabilidade de sistemas de software. Isso geralmente envolve monitoramento detalhado, testes de desempenho e ajustes finos do sistema. Em ambientes de nuvem e sistemas distribuídos, a identificação de gargalos também pode incluir a análise da distribuição de carga e a escalabilidade dinâmica.
-
-Um ponto importante de se lembrar é que, ao resolver um ponto de gargalo a carga sobre os sistemas após esse ponto irão receber mais carga, o que pode gerar um novo gargalo. Portanto a análise e busca de gargalos na capacidade do sistema é um processo dinâmico e contínuo.
+Identificar e resolver gargalos é a chave para otimizar performance e
+escalabilidade, e geralmente exige monitoramento detalhado, testes de carga e
+ajustes finos. Há, porém, um detalhe importante: ao resolver um gargalo, a
+carga flui adiante e pode **revelar um novo gargalo** no componente seguinte.
+Por isso, é um processo dinâmico e contínuo.
 
 ## Backpressure de Capacidade
 
-O conceito de `"backpressure"`, ou `"repressão"` em software e, especialmente, em arquiteturas baseadas em microserviços, também pode ter várias definições dependendo de onde é empregado. Em alguns contextos, o backpressure pode ser a capacidade ou um mecanismo intencional de um sistema para gerenciar sua entrada/saída, evitando gargalos de processamento do sistema seguinte. Aqui, vamos usar a definição da engenharia física, mais precisamente da gestão de fluidos, onde o termo se refere à resistência oposta ao movimento de um fluido.
+**Backpressure** (ou "repressão") tem várias definições conforme o contexto.
+Aqui, a inspiração vem da engenharia física — mais especificamente da gestão de
+fluidos —, onde o termo descreve a resistência oposta ao movimento de um fluido.
 
-De acordo com o Wikipedia,
-
-> Backpressure, ou Repressão, é o termo usado para definir uma resistência ao fluxo desejado de fluido através de tubos. Obstruções ou curvas apertadas criam contrapressão devido a perda de carga por atrito e queda de pressão.
+> Backpressure, ou Repressão, é o termo usado para definir uma resistência ao
+> fluxo desejado de fluido através de tubos. Obstruções ou curvas apertadas
+> criam contrapressão devido a perda de carga por atrito e queda de pressão.
 
 ![Backpressure - Pipes](images/Back_pressure.jpg)
 
-No contexto de software, o backpressure ocorre quando um componente ou serviço em um sistema distribuído começa a receber mais dados ou solicitações do que é capaz de processar. Isso pode levar a uma série de problemas, como aumento do tempo de resposta, falhas e perda de dados.
-
-Vamos ilustrar uma solicitação em um sistema fictício que é atendida pelos Serviços `A`, `B` e `C` sequencialmente. Respectivamente, esses serviços que compõem a transação suportam `100`, `60` e `300` transações por segundo. Em uma carga de trabalho de 90 transações por segundo, todos os componentes desse sistema conseguem receber e dar vazão de forma eficiente para toda a carga de trabalho inserida sem maiores problemas.
-
-Nesse mesmo cenário, caso esse sistema receba 100 transações por segundo, o que é suportado a níveis de capacidade por 2 dos 3 serviços do conjunto, o serviço B terá um backpressure de 40 transações a cada segundo, pois ele só suporta dar vazão a 60 delas.
+Em software, o backpressure acontece quando um componente recebe mais dados ou
+requisições do que consegue processar, gerando aumento de tempo de resposta,
+falhas e até perda de dados. O artigo ilustra com uma transação que percorre os
+serviços A, B e C, suportando respectivamente 100, 60 e 300 TPS. Com 90 TPS,
+todos absorvem o fluxo sem problemas.
 
 ![Backpressure - warning](images/Scale-Backpressure.drawio.png)
 
-Em um cenário mais crítico, entendendo que o `serviço C` consegue suportar até 300 transações, se injetarmos 120 transações por segundo nesse conjunto, a diferença do input do serviço A para o B será de 20 transações, pois ele só suporta 100 delas nesse tempo, e em seguida, 100 dessas transações que foram repassadas para o serviço B que só suporta 60 serão represadas por capacidade computacional, fazendo com que o backpressure total dessa solicitação seja de 60 TPS, 50% de degradação entre o input inicial e output final, independentemente da capacidade do sistema mais performático de todo o fluxo, que em 100% do tempo terá sua real capacidade sempre ociosa devido aos limites de capacidade dos serviços anteriores.
+A 100 TPS, porém, o serviço B — limitado a 60 — acumula 40 transações por
+segundo de represamento. Num cenário ainda mais crítico, com 120 TPS injetadas,
+o gargalo total chega a 60 TPS, ou seja, 50% de degradação entre entrada e
+saída.
 
 ![Backpressure - danger](images/Scale-Backpressure%20-%20Danger.drawio.png)
 
-Henry Ford popularizou a frase que dizia que “uma corrente é tão forte quanto seu elo mais fraco”. O Backpressure nos ajuda a evidenciar que, por mais que existam serviços mais performáticos que outros compondo um sistema, nosso throughput e capacidade serão limitados ao componente mais degradado.
+O serviço mais performático do fluxo (C, com 300 TPS) fica permanentemente
+ocioso, limitado pelos componentes anteriores. Vale a máxima atribuída a Henry
+Ford: "uma corrente é tão forte quanto seu elo mais fraco". O throughput e a
+capacidade de um sistema sempre serão restringidos pelo seu componente mais
+degradado.
 
 ## Custo de Transação por Capacidade
 
-Analisar o custo por transação é muito interessante para avaliar a eficiência e o custo-benefício da capacidade alocada para o sistema. O cálculo do custo de transação em sistemas é uma métrica financeira que avalia o custo total associado à execução de uma operação ou transação. Essa métrica é particularmente relevante quando construímos sistemas em nuvens públicas, onde as considerações financeiras são altamente sensíveis. Podemos calcular o custo de transação com base nos dados de transações totais do cliente. Normalmente, essa métrica é coletada apenas das requisições provenientes do cliente final, não sendo multiplicada pelo número de subsistemas e microserviços transparentes às interações com o cliente.
+Avaliar o **custo por transação** é uma forma de medir a eficiência e o
+custo-benefício da capacidade alocada. Trata-se de uma métrica financeira
+especialmente relevante em nuvens públicas, onde cada recurso pesa no caixa.
+Normalmente, considera-se apenas as requisições do cliente final, sem
+multiplicar pelos subsistemas e microserviços internos transparentes ao
+usuário.
 
-Essa métrica ajuda organizações a entenderem melhor onde e como seus recursos estão sendo gastos e como podem ser feitas economias ou melhorias. Ela pode ser representada pelo custo total da operação em questão dividido pelo número total de transações dentro do mesmo período de tempo.
-
-$$
-Custo por Transação = \frac{Custo Total Operacional}{Total de Transações}
-$$
-
-Em sistemas com padrões de demanda variáveis, o custo por transação pode mudar ao longo do tempo. É importante considerar os picos de demanda e como eles afetam o custo médio. Geralmente, um custo por transação mais baixo indica maior eficiência e uso eficaz dos recursos.
+O cálculo divide o **custo operacional total** pelo **total de transações** no
+mesmo período. Em sistemas com demanda variável, esse valor muda ao longo do
+tempo — daí a importância de considerar os picos. Em geral, um custo por
+transação mais baixo indica maior eficiência e melhor aproveitamento dos
+recursos.
 
 # Definindo Escalabilidade
 
-Escalabilidade é a capacidade de um sistema, aplicação ou negócio de crescer e lidar com um aumento na carga de trabalho, sem comprometer a qualidade, desempenho e eficiência. Isso pode incluir o aumento de usuários, transações, dados ou recursos. É um atributo crítico para sistemas que esperam um aumento no volume de usuários ou dados e uma característica de design que indica quão bem um sistema pode se adaptar a cargas de trabalho maiores ou menores. Escalabilidade é especialmente importante em ambientes de nuvem, onde as demandas podem mudar rapidamente e os sistemas devem ser capazes de se adaptar a essas mudanças.
+Escalabilidade é a capacidade de um sistema crescer e absorver aumento de carga
+**sem comprometer qualidade, desempenho e eficiência** — seja mais usuários,
+transações, dados ou recursos. É um atributo crítico para sistemas que esperam
+crescimento e especialmente importante em nuvem, onde as demandas mudam
+rapidamente.
 
-De acordo com o livro “Release It!” de Michael T. Nygard, a escalabilidade pode ser definida de duas formas: A primeira forma descreve como o Throughput muda de acordo com variações de demanda, utilizando um gráfico de requisições por segundo comparado com tempo de resposta de um sistema. A segunda forma se refere aos modos de escala que um sistema possui. Aqui, assim como no livro, vamos definir escalabilidade como a capacidade de adicionar ou remover capacidade computacional de um sistema.
+No livro *Release It!*, de Michael T. Nygard, a escalabilidade é vista de duas
+formas: como o throughput varia conforme a demanda (relacionando requisições
+por segundo e tempo de resposta) e como os modos de escala disponíveis em um
+sistema. Adota-se aqui a segunda definição: **a capacidade de adicionar ou
+remover capacidade computacional**.
 
-Uma forma lúdica de exemplificar a escalabilidade é considerar um sistema de ar-condicionado. Imagine que a temperatura desejada para o ambiente seja de 20°C. Se a temperatura do ambiente estiver aumentando devido a condições externas, o ar-condicionado aumentará sua potência para estabilizar a temperatura na marca definida. Por outro lado, se a temperatura estiver diminuindo, o sistema reduzirá sua potência para alcançar o mesmo objetivo.
+Uma analogia útil é o ar-condicionado regulado para 20°C: quando o ambiente
+esquenta, ele aumenta a potência; quando esfria, reduz — sempre buscando
+estabilizar o objetivo. Sistemas escaláveis fazem o mesmo com seus recursos.
 
 ## Importância da Escalabilidade em Sistemas Modernos
 
-A escalabilidade permite que os sistemas se adaptem rapidamente a mudanças no volume de tráfego ou demanda de recursos, garantindo um desempenho consistente mesmo sob carga variável. Em ambientes de negócios dinâmicos, a capacidade de escalar recursos conforme necessário é necessário para manter a continuidade e a eficiência operacional. Além disso, permite manter tempos de resposta rápidos e desempenho confiável, mesmo sob cargas leves, médias e pesadas, resultando em uma experiência de usuário mais satisfatória.
+A escalabilidade permite que sistemas se adaptem rapidamente a variações de
+tráfego e demanda, mantendo desempenho consistente sob qualquer carga. Em
+negócios dinâmicos, escalar conforme necessário é o que garante continuidade,
+eficiência operacional e uma experiência de usuário satisfatória mesmo em
+picos.
 
-Sistemas escaláveis também podem ser mais econômicos, pois permitem dimensionar recursos de forma mais eficiente. Isso significa pagar apenas pelos recursos que são usados, reduzindo o desperdício e otimizando os custos operacionais. Também podem facilitar a implementação de novas funcionalidades e a expansão de negócios sem a necessidade de reestruturar completamente a infraestrutura existente já projetada.
+Há ainda um ganho econômico: sistemas escaláveis aproveitam recursos de forma
+mais eficiente, **pagando apenas pelo que se usa** e reduzindo desperdício.
+Além disso, facilitam a evolução do produto e a adição de funcionalidades sem
+exigir uma reestruturação completa da infraestrutura já projetada.
 
 ## Escalabilidade Vertical e Escalabilidade Horizontal
 
-Existem dois tipos principais de escalabilidade frequentemente discutidos no design de sistemas: a `Escalabilidade Horizontal` e a `Escalabilidade Vertical`. Vamos usar este tópico para discutir a terminologia em torno desses conceitos.
+Existem dois grandes tipos de escalabilidade no design de sistemas: a
+**vertical** e a **horizontal**. Para ilustrá-los, o artigo usa o exemplo de
+uma empresa de ônibus cuja missão é levar passageiros de um ponto A a um ponto
+B.
 
-Para ilustrar essas ideias, consideremos um exemplo lúdico de uma empresa que gerencia uma frota de ônibus. Essa empresa tem como missão levar passageiros de um ponto A a um ponto B dentro da cidade. Inicialmente, a empresa investiu em uma frota que comportava aproximadamente 100 passageiros simultaneamente por horário de ônibus. Recentemente, esse número de passageiros aumentou gradualmente, levando a filas de espera nos pontos de embarque, atrasos e reclamações constantes. Com base nesse cenário, vamos começar a explorar os exemplos de escalabilidade.
+A frota inicial comportava cerca de 100 passageiros por horário, mas o aumento
+gradual da demanda passou a gerar filas, atrasos e reclamações. A partir desse
+problema, exploram-se as duas estratégias de escala.
 
 ### Escalabilidade Vertical
 
 ![Escalabilidade Vertical](images/onibus-vertical.png)
 
-Uma das abordagens consideradas para resolver os problemas de superlotação dos ônibus foi substituir alguns veículos da frota por ônibus de 2 andares, o que dobraria a capacidade de cada veículo para transportar passageiros. Esse paralelo exemplifica como funciona a escalabilidade vertical.
+Uma solução para a superlotação seria trocar parte da frota por **ônibus de
+dois andares**, dobrando a capacidade de cada veículo. Esse é o paralelo da
+escalabilidade vertical: aumentar (ou reduzir) a capacidade de um mesmo
+componente adicionando ou removendo recursos dele.
 
-Podemos entender a escalabilidade vertical como o processo de aumentar ou reduzir a capacidade de um componente, adicionando ou removendo mais recursos desse mesmo componente. A escalabilidade vertical geralmente envolve aumentar ou reduzir a capacidade de CPU, RAM, disco ou rede de um único recurso, mas não se limita apenas a isso; também pode incluir otimizações em algoritmos para aumentar a capacidade de processamento de entrada/saída. Embora seja uma solução mais simples, a escalabilidade vertical frequentemente encontra limitações físicas e de custo.
-
-Em resumo, no design de sistemas que se baseiam na escalabilidade vertical, o foco está na maximização do processamento e eficiência de um único servidor ou recurso. Isso pode incluir a otimização de algoritmos e a escolha de tecnologias que maximizem o uso da CPU e da memória.
+Na prática, a escala vertical envolve ajustar CPU, RAM, disco ou rede de um
+único recurso — sem se limitar a isso, podendo incluir também otimizações de
+algoritmo para melhorar o I/O. É uma abordagem mais simples, mas que esbarra em
+**limites físicos e de custo**.
 
 ![Escalabilidade Vertical](images/scale-up.png)
 
+O foco do design vertical está em **maximizar o processamento e a eficiência de
+um único servidor ou recurso**, otimizando algoritmos e escolhendo tecnologias
+que melhor aproveitem CPU e memória.
+
 #### Scale Up e Scale Down
 
-As operações de `Scale-up` e `Scale-down` são atividades que ocorrem no contexto da escalabilidade vertical. Elas envolvem o aumento ou redução dos recursos computacionais de um servidor específico que desempenha determinada funcionalidade. A operação de `Scale-up` (escalonar para cima) refere-se ao ato de aumentar recursos, como CPU, memória, disco ou rede, para um servidor. Por outro lado, a operação de `Scale-down` (escalonar para baixo) envolve o reduzir esses recursos quando necessário. Em resumo, `Scale-up` significa adicionar mais recursos de hardware, aumentando o número de CPUs, a quantidade de memória RAM ou a capacidade de armazenamento do servidor, enquanto `Scale-down` está relacionado a diminuir esses recursos quando apropriado.
+As operações de **scale-up** e **scale-down** pertencem à escalabilidade
+vertical. **Scale-up** significa aumentar os recursos de um servidor — mais
+CPU, mais RAM, mais armazenamento. **Scale-down** é o inverso: reduzir esses
+recursos quando deixam de ser necessários. Ambas ajustam a capacidade de um
+único componente.
 
 ### Escalabilidade Horizontal
 
 ![Escalabilidade Horizontal](images/onibus-horizontal.png)
 
-Outra proposta considerada para resolver o problema da superlotação de passageiros foi investir em mais unidades dos modelos de ônibus existentes em vez de substituir a frota por modelos que comportassem mais passageiros. Isso resultaria em mais veículos operando na rota, distribuindo os passageiros entre eles. Esse paralelo pode ser facilmente associado à forma como a escalabilidade horizontal funciona.
+A outra alternativa para a superlotação seria comprar **mais unidades dos mesmos
+ônibus**, em vez de substituir a frota. Mais veículos operando na rota
+distribuem os passageiros entre si — exatamente como funciona a escalabilidade
+horizontal.
 
-A escalabilidade horizontal refere-se à adição ou remoção de unidades computacionais, como servidores, contêineres ou réplicas, de um componente ou sistema existente. Por exemplo, se você estiver executando uma aplicação web em um único nó e começar a receber muito tráfego, poderá adicionar mais réplicas ao sistema para compartilhar a carga de trabalho, normalmente usando um [Balanceador de Carga](https://fidelissauro.dev/load-balancing/). A escalabilidade horizontal pode ser implementada de forma eficaz com ferramentas de escalabilidade automática. Esse tipo de conceito também é conhecido como `elasticidade`.
-
-Para implementar a escalabilidade horizontal de forma eficaz, os sistemas devem ser projetados com uma arquitetura distribuída que seja capaz de processar solicitações com paralelismo externo.
+A escala horizontal consiste em **adicionar ou remover unidades computacionais**
+(servidores, contêineres, réplicas) de um sistema. Quando uma aplicação web em
+um único nó começa a receber muito tráfego, adicionam-se réplicas para dividir a
+carga, geralmente por meio de um
+[Balanceador de Carga](https://fidelissauro.dev/load-balancing/). Quando
+automatizada, essa capacidade também é chamada de **elasticidade**.
 
 ![Escalabilidade Horizontal](images/scale-out.png)
 
+Para que funcione bem, o sistema precisa ser projetado com **arquitetura
+distribuída**, capaz de processar solicitações com paralelismo externo.
+
 #### Scale Out e Scale In
 
-As operações de `Scale-out` e `Scale-in` são atividades que se enquadram na escalabilidade horizontal. `Scale-out` (escalar para fora) refere-se a aumentar o número de servidores ou réplicas que desempenham a mesma função, distribuindo assim a carga de processamento entre eles. `Scale-in` (escalar para dentro) é a operação inversa, onde reduzimos o número de servidores ou réplicas no pool de máquinas. Em resumo, `Scale-out` (para fora) envolve o aumento do número de servidores, enquanto `Scale-in` (para dentro) envolve a diminuição desse número. Essas duas operações podem ser usadas em conjunto para ajustar dinamicamente a capacidade da carga de trabalho.
+**Scale-out** e **scale-in** pertencem à escalabilidade horizontal.
+**Scale-out** aumenta o número de servidores ou réplicas que desempenham a
+mesma função, distribuindo a carga entre eles; **scale-in** reduz esse número.
+As duas operações podem ser combinadas para **ajustar dinamicamente** a
+capacidade conforme a demanda oscila.
 
 # Planejamento de Capacidade e Escalabilidade
 
-Neste tópico, vamos explorar uma das métricas essenciais para avaliar a capacidade e a escalabilidade de sistemas, além de como utilizar essas métricas em fórmulas para calcular os ajustes de capacidade que podem ser vinculados a estratégias de escalabilidade horizontal. Apresentaremos uma fórmula base que pode ser adaptada para uma variedade de cenários, ajudando a determinar a capacidade horizontal necessária para aplicações. Este exemplo é apenas uma das várias abordagens disponíveis no mercado, que atuam como mecanismos de escalabilidade automática de recursos. A fórmula base que apresentaremos a seguir foi retirada do funcionamento do “Horizontal Pod Autoscaler” ou “HPA” do Kubernetes, mas pode ser implementada independentemente em diversos contextos.
+Esta seção apresenta uma métrica essencial para avaliar capacidade e
+escalabilidade e mostra como aplicá-la em fórmulas que calculam ajustes de
+capacidade ligados à escalabilidade horizontal. A fórmula base usada foi
+extraída do funcionamento do **Horizontal Pod Autoscaler (HPA)** do Kubernetes,
+mas é genérica o suficiente para ser implementada em diversos contextos.
 
-Vamos começar explorando vários cenários e métricas relevantes para monitorar a escalabilidade de um sistema. Em seguida, aplicaremos a fórmula para determinar a quantidade necessária de recursos computacionais a fim de que um sistema possa se adaptar a um cenário de gargalo.
+A ideia é explorar cenários e métricas relevantes e, em seguida, aplicar a
+fórmula para descobrir quantos recursos computacionais um sistema precisa para
+contornar um gargalo.
 
 ## Fórmula Básica para Capacidade
 
-Para compreender como os processos de escalonamento funcionam, utilizaremos a seguinte fórmula base. O objetivo é encontrar a quantidade ideal de réplicas para atender aos requisitos do sistema observado:
+A fórmula base busca determinar a **quantidade ideal de réplicas** para atender
+ao sistema. Em termos gerais, multiplica-se o número de réplicas atuais pela
+razão entre o **valor atual** da métrica observada e o **valor desejado** dessa
+métrica.
 
-$$
-Réplicas Desejadas = Réplicas Atuais \times (\frac{Valor Atual da Variável}{Valor Desejado da Variável})
-$$
-
-Inicialmente, essa fórmula pode parecer um tanto abstrata, mas exploraremos alguns exemplos para aplicá-la a diferentes cenários. Antes disso, é importante entender os termos usados na fórmula: “Réplicas Desejadas” representam a quantidade ideal de réplicas para o momento da aplicação, “Valor Desejado da Variável” é o valor que queremos que a métrica observada atinja, e “Valor Atual da Variável” é o valor atual dessa métrica. Vamos aprofundar o entendimento por meio de exemplos.
+À primeira vista o conceito parece abstrato, mas se torna claro com exemplos. O
+"valor desejado" é a meta que queremos que a métrica atinja, enquanto o "valor
+atual" é o que está sendo medido naquele momento. As seções seguintes aplicam
+essa lógica a cenários concretos.
 
 ## Utilização de Recursos Computacionais
 
-Uma das maneiras mais simples de compreender o cálculo de capacidade é através da utilização de recursos computacionais, como CPU e memória. Essas métricas são comumente usadas para configurar processos de escalonamento automático de aplicações, devido à sua facilidade de cálculo, planejamento e monitoramento. O objetivo dessa abordagem é determinar o quanto de cada recurso (CPU, memória, disco, rede) está sendo utilizado. Uma utilização excessiva pode indicar um gargalo, e a fórmula nos ajudará a reajustar o sistema para contornar esse gargalo.
+A forma mais simples de aplicar a fórmula é por meio da **utilização de CPU e
+memória**, métricas fáceis de calcular, planejar e monitorar — por isso muito
+usadas em autoscaling. O objetivo é descobrir quanto de cada recurso está em
+uso; utilização excessiva indica gargalo, e a fórmula aponta o reajuste
+necessário.
 
-A fórmula básica aplicada a esse cenário seria:
+No exemplo do artigo, parte-se de 6 réplicas, cada uma podendo usar 200
+milicores, com 1200m solicitados, 600m disponíveis e meta de 80% de utilização.
+O cálculo intermediário (1200m ÷ 600m × 100) resulta em **200% de utilização de
+CPU**.
 
-$$
-Réplicas Desejadas = Réplicas Atuais \times (\frac{Utilização de CPU}{Utilização Desejada de CPU})
-$$
-
-Antes de aplicarmos a fórmula, precisamos calcular a `Utilização de CPU`. Para isso, usaremos uma fórmula intermediária, onde dividimos a quantidade de recurso utilizado pela quantidade de recurso autorizado para uso em relação a todos os recursos computacionais disponíveis. Vamos presumir que 1 core de CPU é composto por 1000m (milicores) para calcular a utilização. Esse exemplo é próximo das unidades utilizadas para capacidade de workloads em clusters de Kubernetes.
-
-$$
-Utilização de Recurso = (\frac{Recurso Solicitado}{Recurso Disponível}) \times 100
-$$
-
-Nesse cenário, vamos presumir o seguinte:
-
-• Replicas Atuais: 6 réplicas
-• Recurso de Cada Réplica: Cada réplica pode utilizar 200m (200 milicores do sistema)
-• Recurso Solicitado: 1200m (1200 milicores do sistema, ou 1 core e 200 milicores)
-• Recurso Disponível: 600m (600 milicores do sistema)
-• Utilização desejada de CPU: 80%
-
-$$
-Utilização de CPU = (\frac{1200m}{600m}) \times 100 \\
-Utilização de CPU = 200\%
-$$
-
-Agora, com o valor de `Utilização de CPU` em `200%`, podemos aplicá-lo à fórmula base, usando uma utilização desejada de 80% do uso da CPU e contabilizando as `Réplicas Atuais` como `6`.
-
-$$
-Réplicas Desejadas = 6 \times (\frac{200}{80}) \\
-Réplicas Desejadas = 15
-$$
-
-Podemos concluir que, nesse cenário de avaliação, caso uma ação de reajuste na capacidade em escalabilidade horizontal fosse realizada, o ideal para contornar o gargalo devido à utilização de recursos de CPU seria aumentar o número de réplicas para 15 unidades. Essa lógica pode ser aplicada não apenas a CPU, mas também a qualquer outro tipo de recurso.
+Aplicando a fórmula base — 6 réplicas × (200 ÷ 80) — chega-se a **15 réplicas**.
+Ou seja, para contornar o gargalo de CPU, o ideal seria escalar de 6 para 15
+réplicas. A mesma lógica vale para qualquer outro recurso, não só CPU.
 
 ## Requisições e Transações por Períodos de Tempo (Throughput)
 
-Uma das minhas abordagens favoritas para planejar capacidade e desenvolver estratégias de escalabilidade horizontal é considerar a quantidade de requisições que a aplicação recebe dentro de um período de tempo. Essencialmente, essa estratégia se baseia na premissa de que cada réplica da aplicação pode processar um determinado número de requisições de forma independente, sem degradar o desempenho e o tempo de resposta. Em resumo, se cada réplica da nossa aplicação é capaz de suportar 10 transações por segundo (TPS) sem comprometer a performance e o tempo de resposta, e a aplicação está recebendo 100 transações por segundo, o ideal seria ter 10 réplicas disponíveis para atender à demanda.
+Uma abordagem favorita do autor é planejar capacidade a partir da **quantidade
+de requisições** que a aplicação recebe num período. A premissa: cada réplica
+suporta um certo número de transações por segundo sem degradar. Se cada réplica
+aguenta 10 TPS e a aplicação recebe 100 TPS, o ideal seriam 10 réplicas.
 
-A fórmula para calcular as réplicas desejadas é a seguinte:
+No exemplo, partem-se de 6 réplicas, cada uma suportando 15 TPS, com 10.000
+requisições no último minuto. Primeiro calcula-se o throughput total: 10.000 ÷
+60 ≈ **166,66 rps**. Em seguida, divide-se pelo número de réplicas atuais para
+obter as requisições por réplica: 166,66 ÷ 6 ≈ **27,78**.
 
-$$
-Réplicas Desejadas = Réplicas Atuais \times (\frac{Requisições por Réplica}{Base de Requisições})
-$$
-
-Nesse cenário, vamos presumir o seguinte:
-
-• Réplicas Atuais: 6 réplicas
-• Capacidade de Cada Réplica: Cada réplica pode lidar com 15 transações por segundo
-• Total de Requisições Recebidas no Último Minuto: 10.000
-
-Para aplicar a fórmula, precisamos primeiro calcular o valor das `Requisições por Réplica`. Para isso, dividimos o total de requisições recebidas no último minuto pelo período de tempo, que é 60 segundos, e depois dividimos esse valor pelo número de réplicas atualmente em uso.
-
-$$
-Transações por Segundo = \frac{Total de Requisições Atendidas}{Período de Tempo} \\
-Transações por Segundo = \frac{10.000}{60} \\
-Transações por Segundo = 166,66
-$$
-
-No exemplo, estamos recebendo uma média de 166,66 requisições por segundo em todo o sistema. Agora, para determinar a quantidade média de requisições que cada réplica da aplicação está recebendo, dividimos essa quantidade de transações pelo número atual de réplicas:
-
-$$
-Requisições por Réplica = \frac{Transações por Segundo}{Réplicas Atuais} \\
-Requisições por Réplica = \frac{166,66}{6} \\
-Requisições por Réplica = 27,78
-$$
-
-Agora temos todas as variáveis necessárias para aplicar a fórmula de capacidade e escalabilidade. Substituindo a variável `Requisições por Réplica` por `27,78` e a `Base de Requisições` por `15`, que representa a quantidade desejada de requisições por réplica sem maiores problemas, podemos calcular a quantidade ideal de réplicas:
-
-$$
-Réplicas Desejadas = 6 \times (\frac{27,78}{15}) \\
-Réplicas Desejadas = 11
-$$
-
-Com base nesse exemplo, podemos concluir que, em uma operação de reajuste de capacidade com foco na escalabilidade horizontal, o número ideal de réplicas a serem definidas para a aplicação seria 11 unidades.
+Com essas variáveis, aplica-se a fórmula — 6 × (27,78 ÷ 15) — usando 15 como a
+base desejada de requisições por réplica. O resultado é **11 réplicas**. Numa
+operação de reajuste com foco horizontal, esse seria o número ideal para a
+aplicação.
 
 ## Escalabilidade de Software
 
-Como mencionado anteriormente, o conceito de escalabilidade vai muito além do ajuste elástico da infraestrutura para lidar com demandas específicas. A escalabilidade é amplamente aplicada na arquitetura de software e desempenha um papel que está intimamente ligado à escalabilidade de no geral. É um erro associar conceitos de escalabilidade apenas a componentes e dependências de infraestrutura. Olhar para a escalabilidade ao projetar um software, considerando a arquitetura, as necessidades e os fluxos de negócios, é uma abordagem inteligente para criar soluções modernas sem aumentar exponencialmente os custos operacionais.
+Escalabilidade vai **muito além do ajuste elástico de infraestrutura**.
+Associá-la apenas a componentes de infra é um erro: olhar para arquitetura,
+necessidades e fluxos de negócio ao projetar software é o que permite criar
+soluções modernas sem inflar os custos operacionais.
 
-Uma das abordagens mais diretas para melhorar o desempenho é otimizar os algoritmos no código existente. Isso envolve refinar os algoritmos para reduzir a complexidade computacional, eliminar gargalos de processamento, melhorar a eficiência no uso da memória e avaliar oportunidades de paralelismo e tarefas concorrentes.
+A primeira frente é **otimizar algoritmos** no código existente — reduzir a
+complexidade computacional, eliminar gargalos de processamento, melhorar o uso
+de memória e explorar paralelismo e concorrência. No nível de dados, otimizar
+esquemas, índices e queries reduz tempo de resposta e amplia a capacidade,
+assim como distribuir a carga entre vários servidores.
 
-A otimização de esquemas de banco de dados, índices e consultas pode reduzir significavelmente o tempo de resposta e aumentar a capacidade e escalabilidade de um sistema. O mesmo se aplica à distribuição de carga entre vários servidores disponíveis que são capazes de processar uma tarefa. [Considere o uso de bancos de dados NoSQL ou soluções de armazenamento distribuído para cenários de alta demanda](https://fidelissauro.dev/teorema-cap/). Implementar caching onde for apropriado pode reduzir significativamente o tempo de resposta e a carga nos sistemas de backend. Isso pode incluir caching em memória, caching distribuído e otimizações de cache no lado do cliente. Para o processamento de tarefas intensivas ou operações de I/O, usar filas e mensagens assíncronas para distribuir a carga e melhorar a eficiência geral do sistema é uma estratégia eficaz.
-
-Existem muitas possibilidades relacionadas à escalabilidade, e ao integrar essas estratégias ao desenvolvimento e à manutenção de software, é possível criar sistemas não apenas mais escaláveis, mas também mais eficientes e confiáveis. [Isso requer um compromisso contínuo com a qualidade do código, a arquitetura do sistema e o monitoramento contínuo, garantindo que o sistema possa se adaptar e evoluir com as crescentes demandas](https://fidelissauro.dev/janelas-quebradas/)
-
-Esse capitulo foi especialmente muito longo, cansativo e difícil comparado aos demais. Se você leu até aqui, por favor, me deixe saber!
-
+Outras estratégias incluem
+[avaliar bancos NoSQL ou armazenamento distribuído](https://fidelissauro.dev/teorema-cap/)
+para alta demanda, aplicar **caching** (em memória, distribuído ou no cliente)
+e usar **filas e mensageria assíncrona** para tarefas intensivas ou de I/O.
+Integrar essas práticas exige
+[um compromisso contínuo com qualidade de código, arquitetura e monitoramento](https://fidelissauro.dev/janelas-quebradas/),
+garantindo que o sistema evolua junto com as demandas.
 
 # Referências
 

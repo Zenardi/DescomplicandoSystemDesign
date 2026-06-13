@@ -9,46 +9,47 @@
     - [Uso do Scale Cube](#uso-do-scale-cube)
     - [Referências](#referências)
 
+> **Nota:** Este documento é um material de estudo baseado no artigo original **"System Design - Scale Cube"**, de **Matheus Fidelis**, publicado em [fidelissauro.dev/cubo-escalabilidade](https://fidelissauro.dev/cubo-escalabilidade/). As ilustrações pertencem ao autor original. Recomenda-se a leitura do artigo completo na fonte.
 
-> Texto extra da série de System Design. Esse texto foi resultado de uma revisão bibliográfica - não cientifica - que fiz para arquivo pessoal.
+---
 
-O **Scale Cube**, ou **Cubo da Escalabilidade**, é um modelo conceitual apresentado no livro *“The Art of Scalability”*, de Martin L. Abbott e Michael T. Fisher, que propõe uma **modelagem de microserviços voltada à escalabilidade desde o dia zero**. O modelo utiliza a analogia de um “cubo” porque é descrito **com 3 dimensões: os eixos X, Y e Z, também conhecidos como Largura, Altura e Profundidade**, onde cada uma **corresponde a um princípio de escalabilidade** de serviços, permitindo arquitetar soluções para demandas crescentes de uso.
+O **Scale Cube** (Cubo da Escalabilidade) é um modelo conceitual descrito no livro *The Art of Scalability*, de Martin L. Abbott e Michael T. Fisher. A proposta é orientar a modelagem de sistemas pensando em escalabilidade desde o início do projeto. O nome vem da representação em forma de cubo, com três dimensões — os eixos **X, Y e Z** (largura, altura e profundidade) — em que cada eixo traduz um princípio distinto de escalabilidade.
 
 ![Scale Cube](images/scale-cube-eixos.drawio.png)
 
-O **Scale Cube** oferece um modelo mental para **pensar e definir o que levar em conta ao projetar ou refatorar sistemas**, de forma que eles consigam atingir níveis elevados de escalabilidade. As três dimensões correspondem a **Eixo X: Escalabilidade Horizontal, Eixo Y: Decomposição de Funcionalidades e Eixo Z: Sharding e Particionamento de Dados**.
+Mais do que uma regra rígida, o cubo funciona como um mapa mental para decidir o que precisa ser considerado ao desenhar ou refatorar uma aplicação que precisa crescer. Os três eixos representam, respectivamente: **X — escalabilidade horizontal**, **Y — decomposição de funcionalidades** e **Z — sharding e particionamento de dados**.
 
 ## Eixo X - Escalabilidade Horizontal
 
-O Eixo X sugere que **a aplicação deve ser capaz de escalar horizontalmente à medida que seus níveis de uso e saturação começarem a ser impactados, para evitar sobrecarga sob demanda**. Ou seja, a solução como um todo, seja por meio de arquiteturas orquestradas de containers ou não, **deve ser capaz de adicionar e remover réplicas idênticas da mesma aplicação conforme necessário**. Caso essas réplicas sejam acionadas por requisições HTTP, elas devem ser capazes de receber tráfego por meio de componentes intermediários, como [Balanceadores de Carga](https://fidelissauro.dev/load-balancing/).
+O eixo X trata da capacidade de a aplicação crescer horizontalmente conforme a demanda e os níveis de saturação aumentam. Na prática, isso significa conseguir **adicionar e remover réplicas idênticas** do mesmo serviço sob demanda, distribuindo a carga entre elas. Quando o tráfego chega via HTTP, essas réplicas costumam receber requisições por meio de componentes intermediários como balanceadores de carga.
 
 ![X](images/scale-cube-x.drawio.png)
 
-Essa dimensão **é relativamente fácil de implementar**, já que é uma **característica intrínseca da maioria das plataformas que permitem a execução de software em produção**, sejam elas nativas de nuvens públicas ou orquestradores de containers. Ao considerar a **construção de arquiteturas stateless que permitam a realização de requisições sequenciais por servidores distintos** e que administrem o **estado de entidades e processos de maneira distribuída em vez de local**, a implementação da escalabilidade horizontal tende a ser a parte mais simples do modelo.
+Costuma ser a dimensão mais simples de aplicar, porque escalar horizontalmente é uma característica nativa da maioria das plataformas modernas — nuvens públicas e orquestradores de containers. O ponto de atenção está em projetar aplicações **stateless**: requisições sequenciais podem cair em servidores diferentes, então o estado de entidades e processos precisa ser gerido de forma distribuída, e não preso à memória local de uma instância.
 
 ## Eixo Y - Quebra de Funcionalidades
 
-O Eixo Y propõe a **divisão das funcionalidades de um sistema**. O objetivo é decompor e **separar as funcionalidades de um sistema maior em vários microserviços especializados** em **contextos isolados e desacoplados**. Basicamente, é aqui que ocorre o processo de **quebra de um monolito em microserviços**. Com isso, torna-se possível que cada uma dessas funcionalidades escale de forma independente e seja otimizada de acordo com suas características específicas. Por exemplo, se um desses serviços tiver características de CPU Bound e outro, de outra funcionalidade, for mais I/O intensivo, **cada um pode ser otimizado de forma isolada, sem impactar o outro**, utilizando os recursos e especificações ideais para cada cenário.
+O eixo Y propõe **dividir as funcionalidades** de um sistema, decompondo um sistema maior em microserviços especializados, cada um responsável por um contexto isolado e desacoplado. É essencialmente o processo de quebrar um monolito em serviços menores. A grande vantagem é que cada funcionalidade passa a **escalar e ser otimizada de forma independente**: um serviço CPU-bound e outro I/O-intensivo podem ser dimensionados com recursos diferentes, sem que um afete o outro.
 
 ![Y](images/scale-cube-y.drawio.png)
 
-Junto com o Eixo X, o Eixo Y **assegura grande parte das características dos microserviços como os conhecemos hoje**. Transformar funcionalidades em serviços especializados, que podem ser escalados horizontalmente com base em suas particularidades, proporciona uma **experiência realista de um sistema distribuído**.
+Combinado ao eixo X, o eixo Y é o que dá forma aos microserviços como os conhecemos hoje. Transformar funcionalidades em serviços especializados, capazes de escalar horizontalmente conforme suas próprias características, é o que entrega a experiência concreta de um sistema distribuído.
 
 ## Eixo Z - Sharding de Dados
 
-O Eixo Z é o **mais complexo do modelo em termos de funcionalidades e implementação**. Ele propõe que **todos os dados possam ser particionados e distribuídos entre vários clusters, servidores, bancos de dados, e similares**. A estratégia de dividir grandes conjuntos de dados em partes menores é chamada de [sharding ou particionamento](https://fidelissauro.dev/sharding/). **Cada shard representa uma fração do total de dados**.
+O eixo Z é o **mais complexo** do modelo, tanto em conceito quanto em implementação. Ele propõe **particionar e distribuir os dados** entre vários clusters, servidores e bancos. Essa estratégia de dividir grandes volumes em fatias menores é chamada de **sharding** ou particionamento, em que cada *shard* guarda apenas uma parcela do conjunto total de dados.
 
 ![Z](images/scale-cube-z.drawio.png)
 
-Como foi abordado conceitualmente no capítulo de [Sharding e Particionamento](https://fidelissauro.dev/sharding/), **dividir a quantidade de dados entre vários servidores independentes** e **rotear a requisição para a partição correta com base em uma chave de partição** nos ajuda a escalar a camada mais delicada e complexa de sistemas distribuídos: **a camada de persistência**. Utilizando uma sharding key fornecida por algum atributo de acesso ao sistema, como **iniciais de um cliente, intervalos de identificadores sequenciais, intervalos de datas ou hash de algum valor forte**, conseguimos criar segregações e roteamentos inteligentes que reduzem o blast-radius em caso de falha e nos permitem escalar a camada de dados de forma quase horizontal.
+A ideia é dividir os dados entre servidores independentes e **rotear cada requisição para a partição correta** com base em uma chave de partição (*sharding key*). Essa chave pode derivar de atributos como iniciais do cliente, intervalos de identificadores sequenciais, faixas de datas ou o hash de algum valor forte. Com isso, ataca-se a camada mais delicada de um sistema distribuído — a **persistência** —, reduzindo o blast-radius em caso de falha e permitindo escalar os dados de forma quase horizontal.
 
-Essa abordagem é a mais complexa do modelo, pois **necessita de camadas adicionais de engenharia, estratégias para a distribuição dos dados** e mecanismos que forneçam formas inteligentes para que o **roteamento da chamada encontre seu destino correto**.
+É a abordagem mais trabalhosa do cubo, justamente porque exige camadas adicionais de engenharia, estratégias bem pensadas de distribuição e mecanismos de roteamento inteligentes para que cada chamada encontre o destino correto.
 
 ### Uso do Scale Cube
 
-Com a utilização adequada de todas as dimensões, **podemos adicionar níveis de confiabilidade e escalabilidade em diversos cenários complexos de sistemas distribuídos, simplificando a decomposição, a escalabilidade horizontal e a distribuição controlada de dados entre os serviços que compõem o sistema**. Além de garantir escalabilidade sob alta demanda, isso nos permite explorar opções de processos de deployment, facilitando a adoção de estratégias mais personalizadas de release, como Blue/Green Deployments e Canary Releases. Consequentemente, isso aumenta a resiliência e a eficácia operacional.
+Aplicando as três dimensões de forma combinada, é possível ganhar confiabilidade e escalabilidade em cenários distribuídos complexos, simplificando a decomposição de serviços, a escalabilidade horizontal e a distribuição controlada de dados. Como bônus, esse desenho abre espaço para estratégias de deploy mais elaboradas, como **Blue/Green Deployments** e **Canary Releases**, aumentando a resiliência e a eficiência operacional.
 
-O modelo do Scale Cube, **apesar de ser altamente conceitual e atuar apenas como um mapa mental, não sendo um modelo de governança arquitetônica em si, contribui para esclarecer as preocupações que devemos considerar ao projetar sistemas críticos**. Ele cumpre seu propósito ao aprimorar o senso crítico de arquitetura e engenharia das equipes envolvidas em um projeto de software.
+Vale lembrar que o Scale Cube é **altamente conceitual**: funciona como mapa mental, não como um modelo de governança arquitetural. Seu valor está em organizar as preocupações que devem ser levadas em conta ao projetar sistemas críticos, aprimorando o senso crítico de arquitetura e engenharia das equipes envolvidas.
 
 ### Referências
 
@@ -59,4 +60,3 @@ O modelo do Scale Cube, **apesar de ser altamente conceitual e atuar apenas como
 [Achieving Scalability with Scale Cube](https://medium.com/@avicsebooks/achieving-scalability-with-scale-cube-6f67eac96930)
 
 [AKF Scale Cube](https://akfpartners.com/growth-blog/scale-cube)
-

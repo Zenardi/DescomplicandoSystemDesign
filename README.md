@@ -846,7 +846,49 @@
 <details>
 <summary>DAY-26 - Cell Based Pattern</summary>
 
--
+- [System Design - Cell-Based Architecture](day-26/README.md#system-design---cell-based-architecture)
+- [Definindo a Cell-Based Architecture](day-26/README.md#definindo-a-cell-based-architecture)
+  - [Unidades Celulares](day-26/README.md#unidades-celulares)
+  - [Dimensão Estrutural](day-26/README.md#dimensão-estrutural)
+  - [Isolamento de Estado](day-26/README.md#isolamento-de-estado)
+- [Estratégias de Roteamento e Direcionamento](day-26/README.md#estratégias-de-roteamento-e-direcionamento)
+  - [Edge Cells](day-26/README.md#edge-cells)
+  - [Segmentação de Carga](day-26/README.md#segmentação-de-carga)
+  - [Células Síncronas](day-26/README.md#células-síncronas)
+  - [Células Assíncronas](day-26/README.md#células-assíncronas)
+- [Replicação Celular](day-26/README.md#replicação-celular)
+  - [Replicação Assíncrona Entre Células](day-26/README.md#replicação-assíncrona-entre-células)
+  - [Replicação Consistente Entre Células](day-26/README.md#replicação-consistente-entre-células)
+  - [Replicação e Shuffle Sharding](day-26/README.md#replicação-e-shuffle-sharding)
+  - [Replicação e Blast Radius](day-26/README.md#replicação-e-blast-radius)
+- [Referências](day-26/README.md#referências)
+
+</details>
+
+&nbsp;
+
+<details>
+<summary>DAY-27 - Single Point of Failure e Disaster Recovery</summary>
+
+- [System Design - Single Point of Failure, Disaster Recovery e Continuidade Operacional](day-27/README.md#system-design---single-point-of-failure-disaster-recovery-e-continuidade-operacional)
+- [Definindo um Single Point of Failure](day-27/README.md#definindo-um-single-point-of-failure)
+- [Identificando Single Points of Failure](day-27/README.md#identificando-single-points-of-failure)
+- [Lidando com Single Points of Failure](day-27/README.md#lidando-com-single-points-of-failure)
+  - [Design Stateless de Aplicação](day-27/README.md#design-stateless-de-aplicação)
+  - [Redundância e Replicação Ativa](day-27/README.md#redundância-e-replicação-ativa)
+  - [Redundância e Replicação Passiva](day-27/README.md#redundância-e-replicação-passiva)
+  - [Failover Automático](day-27/README.md#failover-automático)
+- [Disaster Recovery](day-27/README.md#disaster-recovery)
+  - [Ativo-Ativo](day-27/README.md#ativo-ativo)
+  - [Ativo-Passivo](day-27/README.md#ativo-passivo)
+  - [Pilot Light (Luz Piloto)](day-27/README.md#pilot-light-luz-piloto)
+- [Métricas e KPIs de Recuperação](day-27/README.md#métricas-e-kpis-de-recuperação)
+  - [MTTD - Mean Time to Detect](day-27/README.md#mttd---mean-time-to-detect)
+  - [MTTR - Mean Time to Repair](day-27/README.md#mttr---mean-time-to-repair)
+  - [MTBF - Mean Time Between Failures](day-27/README.md#mtbf---mean-time-between-failures)
+  - [RTO - Recovery Time Objective](day-27/README.md#rto---recovery-time-objective)
+  - [RPO - Recovery Point Objective](day-27/README.md#rpo---recovery-point-objective)
+- [Referências](day-27/README.md#referências)
 
 </details>
 
@@ -880,7 +922,8 @@
 | Capacity Planning e Teoria das Filas | - | [Artigo](https://fidelissauro.dev/capacity-planning/) |
 | Testes de Carga e Estresse | [Slides](./day-24/24%20-%20System%20Design%20-%20Load%20Tests%20.pdf) | [Artigo](https://fidelissauro.dev/load-testing/) |
 | Bulkhead Pattern | [Slides](./day-25/25%20-%20System%20Design%20-%20Bulkhead.pdf) | [Artigo](https://fidelissauro.dev/bulkheads/) |
-| Cell Based Pattern | [Slides](./day-26/26%20-%20System%20Design%20-%20Cell%20Based%20Pattern.pdf) | - |
+| Cell Based Pattern | [Slides](./day-26/26%20-%20System%20Design%20-%20Cell%20Based%20Pattern.pdf) | [Artigo](https://fidelissauro.dev/cell-based/) |
+| Single Point of Failure e Disaster Recovery | - | [Artigo](https://fidelissauro.dev/single-point-of-failure/) |
 
 
 

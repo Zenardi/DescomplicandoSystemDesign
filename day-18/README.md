@@ -15,899 +15,188 @@
     - [Outbox Pattern no Contexto de CQRS](#outbox-pattern-no-contexto-de-cqrs)
 - [Referencias](#referencias)
 
+> **Nota:** Este documento é um material de estudo baseado no artigo original **"System Design - CQRS (Command Query Responsability Segregation)"**, de **Matheus Fidelis**, publicado em [fidelissauro.dev/cqrs](https://fidelissauro.dev/cqrs/). As ilustrações pertencem ao autor original. Recomenda-se a leitura do artigo completo na fonte.
+
+---
 
 ![capa-cqrs.png](./images/capa-cqrs.png)
 
-Esse capítulo tem o objetivo de **adicionar mais algumas estratégias para lidar com dados em sistemas modernos à sua caixa de ferramentas**, sendo esses sistemas distribuídos ou não. A necessidade de aumentar o repertório de padrões de projeto para lidar com dados de domínios em larga escala **tem se tornado cada vez mais presente no dia a dia de engenheiros e arquitetos de software**, e representa um importante recorte de senioridade. A longo prazo e em escala, **considero os dados como a parte mais crítica e difícil de se lidar dentre todas as disciplinas de Engenharia de Software**, e a seguir vamos abordar o padrão CQRS e algumas possibilidades de implementação que podem ser adaptadas, combinadas e estendidas conforme a experiência dos times e conhecimento dos domínios de negócio ganham maturidade.
+Este capítulo amplia o repertório de estratégias para lidar com dados em sistemas modernos, distribuídos ou não. À medida que os domínios crescem em escala, manipular dados de forma eficiente torna-se uma das disciplinas mais críticas e complexas da Engenharia de Software, e dominar padrões para isso é um marcador importante de senioridade. O foco aqui é o padrão CQRS e diferentes formas de implementá-lo, que podem ser combinadas e adaptadas conforme a maturidade dos times e o conhecimento dos domínios de negócio evoluem.
 
 # Definindo CQRS
 
-O CQRS, ou **Command Query Responsibility Segregation**, é um **padrão arquitetural cujo objetivo é separar as responsabilidades de escrita e leitura de um sistema**. As operações de escrita no padrão CQRS são denominadas “comandos”, pois entende-se que a implementação de escrita do CQRS seja voltada para efetuar operações imperativas que mudam o estado de uma ou mais entidades do sistema. As operações de leitura são denominadas “queries”, cujo objetivo é apenas fornecer uma capacidade de leitura dos dados desse domínio de forma otimizada.
+CQRS significa **Command Query Responsibility Segregation** e é um padrão arquitetural que separa as responsabilidades de escrita e de leitura de um sistema. As operações de escrita são chamadas de "comandos", pois representam ações imperativas que alteram o estado de uma ou mais entidades. As operações de leitura são chamadas de "queries" e existem apenas para devolver dados do domínio de forma otimizada, sem modificar nada.
 
 ![CQRS Concept](images/cqrs-concept.png)
 
 > Modelo Conceitual de CQRS
 
-O objetivo central do CQRS é **aumentar a performance e a escalabilidade de um serviço através de modelos de dados que sejam especificamente otimizados para suas respectivas tarefas**, apostando na teoria de que, ao separar as operações de comandos e consultas, cada parte do sistema pode ser escalada independentemente, permitindo uma utilização mais eficiente dos recursos computacionais alocados para cada uma dessas tarefas.
+A motivação central é ganhar performance e escalabilidade usando modelos de dados especializados para cada tarefa. Ao desacoplar comandos e queries, cada lado pode ser escalado de forma independente, aproveitando melhor os recursos computacionais alocados.
 
-Em resumo, o padrão CQRS **envolve usar dois ou mais bancos de dados que têm seus dados replicados, mas cada um com uma estrutura específica para diferentes necessidades**. Vamos explorar essas ideias e outras abordagens mais complexas e poderosas ao longo do capítulo.
+Na prática, o padrão costuma envolver dois ou mais bancos de dados que mantêm os mesmos dados replicados, mas cada um modelado para uma necessidade específica. Ao longo do capítulo essas ideias são exploradas em variações cada vez mais sofisticadas.
 
 ## Separação de Responsabilidades
 
-O princípio central do CQRS é a separação de responsabilidades entre operações de leitura e operações de escrita, utilizando infraestruturas e modelos de dados diferentes.
+A essência do CQRS é separar leitura e escrita usando infraestruturas e modelos de dados distintos para cada responsabilidade.
 
 ![Diagrama Responsabilidade](images/cqrs-mermaid.png)
 
 > Diagrama conceitual de segregação de responsabilidades do CQRS
 
-Os **commands**, ou comandos, encapsulam **todas as informações necessárias para realizar operações de escrita**, como criar, atualizar ou deletar um registro, além de **aplicar todas as regras de validação necessárias para garantir a integridade dos dados**. Conceitualmente, o comando tende a se referir ao ato de “processar algo”, alterando um estado mediante o estímulo de um comportamento, mas também pode ser aplicado para manipular entidades anêmicas, se necessário. **O modelo de escrita deve se focar em garantir a consistência e a integridade dos dados**. É comum usar bancos de dados relacionais que suportem transações e garantam [ACID (Atomicidade, Consistência, Isolamento, Durabilidade)](https://fidelissauro.dev/teorema-cap/) para assegurar a consistência e executar as transações de forma atômica. Os bancos de dados de escrita que precisam garantir forte consistência contam com processos de normalização para otimizar a performance e a integridade.
+Os **commands** carregam todas as informações necessárias para criar, atualizar ou remover registros e aplicam as validações que garantem a integridade dos dados. O modelo de escrita prioriza consistência e integridade, e por isso costuma se apoiar em bancos relacionais com transações ACID e em estruturas normalizadas, que asseguram operações atômicas e relacionamentos íntegros.
 
-As **queries** são responsáveis por **retornar dados sem alterar o estado do sistema**. Os bancos de dados são otimizados para **recuperação rápida e eficiente de informações**, muitas vezes utilizando técnicas como **caching, réplicas de leitura ou desnormalização de dados** para melhorar o desempenho nesse tipo de cenário. Bancos de dados NoSQL são frequentemente usados nesse contexto, pois oferecem alta performance em consultas e podem escalar horizontalmente de forma eficaz, embora bancos SQL também possam ser usados de forma desnormalizada sem nenhum tipo de problema.
+As **queries** apenas retornam dados, sem alterar estado. Os bancos do lado de leitura são otimizados para recuperação rápida, recorrendo a técnicas como caching, réplicas de leitura e desnormalização. Bancos NoSQL aparecem com frequência nesse papel por sua performance e escalabilidade horizontal, embora bancos SQL desnormalizados também funcionem bem.
 
-Em resumo, um exemplo mais simples de aplicação do CQRS seria **fazer uso de um modelo normalizado dentro de um banco SQL de escrita para garantir toda a consistência e integridade** e, a partir dos eventos de comando, uma **segunda escrita seria realizada em outra base de dados com uma view materializada e desnormalizada**, otimizada para ser recuperada, ou em um banco NoSQL com a estrutura do documento muito próxima do payload de response.
+Um exemplo simples seria manter um modelo normalizado em um banco SQL de escrita para garantir consistência e, a partir dos eventos de comando, gravar uma segunda representação desnormalizada em uma view materializada ou em um documento NoSQL próximo do formato de resposta da API.
 
 ### Perspectiva sobre Modelos de Domínio
 
-O modelo de **comando é responsável por manipular os dados do sistema e garantir a consistência e a integridade das operações**. Este modelo é geralmente mais complexo, pois incorpora todas as **regras de negócio, validações e lógicas** que precisam ser aplicadas quando o estado do sistema é alterado. O modelo de comando frequentemente segue o padrão **Rich Domain Model**, onde a lógica de negócio está embutida nas entidades do domínio e faz uso de transações ACID para garantir mudanças de estado consistentes durante o ciclo de vida dos dados de domínio. Vamos desenhar um cenário onde, em um sistema hospitalar de prontuários médicos hipotéticos, um o médico precisar criar uma nova prescrição para um paciente. A ação de comando deverá verificar se o médico é válido, se o paciente é válido, se o medicamento existe, se o médico está autorizado a prescrever o medicamento de acordo com sua especialidade e, por fim, realizar a persistência no banco de dados. Toda essa lógica será encapsulada dentro do comando.
+O modelo de comando concentra a lógica de negócio, as validações e as regras que devem ser aplicadas sempre que o estado muda. Ele tende a ser mais complexo e frequentemente segue o padrão **Rich Domain Model**, com a lógica embutida nas entidades e apoiada em transações ACID. Em um sistema hospitalar fictício, por exemplo, criar uma prescrição exigiria validar médico, paciente e medicamento, conferir se o médico tem autorização para prescrever conforme sua especialidade e só então persistir — tudo encapsulado dentro do comando.
 
-O modelo de consulta é otimizado para leitura e recuperação rápida de dados. Diferentemente do modelo de comando, ele não precisa incorporar lógica de negócio complexa ou validações, pois sua responsabilidade é exclusivamente fornecer dados para serem exibidos ou utilizados em outras partes do sistema depois que um comando já foi executado. Por exemplo, um modelo desnormalizado das prescrições pode ser criado para agrupar de forma legível e rápida as informações do médico, do paciente e dos medicamentos prescritos.
+O modelo de consulta, por outro lado, é otimizado apenas para leitura. Ele não precisa carregar regras de negócio ou validações, pois sua função é entregar dados já consolidados para exibição ou uso posterior. No mesmo exemplo, uma estrutura desnormalizada poderia reunir, de forma legível e rápida, os dados do médico, do paciente e dos medicamentos prescritos.
 
 # Modelos de Implementação
 
-A aplicação do CQRS pode variar desde as implementações mais simplistas, que respeitam contextos limitados de um domínio ou funcionalidade, até as mais complexas, que agrupam informações de forma incremental de várias fontes e etapas de um processo maior. Aqui veremos algumas alternativas e modelos de implementação que podem ser úteis para a compreensão da extensão das capacidades desse tipo de arquitetura na resolução de problemas de escala e resiliência.
+As implementações de CQRS variam de versões simples, restritas a um contexto ou funcionalidade, até abordagens complexas que agregam dados de várias fontes e etapas de um processo maior. As seções seguintes apresentam diferentes modelos de implementação que ajudam a entender o alcance desse tipo de arquitetura na resolução de problemas de escala e resiliência.
 
 ## CQRS em bancos SQL e Views Materializadas
 
-Um dos exemplos mais simples de uma implementação CQRS é transpor um **modelo SQL normalizado para outro modelo SQL desnormalizado**. A simplicidade dessa abordagem permite que essa nova **tabela desnormalizada esteja presente ou não na mesma instância ou schema que o restante das tabelas normalizadas dos domínios**. A evolução para um banco de dados separado é um passo que pode ocorrer com facilidade, porém necessitaria de processos e infraestruturas adicionais, se necessário.
+A forma mais simples de aplicar CQRS é transpor um modelo SQL normalizado para outro modelo SQL desnormalizado. Essa tabela desnormalizada pode ficar na mesma instância e schema do modelo normalizado ou em um banco separado; a evolução para uma base dedicada é viável, embora exija infraestrutura e processos adicionais.
 
-Vamos supor um modelo de uma funcionalidade de **prescrição de medicamentos de um sistema hospitalar fictício**, onde teremos as tabelas `Médicos`, `Pacientes`, `Medicamentos`, `Prescrições` e `Prescrição_Medicamentos`, que fará o vínculo de 1:N entre os medicamentos prescritos. Esse modelo fornece uma consistência forte de relacionamentos, não permitindo que medicamentos não cadastrados sejam prescritos, que pacientes não cadastrados sejam tratados e que médicos não cadastrados operem e prescrevam medicamentos.
+O exemplo usado é uma funcionalidade de prescrição de medicamentos, modelada com as tabelas `Medicos`, `Pacientes`, `Medicamentos`, `Prescricoes` e `Prescricao_Medicamentos`, esta última fazendo o vínculo 1:N entre prescrição e medicamentos. Esse modelo garante consistência forte de relacionamentos, impedindo que medicamentos, pacientes ou médicos não cadastrados participem de uma prescrição.
 
 ![CQRS](images/cqrs-database-write.png)
 
-```sql
-CREATE TABLE IF NOT EXISTS Medicos (
-    id SERIAL PRIMARY KEY,
-    nome VARCHAR(255) NOT NULL,
-    especialidade VARCHAR(255) NOT NULL,
-    crm VARCHAR(255) NOT NULL UNIQUE
-);
+O artigo apresenta o DDL desse modelo normalizado de escrita: as cinco tabelas com chaves primárias e chaves estrangeiras ligando prescrições a médicos e pacientes, e a tabela de vínculo a prescrições e medicamentos. A modelagem prioriza a integridade dos relacionamentos durante a manipulação dos dados.
 
-CREATE TABLE IF NOT EXISTS Pacientes (
-    id SERIAL PRIMARY KEY,
-    nome VARCHAR(255) NOT NULL,
-    data_nascimento DATE NOT NULL,
-    endereco VARCHAR(255)
-);
+Esse modelo garante integridade, mas surge outra necessidade: gerar relatórios e ordens de serviço para a farmácia hospitalar preparar e controlar a saída de estoque. Essa visão é crítica, pois envolve triagem, rastreio, contabilidade e separação dos medicamentos por quarto/enfermaria. Para montá-la em um modelo altamente normalizado, é preciso uma quantidade considerável de joins.
 
-CREATE TABLE IF NOT EXISTS Medicamentos (
-    id SERIAL PRIMARY KEY,
-    nome VARCHAR(255) NOT NULL,
-    descricao TEXT
-);
-
-CREATE TABLE IF NOT EXISTS Prescricoes (
-    id SERIAL PRIMARY KEY,
-    id_medico INT NOT NULL,
-    id_paciente INT NOT NULL,
-    data_prescricao TIMESTAMP NOT NULL,
-    FOREIGN KEY (id_medico) REFERENCES Medicos(id),
-    FOREIGN KEY (id_paciente) REFERENCES Pacientes(id)
-);
-
-CREATE TABLE IF NOT EXISTS Prescricao_Medicamentos (
-    id SERIAL PRIMARY KEY,
-    id_prescricao INT NOT NULL,
-    id_medicamento INT NOT NULL,
-    horario VARCHAR(50) NOT NULL,
-    dosagem VARCHAR(50) NOT NULL,
-    FOREIGN KEY (id_prescricao) REFERENCES Prescricoes(id),
-    FOREIGN KEY (id_medicamento) REFERENCES Medicamentos(id)
-);
-
-```
-
-
-```sql
-CREATE TABLE IF NOT EXISTS Medicos (
-    id SERIAL PRIMARY KEY,
-    nome VARCHAR(255) NOT NULL,
-    especialidade VARCHAR(255) NOT NULL,
-    crm VARCHAR(255) NOT NULL UNIQUE
-);
-
-CREATE TABLE IF NOT EXISTS Pacientes (
-    id SERIAL PRIMARY KEY,
-    nome VARCHAR(255) NOT NULL,
-    data_nascimento DATE NOT NULL,
-    endereco VARCHAR(255)
-);
-
-CREATE TABLE IF NOT EXISTS Medicamentos (
-    id SERIAL PRIMARY KEY,
-    nome VARCHAR(255) NOT NULL,
-    descricao TEXT
-);
-
-CREATE TABLE IF NOT EXISTS Prescricoes (
-    id SERIAL PRIMARY KEY,
-    id_medico INT NOT NULL,
-    id_paciente INT NOT NULL,
-    data_prescricao TIMESTAMP NOT NULL,
-    FOREIGN KEY (id_medico) REFERENCES Medicos(id),
-    FOREIGN KEY (id_paciente) REFERENCES Pacientes(id)
-);
-
-CREATE TABLE IF NOT EXISTS Prescricao_Medicamentos (
-    id SERIAL PRIMARY KEY,
-    id_prescricao INT NOT NULL,
-    id_medicamento INT NOT NULL,
-    horario VARCHAR(50) NOT NULL,
-    dosagem VARCHAR(50) NOT NULL,
-    FOREIGN KEY (id_prescricao) REFERENCES Prescricoes(id),
-    FOREIGN KEY (id_medicamento) REFERENCES Medicamentos(id)
-);
-
-```
-
->[!NOTE] 
-> Exemplo da modelagem de escrita normalizada para integridade dos relacionamentos
-
-Esse modelo, por mais que seja superficial, **garante a integridade dos dados durante a manipulação dos dados**. Porém, uma outra funcionalidade do sistema de prescrição médica é **gerar relatórios e ordens de serviço para a farmácia hospitalar para preparar e controlar a saída do estoque dos medicamentos**. Essa funcionalidade é crítica, pois os **medicamentos precisam de triagem, rastreio, contabilidade e facilidade visual para separação e destinação ao quarto/enfermaria onde o paciente está**. Para montar uma visão como essa em sistemas altamente normalizados, é necessária uma grande quantidade de joins entre as tabelas.
-
-```sql
-SELECT
-    p.id AS id_prescricao,
-    p.data_prescricao,
-    m.nome AS nome_medico,
-    m.especialidade,
-    pac.nome AS nome_paciente,
-    pac.data_nascimento,
-    pac.endereco,
-    med.nome AS nome_medicamento,
-    pm.horario,
-    pm.dosagem
-FROM
-    Prescricoes p
-    LEFT JOIN Medicos m ON p.id_medico = m.id
-    LEFT JOIN Pacientes pac ON p.id_paciente = pac.id
-    LEFT JOIN Prescricao_Medicamentos pm ON p.id = pm.id_prescricao
-    LEFT JOIN Medicamentos med ON pm.id_medicamento = med.id
-WHERE
-    p.id = 1; -- ID da prescrição específica
-
-```
-
-
-```sql
-SELECT
-    p.id AS id_prescricao,
-    p.data_prescricao,
-    m.nome AS nome_medico,
-    m.especialidade,
-    pac.nome AS nome_paciente,
-    pac.data_nascimento,
-    pac.endereco,
-    med.nome AS nome_medicamento,
-    pm.horario,
-    pm.dosagem
-FROM
-    Prescricoes p
-    LEFT JOIN Medicos m ON p.id_medico = m.id
-    LEFT JOIN Pacientes pac ON p.id_paciente = pac.id
-    LEFT JOIN Prescricao_Medicamentos pm ON p.id = pm.id_prescricao
-    LEFT JOIN Medicamentos med ON pm.id_medicamento = med.id
-WHERE
-    p.id = 1; -- ID da prescrição específica
-
-```
-
-> [!NOTE] 
-> Exemplo de Query para recuperar os dados dos medicamentos solicitados por prescrições médicas
+O texto exibe a query que recupera essa visão consolidada de uma prescrição específica, combinando `Prescricoes`, `Medicos`, `Pacientes`, `Prescricao_Medicamentos` e `Medicamentos` por meio de vários `LEFT JOIN`, filtrando pelo id da prescrição.
 
 #### Output
 
-```sh
-1
-2
-3
-1	2023-05-20 14:30:00.000	Dr. João Silva	Cardiologia	Maria Oliveira	1985-07-10	Rua das Flores, 123	Aspirina	08:00	100mg
-1	2023-05-20 14:30:00.000	Dr. João Silva	Cardiologia	Maria Oliveira	1985-07-10	Rua das Flores, 123	Paracetamol	20:00	500mg
-1	2023-05-20 14:30:00.000	Dr. João Silva	Cardiologia	Maria Oliveira	1985-07-10	Rua das Flores, 123	Aspirina	08:00	100mg
+O resultado dessa query é uma série de linhas em que cada medicamento prescrito aparece repetindo os dados do médico e do paciente — efeito natural do join, com colunas como data da prescrição, nome e especialidade do médico, dados do paciente, nome do medicamento, horário e dosagem. Em vez de reproduzir a saída completa, basta entender que cada medicamento gera uma linha com as informações cruzadas.
 
-```
-
-
-```sh
-1	2023-05-20 14:30:00.000	Dr. João Silva	Cardiologia	Maria Oliveira	1985-07-10	Rua das Flores, 123	Aspirina	08:00	100mg
-1	2023-05-20 14:30:00.000	Dr. João Silva	Cardiologia	Maria Oliveira	1985-07-10	Rua das Flores, 123	Paracetamol	20:00	500mg
-1	2023-05-20 14:30:00.000	Dr. João Silva	Cardiologia	Maria Oliveira	1985-07-10	Rua das Flores, 123	Aspirina	08:00	100mg
-
-```
-
-Para externalizar essa consulta para um modelo especializado, a primeira possibilidade seria criar uma segunda tabela semi-desnormalizada, mantendo apenas a consistência entre IDs e relacionamentos para evitar corrupção a um nível básico e colocando em linha a prescrição dos medicamentos de forma descritiva. Isso elimina a necessidade de joins entre tabelas constantemente, entregando a view específica para o subsistema de farmácia.
+Para externalizar essa consulta em um modelo especializado, a primeira alternativa é criar uma segunda tabela semi-desnormalizada que mantém apenas a consistência básica entre IDs e relacionamentos e coloca os medicamentos da prescrição em linha, de forma descritiva. Isso elimina a necessidade de joins constantes e entrega a view pronta para o subsistema de farmácia.
 
 ![CQRS](images/cqrs-database-read-prescricoes.png)
 
-```sql
-CREATE TABLE IF NOT EXISTS vw_prescricoes_medicamentos_detalhadas (
-    id SERIAL PRIMARY KEY,
-    id_prescricao INT,
-    data_prescricao TIMESTAMP NOT NULL,
-    id_medico INT NOT NULL,
-    nome_medico VARCHAR(255) NOT NULL,
-    especialidade_medico VARCHAR(255) NOT NULL,
-    crm_medico VARCHAR(8) NOT NULL,
-    id_paciente INT NOT NULL,
-    nome_paciente VARCHAR(255) NOT NULL,
-    data_nascimento_paciente DATE NOT NULL,
-    endereco_paciente VARCHAR(255),
-    id_medicamento INT NOT NULL,
-    nome_medicamento VARCHAR(255) NOT NULL,
-    descricao_medicamento TEXT,
-    horario VARCHAR(50) NOT NULL,
-    dosagem VARCHAR(50) NOT null,
-    FOREIGN KEY (id_medico) REFERENCES Medicos(id),
-    FOREIGN KEY (id_paciente) REFERENCES Pacientes(id),
-    FOREIGN KEY (id_medicamento) REFERENCES Medicamentos(id),
-    FOREIGN KEY (id_prescricao) REFERENCES Prescricoes(id)
-);
+O artigo mostra o DDL dessa tabela de leitura, `vw_prescricoes_medicamentos_detalhadas`, que reúne em colunas únicas os dados de médico, paciente e medicamento que antes estavam espalhados, mantendo ainda chaves estrangeiras de referência para preservar um mínimo de integridade.
 
-```
+Para ilustrar, supondo que a tabela de consulta esteja no mesmo banco, é feita uma carga inicial usando a query com todos os joins para popular a nova tabela. Depois disso, recuperar a prescrição detalhada passa a ser um simples `SELECT` em uma única tabela já compilada.
 
+O material apresenta o `INSERT ... SELECT` que faz essa carga inicial, lendo o modelo normalizado com os joins e gravando os campos correspondentes na tabela de leitura, seguido de um `SELECT` simples nessa tabela filtrando pela prescrição. A saída resultante traz, em cada linha, todos os dados já consolidados (prescrição, médico, paciente e medicamento), sem necessidade de novos joins.
 
-```sql
-CREATE TABLE IF NOT EXISTS vw_prescricoes_medicamentos_detalhadas (
-    id SERIAL PRIMARY KEY,
-    id_prescricao INT,
-    data_prescricao TIMESTAMP NOT NULL,
-    id_medico INT NOT NULL,
-    nome_medico VARCHAR(255) NOT NULL,
-    especialidade_medico VARCHAR(255) NOT NULL,
-    crm_medico VARCHAR(8) NOT NULL,
-    id_paciente INT NOT NULL,
-    nome_paciente VARCHAR(255) NOT NULL,
-    data_nascimento_paciente DATE NOT NULL,
-    endereco_paciente VARCHAR(255),
-    id_medicamento INT NOT NULL,
-    nome_medicamento VARCHAR(255) NOT NULL,
-    descricao_medicamento TEXT,
-    horario VARCHAR(50) NOT NULL,
-    dosagem VARCHAR(50) NOT null,
-    FOREIGN KEY (id_medico) REFERENCES Medicos(id),
-    FOREIGN KEY (id_paciente) REFERENCES Pacientes(id),
-    FOREIGN KEY (id_medicamento) REFERENCES Medicamentos(id),
-    FOREIGN KEY (id_prescricao) REFERENCES Prescricoes(id)
-);
-
-```
-
-> [!NOTE] 
-> Exemplo de modelagem para um padrão de leitura otimizado para a triagem de farmácia
-
-Para ilustrar inicialmente, supondo que a tabela otimizada para consulta esteja presente no mesmo banco de dados, podemos iniciar uma carga inicial com os dados presentes localmente, utilizando como base a query anterior com todos os joins necessários. Em seguida, conseguiremos simplificar a busca dos dados da prescrição de forma detalhada apenas com um select simples em uma única tabela analítica onde os dados estão compilados.
-
-```sql
-INSERT INTO vw_prescricoes_medicamentos_detalhadas (
-    id_prescricao,
-    data_prescricao,
-    id_medico,
-    nome_medico,
-    especialidade_medico,
-    crm_medico,
-    id_paciente,
-    nome_paciente,
-    data_nascimento_paciente,
-    endereco_paciente,
-    id_medicamento,
-    nome_medicamento,
-    descricao_medicamento,
-    horario,
-    dosagem
-)
-SELECT
-    p.id AS id_prescricao,
-    p.data_prescricao,
-    m.id AS id_medico,
-    m.nome AS nome_medico,
-    m.especialidade AS especialidade_medico,
-    m.crm as crm_medico,
-    pac.id AS id_paciente,
-    pac.nome AS nome_paciente,
-    pac.data_nascimento AS data_nascimento_paciente,
-    pac.endereco AS endereco_paciente,
-    med.id AS id_medicamento,
-    med.nome AS nome_medicamento,
-    med.descricao AS descricao_medicamento,
-    pm.horario,
-    pm.dosagem
-FROM
-    Prescricoes p
-    JOIN Medicos m ON p.id_medico = m.id
-    JOIN Pacientes pac ON p.id_paciente = pac.id
-    JOIN Prescricao_Medicamentos pm ON p.id = pm.id_prescricao
-    JOIN Medicamentos med ON pm.id_medicamento = med.id;
-
-```
-
-
-```sql
-INSERT INTO vw_prescricoes_medicamentos_detalhadas (
-    id_prescricao,
-    data_prescricao,
-    id_medico,
-    nome_medico,
-    especialidade_medico,
-    crm_medico,
-    id_paciente,
-    nome_paciente,
-    data_nascimento_paciente,
-    endereco_paciente,
-    id_medicamento,
-    nome_medicamento,
-    descricao_medicamento,
-    horario,
-    dosagem
-)
-SELECT
-    p.id AS id_prescricao,
-    p.data_prescricao,
-    m.id AS id_medico,
-    m.nome AS nome_medico,
-    m.especialidade AS especialidade_medico,
-    m.crm as crm_medico,
-    pac.id AS id_paciente,
-    pac.nome AS nome_paciente,
-    pac.data_nascimento AS data_nascimento_paciente,
-    pac.endereco AS endereco_paciente,
-    med.id AS id_medicamento,
-    med.nome AS nome_medicamento,
-    med.descricao AS descricao_medicamento,
-    pm.horario,
-    pm.dosagem
-FROM
-    Prescricoes p
-    JOIN Medicos m ON p.id_medico = m.id
-    JOIN Pacientes pac ON p.id_paciente = pac.id
-    JOIN Prescricao_Medicamentos pm ON p.id = pm.id_prescricao
-    JOIN Medicamentos med ON pm.id_medicamento = med.id;
-
-```
-
-> [!NOTE]
-> Exemplo de carregamento inicial da tabela de view com os dados presentes no modelo normalizado
-
-```sql
-SELECT * FROM vw_prescricoes_medicamentos_detalhadas WHERE id_prescricao = 1;
-
-```
-
-
-```sql
-SELECT * FROM vw_prescricoes_medicamentos_detalhadas WHERE id_prescricao = 1;
-
-```
-
-```sh
-1
-2
-3
-1	1	2023-05-20 14:30:00.000	1	Dr. João Silva	Cardiologia	CRM12345	1	Maria Oliveira	1985-07-10	Rua das Flores, 123	1	Aspirina	Analgésico e anti-inflamatório	08:00	100mg
-2	1	2023-05-20 14:30:00.000	1	Dr. João Silva	Cardiologia	CRM12345	1	Maria Oliveira	1985-07-10	Rua das Flores, 123	2	Paracetamol	Analgésico	20:00	500mg
-20	1	2023-05-20 14:30:00.000	1	Dr. João Silva	Cardiologia	CRM12345	1	Maria Oliveira	1985-07-10	Rua das Flores, 123	1	Aspirina	Analgésico e anti-inflamatório	08:00	100mg
-
-```
-
-
-```sh
-1	1	2023-05-20 14:30:00.000	1	Dr. João Silva	Cardiologia	CRM12345	1	Maria Oliveira	1985-07-10	Rua das Flores, 123	1	Aspirina	Analgésico e anti-inflamatório	08:00	100mg
-2	1	2023-05-20 14:30:00.000	1	Dr. João Silva	Cardiologia	CRM12345	1	Maria Oliveira	1985-07-10	Rua das Flores, 123	2	Paracetamol	Analgésico	20:00	500mg
-20	1	2023-05-20 14:30:00.000	1	Dr. João Silva	Cardiologia	CRM12345	1	Maria Oliveira	1985-07-10	Rua das Flores, 123	1	Aspirina	Analgésico e anti-inflamatório	08:00	100mg
-
-```
-
-Com o exemplo acima, **conseguimos otimizar inicialmente uma visualização dentro de um modelo de leitura para a farmácia do hospital**, nos quais os sistemas conseguem recuperar os dados de forma simplificada. Esse tipo de estratégia é muito comum para criar visualizações especializadas em diversos tipos de sistemas e viabiliza algumas abordagens interessantes de segregação de responsabilidade de escrita e leitura de forma simplificada. No entanto, **executar o carregamento de dados como o exemplo ilustrado é inviável em sistemas transacionais com um volume considerável**, uma vez que executar o select da base de dados inteira para carregar em uma tabela especializada não resolveria e talvez agravasse problemas de escala de uso desses dados. Para isso, precisamos **adicionar responsabilidades adicionais ao modelo de comando e consulta, muitas vezes utilizando a consistência eventual nos modelos de leitura.**
+Com isso, a visão de leitura para a farmácia fica otimizada e os sistemas recuperam os dados de forma simplificada. Essa estratégia é comum para criar visualizações especializadas, mas a carga via `SELECT` da base inteira é inviável em sistemas transacionais de grande volume, pois pode agravar problemas de escala. Para contornar isso, é preciso adicionar responsabilidades aos modelos de comando e consulta, muitas vezes aceitando consistência eventual no lado de leitura.
 
 ![CQRS Exemplo](images/cqrs-conceitual.png)
 
-Para realizar a sincronização entre os modelos de escrita e leitura de forma saudável, o uso de mensageria e eventos como intermediários entre ambos pode ajudar a desacoplar as responsabilidades e fazer com que ambos escalem independentemente um do outro. No entanto, a consistência eventual é um efeito colateral que precisa ser considerado no design da arquitetura para viabilizar esse comportamento.
+Para sincronizar escrita e leitura de forma saudável, mensageria e eventos atuam como intermediários, desacoplando as responsabilidades e permitindo que ambos os lados escalem de forma independente. O preço a pagar é a consistência eventual, que precisa ser prevista no design da arquitetura.
 
 ### Consistência Eventual no CQRS
 
-No contexto de CQRS, a **consistência eventual pode ser de grande valor quando prevista e aceita no design da solução**. Diferente de sistemas tradicionais que podem garantir uma consistência imediata entre os modelos de dados, aceitar o comportamento de um sistema eventualmente consistente **pressupõe que o sistema pode operar de forma inconsistente por um período de tempo sem grandes problemas** e também **pressume que, com o tempo, o sistema ou entidade se tornará consistente**.
+No contexto de CQRS, a consistência eventual é valiosa quando é prevista e aceita desde o desenho da solução. Diferente de sistemas que garantem consistência imediata, esse modelo parte do princípio de que o sistema pode operar inconsistente por um intervalo de tempo sem grandes prejuízos e que, com o passar do tempo, voltará a um estado consistente.
 
 ![CQRS Farmacia](images/cqrs-eventual-farmacia.png)
 
-Na prática, olhando para uma implementação de CQRS que suporte esse tipo de cenário, onde os modelos de comando e consulta são separados e controlados por funcionalidades e implementações distintas, as operações de escrita são processadas no modelo de comando e, em seguida, **eventos ou mensagens são gerados para atualizar o modelo de consulta** de forma assíncrona, o que implica que **pode haver um atraso antes que o modelo de consulta reflita as últimas mudanças** realizadas no modelo de comando. Durante esse intervalo, o sistema está em um estado de “consistência eventual”.
+Na prática, com os modelos de comando e consulta separados, as escritas ocorrem no modelo de comando e, em seguida, eventos ou mensagens são emitidos para atualizar o modelo de consulta de forma assíncrona. Isso significa que pode haver um atraso até que a leitura reflita as últimas mudanças — o intervalo em que o sistema está em "consistência eventual".
 
 ![CQRS Evento](images/cqrs-eventual.png)
 
-Para realizar a sincronização entre modelos, **são necessários esforços computacionais adicionais**, sendo eles processos assíncronos de mensageria que trocam dados através de tópicos ou filas e realizam a escrita no modelo de consulta, criando views otimizadas para a recuperação. Esse processo pressupõe a existência de um comportamento adicional independente e que não deve impactar agressivamente a performance.
-
-Para ilustrar, podemos entender que **após o processamento e persistência dos dados no modelo de escrita, o processo encapsulado no comando envia alguma mensagem ou evento** contendo todos os dados necessários para que uma **aplicação ou processo de sincronização consiga construir a representação do registro no modelo de consulta**.
+Sincronizar os modelos exige esforço computacional extra: processos assíncronos de mensageria que trafegam dados por filas ou tópicos e escrevem no modelo de consulta, gerando views otimizadas. Esse comportamento adicional deve ser independente e não pode impactar a performance de forma agressiva. Em termos práticos, após persistir no modelo de escrita, o comando publica uma mensagem ou evento com os dados necessários para que um processo de sincronização construa a representação correspondente no modelo de consulta.
 
 ## CQRS e Réplicas de Leitura
 
-À medida que a intensidade de escrita aumenta devido à sincronização dos modelos, o próprio modelo de leitura tende a acabar sendo saturado pela carga de trabalho, pois ainda centraliza uma grande concorrência de escrita e leitura do sistema e dos clientes, por mais que sejam otimizadas. Olhando para a solução que o CQRS visa implementar, podemos perceber que, com o tempo, apenas trocamos o problema de lugar. No entanto, existem algumas outras abordagens de otimização do modelo de leitura em uma abordagem SQL.
+Conforme a intensidade de escrita cresce por causa da sincronização entre modelos, o próprio modelo de leitura tende a saturar, pois ainda concentra a concorrência entre escrita de sincronização e leitura dos clientes. Olhando de perto, percebe-se que o problema apenas mudou de lugar — mas há outras formas de otimizar o lado de leitura em uma abordagem SQL.
 
 ![CQRS Read Replica](images/cqrs-read-replica.png)
 
-Se aproveitarmos a já aceita consistência eventual entre os modelos, podemos utilizar réplicas de leitura adicionais como banco principal para o modelo de consulta, deixando a instância primária somente para fazer offload da escrita e evitar concorrência com o uso da API. Esse tipo de abordagem aumenta consideravelmente os custos operacionais, mas adiciona uma camada adicional de resiliência de dados. Resumindo de forma prática, se presumirmos que a sincronização entre os modelos ocorre mediante a escrita nas duas bases, e que as queries não podem efetuar mudanças no estado das entidades, podemos adicionar instâncias *read-only* no processo para ganhar níveis de performance.
+Aproveitando a consistência eventual já aceita, é possível usar réplicas de leitura adicionais como base principal das queries, deixando a instância primária dedicada a absorver a escrita de sincronização e evitar concorrência com a API. Isso eleva os custos operacionais, mas adiciona resiliência: se a sincronização escreve nas duas bases e as queries não alteram estado, instâncias *read-only* podem ser incorporadas ao fluxo para ganhar performance.
 
 ## CQRS e Bancos de Dados NoSQL
 
-A implementação de modelos NoSQL para suprir a responsabilidade de leitura **pode ser uma alternativa interessante devido à troca de isolamento, relacionamento e atomicidade por performance** otimizada para escrita e leitura. Uma vez que **não precisamos das features ACID nos modelos de leitura**, podemos aceitar o tradeoff para otimização de consultas com maior segurança.
+Usar NoSQL para atender ao lado de leitura é interessante porque troca isolamento, relacionamento e atomicidade por performance otimizada de escrita e leitura. Como o modelo de leitura não precisa das garantias ACID, esse tradeoff pode ser aceito com mais segurança em prol de consultas mais rápidas.
 
-A implementação desse modelo é exatamente igual, topologicamente falando, a de utilizar ambas as bases no padrão SQL, com exceção de que suas **aplicações ou processos do contexto do domínio precisam conhecer os dois dialetos e saber trabalhar a tradução entre eles por meio de processos intermediários**.
+Topologicamente, a implementação é igual à de usar dois bancos SQL, com a diferença de que as aplicações ou processos do domínio precisam conhecer os dois dialetos e saber traduzir entre eles por meio de processos intermediários.
 
 ![CQRS NoSQL](images/cqrs-nosql.png)
 
-Imagine que precisamos **converter os dados de todas as prescrições do cliente para construir prontuários médicos eletrônicos** para acompanhamento e gestão interna do hospital e também servir para **gerar receitas médicas das consultas e entregar diretamente para o paciente**. Os dois casos são muito parecidos e podemos criar um query model NoSQL muito próximo do response de um prontuário ou receita.
+No exemplo, é preciso converter os dados de todas as prescrições para montar prontuários médicos eletrônicos — usados na gestão interna do hospital — e também receitas médicas entregues ao paciente. Os dois casos são parecidos e permitem criar um query model NoSQL muito próximo do response final.
 
 ![CQRS NoSQL Prontuario](images/cqrs-event-handler.png)
 
-Podemos usar o padrão CQRS para transformar esse modelo de consulta em um padrão NoSQL orientado a documentos. Nesse caso, todas as informações da prescrição são agrupadas em um modelo de prontuário ou receita médica, similar a um response HTTP que seria criado manualmente, juntando as linhas retornadas. Quando comandos de escrita são executados no sistema, eventos ou mensagens com todas as informações do prontuário precisam ser gerados nos brokers para criar uma visualização otimizada.
+Com CQRS, esse modelo de consulta pode virar um documento NoSQL no qual todas as informações da prescrição são agrupadas, parecido com um response HTTP montado manualmente. Cada comando de escrita gera eventos ou mensagens com os dados do prontuário para construir a visualização otimizada. O exemplo adota o **Elasticsearch**, no qual se cria um mapeamento que define a estrutura mínima de campos e tipos, alinhado ao evento de entrada e ao payload esperado da API de consulta.
 
-Para este exemplo, vamos usar o **Elasticsearch** como base para converter o modelo para NoSQL. Nele, podemos criar um mapeamento para garantir a estrutura mínima dos campos e tipos necessários para construir uma visualização segura. Esse mapeamento pode ser criado de forma semelhante ao evento de entrada e ao payload de resposta, garantindo um formato base otimizado para a resposta esperada da API de consulta do domínio.
+O artigo mostra o mapping do índice `prontuarios`, com objetos aninhados para `medico`, `paciente` e uma lista `nested` de `medicamentos`, e a resposta de confirmação retornada pelo Elasticsearch ao criar o índice.
 
-```json
-// PUT /prontuarios
-{
-  "mappings": {
-    "properties": {
-      "id_prescricao": { "type": "integer" },
-      "data_prescricao": { "type": "date" },
-      "medico": {
-        "properties": {
-          "id_medico": { "type": "integer" },
-          "nome": { "type": "text" },
-          "crm": { "type": "text" },
-          "especialidade": { "type": "text" }
-        }
-      },
-      "paciente": {
-        "properties": {
-          "id_paciente": { "type": "integer" },
-          "nome": { "type": "text" },
-          "data_nascimento": { "type": "date" },
-          "endereco": { "type": "text" }
-        }
-      },
-      "medicamentos": {
-        "type": "nested",
-        "properties": {
-          "id_medicamento": { "type": "integer" },
-          "nome": { "type": "text" },
-          "horario": { "type": "text" },
-          "dosagem": { "type": "text" }
-        }
-      }
-    }
-  }
-}
+Depois do mapping, é necessário um processo que receba o evento de domínio gerado por um comando de escrita e o transforme no documento esperado. A escolha do banco influencia esse processo, pois nem sempre todos os dados chegam em um único evento. Se a construção for incremental, com dados distribuídos consolidados de forma assíncrona, o modelo NoSQL precisa aceitar incrementos parciais dos registros.
 
-```
+O texto apresenta o documento indexado via `POST`, contendo o id da prescrição, os blocos de médico e paciente e o array de medicamentos com horário e dosagem. Esse modelo abre uma grande variedade de possibilidades de consulta: se a chave do índice for conhecida e mantida pelo modelo de escrita, a busca pode ser feita diretamente por ela, garantindo recuperação otimizada.
 
-
-
-```json
-// PUT /prontuarios
-{
-  "mappings": {
-    "properties": {
-      "id_prescricao": { "type": "integer" },
-      "data_prescricao": { "type": "date" },
-      "medico": {
-        "properties": {
-          "id_medico": { "type": "integer" },
-          "nome": { "type": "text" },
-          "crm": { "type": "text" },
-          "especialidade": { "type": "text" }
-        }
-      },
-      "paciente": {
-        "properties": {
-          "id_paciente": { "type": "integer" },
-          "nome": { "type": "text" },
-          "data_nascimento": { "type": "date" },
-          "endereco": { "type": "text" }
-        }
-      },
-      "medicamentos": {
-        "type": "nested",
-        "properties": {
-          "id_medicamento": { "type": "integer" },
-          "nome": { "type": "text" },
-          "horario": { "type": "text" },
-          "dosagem": { "type": "text" }
-        }
-      }
-    }
-  }
-}
-
-```
-
-```json
-{
-	"acknowledged": true,
-	"shards_acknowledged": true,
-	"index": "prontuarios"
-}
-
-```
-
-
-```json
-{
-	"acknowledged": true,
-	"shards_acknowledged": true,
-	"index": "prontuarios"
-}
-
-```
-
-Após a criação de um mapping, precisamos criar um processo que recebe o evento de domínio decorrente de um comando de escrita e o transforma para o padrão de documento estabelecido. A escolha da tecnologia do banco de dados deve ser levada em conta para esse processo, uma vez que pode ou não ter todos os dados em um único evento para construir a view de leitura de forma íntegra. Caso esse processo seja feito com dados distribuídos que são recebidos, consolidados e disponibilizados de forma assíncrona e incremental, o modelo NoSQL deverá ser capaz de receber incrementos parciais dos registros.
-
-```json
-// POST /prescricoes/_doc/1
-{
-    "id_prescricao": 1,
-    "data_prescricao": "2023-05-20T14:30:00.000Z",
-    "medico": {
-        "id_medico": 1,
-        "nome": "Dr. João Silva",
-        "especialidade": "Cardiologia",
-        "crm": "CRM123123"
-    },
-    "paciente": {
-        "id_paciente": 1,
-        "nome": "Maria Oliveira",
-        "data_nascimento": "1985-07-10",
-        "endereco": "Rua das Flores, 123"
-    },
-    "medicamentos": [
-        {
-            "id_medicamento": 1,
-            "nome": "Aspirina",
-            "horario": "08:00",
-            "dosagem": "100mg"
-        },
-        {
-            "id_medicamento": 2,
-            "nome": "Paracetamol",
-            "horario": "20:00",
-            "dosagem": "500mg"
-        }
-    ]
-}
-
-
-```
-
-
-
-```json
-// POST /prescricoes/_doc/1
-{
-    "id_prescricao": 1,
-    "data_prescricao": "2023-05-20T14:30:00.000Z",
-    "medico": {
-        "id_medico": 1,
-        "nome": "Dr. João Silva",
-        "especialidade": "Cardiologia",
-        "crm": "CRM123123"
-    },
-    "paciente": {
-        "id_paciente": 1,
-        "nome": "Maria Oliveira",
-        "data_nascimento": "1985-07-10",
-        "endereco": "Rua das Flores, 123"
-    },
-    "medicamentos": [
-        {
-            "id_medicamento": 1,
-            "nome": "Aspirina",
-            "horario": "08:00",
-            "dosagem": "100mg"
-        },
-        {
-            "id_medicamento": 2,
-            "nome": "Paracetamol",
-            "horario": "20:00",
-            "dosagem": "500mg"
-        }
-    ]
-}
-
-
-```
-
-Esse modelo de database nos permite uma variedade muito grande de possibilidades de consulta. Caso a chave do índice ou coleção do seu modelo seja conhecida e mantida pelo modelo original de escrita, a busca pode ser realizada diretamente por ela, o que invariavelmente garante uma performance otimizada para a recuperação desses dados.
-
-```json
-// GET /prescricoes/_doc/1
-{
-	"_index": "prescricoes",
-	"_type": "_doc",
-	"_id": "1",
-	"_version": 1,
-	"_seq_no": 0,
-	"_primary_term": 1,
-	"found": true,
-	"_source": {
-		"id_prescricao": 1,
-		"data_prescricao": "2023-05-20T14:30:00.000Z",
-		"medico": {
-			"id_medico": 1,
-			"nome": "Dr. João Silva",
-			"especialidade": "Cardiologia",
-			"crm": "CRM123123"
-		},
-		"paciente": {
-			"id_paciente": 1,
-			"nome": "Maria Oliveira",
-			"data_nascimento": "1985-07-10",
-			"endereco": "Rua das Flores, 123"
-		},
-		"medicamentos": [
-			{
-				"id_medicamento": 1,
-				"nome": "Aspirina",
-				"horario": "08:00",
-				"dosagem": "100mg"
-			},
-			{
-				"id_medicamento": 2,
-				"nome": "Paracetamol",
-				"horario": "20:00",
-				"dosagem": "500mg"
-			}
-		]
-	}
-}
-
-```
-
-```json
-// GET /prescricoes/_doc/1
-{
-	"_index": "prescricoes",
-	"_type": "_doc",
-	"_id": "1",
-	"_version": 1,
-	"_seq_no": 0,
-	"_primary_term": 1,
-	"found": true,
-	"_source": {
-		"id_prescricao": 1,
-		"data_prescricao": "2023-05-20T14:30:00.000Z",
-		"medico": {
-			"id_medico": 1,
-			"nome": "Dr. João Silva",
-			"especialidade": "Cardiologia",
-			"crm": "CRM123123"
-		},
-		"paciente": {
-			"id_paciente": 1,
-			"nome": "Maria Oliveira",
-			"data_nascimento": "1985-07-10",
-			"endereco": "Rua das Flores, 123"
-		},
-		"medicamentos": [
-			{
-				"id_medicamento": 1,
-				"nome": "Aspirina",
-				"horario": "08:00",
-				"dosagem": "100mg"
-			},
-			{
-				"id_medicamento": 2,
-				"nome": "Paracetamol",
-				"horario": "20:00",
-				"dosagem": "500mg"
-			}
-		]
-	}
-}
-
-```
+O artigo encerra a seção exibindo a resposta de um `GET` por id, que devolve o documento completo no campo `_source`, com todos os dados da prescrição já consolidados em um único objeto.
 
 ## CQRS em Sistemas Distribuídos
 
-A arquitetura CQRS quando aplicada a sistemas distribuídos e granulares pode ofertar aumentos significativos de resiliência, performance e **facilidade para sumarizar dados de domínio distribuídos entre contextos de multiplos microserviços**. Quando adotamos um modelo de microserviços no qual segregamos databases especialistas para cada tipo de serviço **torna mais difícil criar consultas que unam e retornem dados de diferentes serviços**. Esse tipo de implementação pode oferecer abordagens de consolidação para otimizar as operações de query e replicação de dados.
+Aplicado a sistemas distribuídos e granulares, o CQRS aumenta resiliência, performance e facilita a sumarização de dados de domínio espalhados por múltiplos microsserviços. Quando cada serviço tem seu próprio banco especializado, fica mais difícil montar consultas que unam dados de serviços diferentes — e é justamente aí que abordagens de consolidação ajudam a otimizar queries e replicação.
 
-A construção de views otimizadas utilizando dados de vários serviços por meio de eventos e mensagens pode facilitar alguns cenários, porém **igualmente acarreta um aumento de complexidade e granularidade** no ambiente, que pode se tornar um tópico complexo na arquitetura de solução. Esse tipo de abordagem pode ser um pouco controverso em termos mais puristas de domínio, nos quais limitam a separação de comando e query somente dentro da responsabilidade de um domínio específico, mas a capacidade de estender os conceitos desse tipo de abordagem para entregar modelos consolidados com informações de diferentes domínios pode ser uma grande adição à sua caixa de ferramentas de arquitetura de solução.
+Construir views otimizadas a partir de dados de vários serviços, via eventos e mensagens, resolve cenários complexos, mas também aumenta a complexidade e a granularidade do ambiente. Para puristas de domínio, estender o CQRS para além de um único domínio pode ser controverso, já que tradicionalmente a separação de comando e query se limita à responsabilidade de um domínio específico; ainda assim, montar modelos consolidados com dados de domínios distintos é uma adição poderosa ao arsenal de arquitetura.
 
 ![CQRS - Distribuido](images/cqrs-distributed.png)
 
-> [!NOTE] 
+> [!NOTE]
 > Consolidação de eventos de diversos event-stores de comandos para compor modelos de dados com dados distribuídos.
 
-O preço da **consistência eventual nesse tipo de cenário tende a se tornar cada vez maior** dependendo da quantidade de fontes de eventos que vão ser tratadas e sumarizadas. Vamos extender o exemplo do sistema hospitalar mais uma vez, onde agora precisamos criar uma forma de recuperar todo  o histórico do paciente para fins de auditoria, faturamento e treinamento de modelos. Temos serviços espalhados na arquitetura que são responsáveis por tratar da triagem inicial, prescrições médicas, exames laboratoriais e exames de imagem que foram realizados por determinado paciente. Essas informações precisam ser recuperadas de forma consolidada por atendimento médico individual, mas também precisam retornar todo o histórico do paciente durante seus anos de relacionamento como cliente do hospital.
+O custo da consistência eventual cresce conforme aumenta o número de fontes de eventos a tratar e sumarizar. Estendendo o exemplo hospitalar, surge a necessidade de recuperar todo o histórico do paciente para auditoria, faturamento e treinamento de modelos. Há serviços distintos para triagem inicial, prescrições, exames laboratoriais e exames de imagem, e essas informações precisam ser consolidadas tanto por atendimento individual quanto ao longo de anos de relacionamento do paciente com o hospital.
 
-Nesse sistema, temos serviços espalhados pela arquitetura responsáveis pela triagem inicial, prescrições médicas, exames laboratoriais e exames de imagem. Precisamos consolidar essas informações por atendimento médico individual e também recuperar todo o histórico do paciente ao longo dos anos. Esse é um caso interessante para usar uma visualização consolidada entre vários domínios que expõem seus dados por meio de tópicos de consolidação. Podemos criar listeners tanto para eventos de comando quanto para tópicos de resposta que confirmem o sucesso da execução, construindo um modelo de consulta que agrupa os dados.
-
-Esse modelo de leitura deve permitir atualizações incrementais e aceitar uma consistência eventual contínua, já que o tempo de construção do registro pode variar conforme a demanda e o número de fontes de dados. **Essa abordagem é útil para recuperar dados em tempo real, mesmo com consistência eventual**. É uma alternativa a jobs de ETL que fazem essa agregação por meio de batches programados, ou a padrões como API-Composition, que podem comprometer a disponibilidade do serviço devido ao alto acoplamento entre diferentes serviços para construir a resposta.
+Para isso, cria-se uma visualização consolidada entre vários domínios que expõem seus dados por tópicos de consolidação. Listeners escutam tanto eventos de comando quanto tópicos de resposta que confirmam a execução bem-sucedida, e vão construindo um modelo de consulta que agrupa os dados. Esse modelo de leitura deve permitir atualizações incrementais e aceitar uma consistência eventual contínua, já que o tempo de construção varia com a demanda e o número de fontes. É uma alternativa em tempo quase real a jobs de ETL em batch e ao padrão API-Composition, que tende a acoplar fortemente os serviços e pode comprometer a disponibilidade.
 
 ### Pattern de Dual-Write no Contexto de CQRS
 
-Quando olhamos friamente com a ótica da resiliência de sistemas distribuídos para o padrão de comando, pode surgir um alerta de consistência importante onde em dois passos (*persistir no banco e publicar o evento*) o que ocorreria caso um deles falhasse e outro fosse executado? Imagine que, por indisponibilidade temporária do broker de mensagens, o **dado fosse persistido na base de dados durante a execução do comando, porém ocorresse uma falha na publicação da mensagem**. Esse cenário levaria a uma inconsistência sistêmica em que o estado alterado pelo comando não refletiria nas APIs de consulta.
+Olhando com a ótica de resiliência, o comando executa dois passos — persistir no banco e publicar o evento — e surge um alerta: o que acontece se um deles falhar e o outro não? Se o dado for persistido mas a publicação da mensagem falhar (por indisponibilidade do broker, por exemplo), a mudança de estado não se refletirá nas APIs de consulta.
 
-Agora vamos olhar para o cenário inverso, onde, por acaso, **a publicação da mensagem ocorresse como previsto, mas uma falha inesperada ocorresse no banco de dados**. Nesse caso, teríamos um nível similar de inconsistência, em que dados que não existem na base de escrita transacional estariam disponibilizados nas APIs de consulta como se o comando executado tivesse sido efetivado.
+No cenário inverso, se a mensagem for publicada com sucesso mas o banco falhar, ocorre uma inconsistência semelhante: dados que não existem na base transacional aparecem nas APIs de consulta como se o comando tivesse sido efetivado.
 
-Ambos os cenários são problemáticos para sistemas que precisam de integridade forte, e para isso existem alguns padrões de design que podem nos ajudar a garantir mais níveis de segurança aos processos de comando e leitura. Um deles é o **Dual-Write**.
+Ambos os casos são problemáticos para sistemas que exigem integridade forte. Para mitigá-los, existem padrões de design que reforçam a segurança dos processos de comando e leitura — um deles é o **Dual-Write**.
 
-O **Padrão Dual-Write se aplica quando precisamos confirmar a consistência do dado em duas fontes distintas e dependentes**, mesmo que de maneira assíncrona. No caso do CQRS, ele é aplicado para manter os modelos de comando e consulta sincronizados. Quando um comando é emitido para alterar o estado do sistema, ele é processado pelo modelo de comando. Isso inclui validações, lógica de negócios e atualização do banco de dados de escrita. Após a operação de escrita ser concluída com sucesso, um evento correspondente é gerado. Esse evento descreve a mudança que ocorreu e deve ser propagado para o modelo de consulta. Para garantir que um ou outro não ocorra isoladamente, o padrão **busca assegurar que os dados não sejam alterados em caso de falha de publicação do evento e que o evento não seja publicado em caso de falha na escrita do banco**, um garantindo o outro.
+O **Dual-Write** se aplica quando é preciso confirmar a consistência do dado em duas fontes distintas e dependentes, ainda que de forma assíncrona. No CQRS, ele mantém comando e consulta sincronizados: quando um comando altera o estado, ele é processado (validações, regras de negócio, escrita no banco) e, ao concluir com sucesso, gera o evento correspondente que descreve a mudança. O objetivo é garantir que o dado não seja alterado se a publicação do evento falhar e que o evento não seja publicado se a escrita no banco falhar — um assegurando o outro.
 
 ![CQRS Dual Write](images/cqrs-dual-write.png)
 
-> [!NOTE] 
+> [!NOTE]
 > Exemplo de Dual Write implementado para garantir a escrita em banco e a publicação do evento
 
-Para tornar esse nível de confiabilidade possível, é necessário que **todas as transações do banco de dados de escrita ocorram dentro de transações atômicas**, onde todas as modificações de estado estejam dentro de uma atividade única e indivisível. Esse tipo de abordagem só acontece de forma efetiva em bancos de dados transacionais ACID, que dão suporte para transações com commit e rollback. Nesse caso, **todas as transações obrigatoriamente precisam iniciar uma transaction antes de efetuar todas as modificações necessárias**. Caso tudo ocorra como o esperado, incluindo a publicação do evento, o commit é realizado, efetuando todas as operações de uma única vez.
+Para viabilizar essa confiabilidade, todas as operações de escrita precisam ocorrer dentro de transações atômicas — uma unidade única e indivisível. Isso só funciona efetivamente em bancos ACID com suporte a commit e rollback. A transação é iniciada antes das modificações; se tudo ocorrer como esperado, inclusive a publicação do evento, o commit efetiva todas as operações de uma vez.
 
 ![CQRS Dual Write Rollback](images/cqrs-dual-write-rollback.png)
 
 ![CQRS Dual Write Rollback](images/cqrs-dual-write-rollback-1.png)
 
-> [!NOTE] 
+> [!NOTE]
 > Exemplo de Falhas que podem ocorrer em processos e integrações sendo respondidas com um rollback
 
-**Em caso de falhas em alguma etapa do processo, o processo de rollback deverá ser iniciado**, não efetivando as operações de escrita que foram realizadas dentro da transaction.
+Se qualquer etapa falhar, o rollback é acionado e as operações de escrita realizadas dentro da transação não são efetivadas.
 
 ### Outbox Pattern no Contexto de CQRS
 
-O **Transactional Outbox Pattern** é uma alternativa ao Dual-Write Pattern, projetado para **garantir a consistência entre a escrita no banco de dados e a publicação de eventos em sistemas distribuídos que utilizam bancos de dados SQL**. No contexto do CQRS, é de extrema importância que **os eventos de mudança de estado sejam corretamente propagados para os modelos de consulta**. Garantir que uma **alteração de estado no banco de dados e a publicação de um evento correspondente ocorram de maneira atômica** significa que ambos devem ser concluídos com sucesso ou nenhum deles deve ser executado.
+O **Transactional Outbox Pattern** é uma alternativa ao Dual-Write, voltado a garantir a consistência entre a escrita no banco e a publicação de eventos em sistemas distribuídos que usam bancos SQL. No CQRS, é fundamental que os eventos de mudança de estado cheguem corretamente aos modelos de consulta, e o ideal é que a alteração no banco e a publicação do evento ocorram de maneira atômica — ambas concluídas ou nenhuma.
 
-O Outbox Pattern resolve esses problemas **armazenando eventos em uma tabela de outbox dentro do mesmo banco de dados transacional utilizado para persistir o estado**. Quando um comando é processado e uma alteração de estado é feita, um **evento correspondente é criado em uma tabela de outbox na mesma transação do banco de dados**. Um serviço ou processo intermediário assíncrono lê periodicamente os eventos da tabela de outbox de forma sequencial, publica os mesmos no sistema de mensageria e, em seguida, marca os eventos como publicados ou os remove da tabela.
+O Outbox resolve isso armazenando os eventos em uma tabela de outbox dentro do mesmo banco transacional usado para persistir o estado. Quando um comando processa uma alteração, o evento correspondente é gravado na tabela de outbox na mesma transação. Um processo assíncrono lê periodicamente esses eventos em ordem, publica-os no sistema de mensageria e depois marca como publicados ou os remove da tabela.
 
 ![Outbox Relay](images/outbox-relay.png)
 
-Esse padrão envolve três componentes principais: a **tabela outbox**, o **processo de publicação**, também conhecido como **relay de mensagem**, e a **gestão de erros** obrigatória para tornar o padrão de fato resiliente para o propósito pelo qual foi concebido. A **tabela outbox é uma tabela no banco de dados transacional onde os eventos são armazenados temporariamente**. Esta tabela **deve estar presente na mesma transação que a escrita de dados para garantir a atomicidade**. O processo de publicação é um serviço ou **processo assíncrono que periodicamente lê eventos da tabela outbox**, **publica os mesmos no sistema de mensageria** do sistema e, em seguida, **marca os eventos como publicados ou os remove da tabela (preferencialmente)**. A gestão de erros deve incluir mecanismos para lidar com falhas na publicação, como retentativas e monitoramento, para garantir que todos os eventos sejam eventualmente publicados e somente removidos mediante essa confirmação.
+O padrão tem três componentes principais: a **tabela outbox**, o **processo de publicação** (também chamado de **relay de mensagem**) e a **gestão de erros** obrigatória para torná-lo de fato resiliente. A tabela outbox guarda os eventos temporariamente e deve participar da mesma transação da escrita de dados, garantindo atomicidade. O relay lê os eventos de forma assíncrona e periódica, publica na mensageria e marca como publicados ou os remove — preferencialmente removendo. A gestão de erros precisa prever retentativas e monitoramento, de modo que todo evento seja eventualmente publicado e só removido após confirmação.
 
-Imagine que precisamos criar uma view das prescrições do prontuário médico. Para isso, vamos criar uma tabela Outbox para armazenar os eventos de prescrição dentro da transação que salva as prescrições na tabela principal de escrita.
+No exemplo, é preciso montar uma view das prescrições do prontuário. Para isso, cria-se uma tabela de outbox que armazena os eventos de prescrição dentro da mesma transação que salva as prescrições na tabela principal.
 
 ![Outbox Modelagem](images/cqrs-outbox-pattern.png)
 
-```sql
-CREATE TABLE IF NOT EXISTS OutboxPrescricaoMedica (
-    id SERIAL PRIMARY KEY,
-    aggregate_id INT NOT NULL,
-    aggregate_type VARCHAR(255) NOT NULL,
-    event_type VARCHAR(255) NOT NULL,
-    payload JSONB NOT NULL,
-    timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    processed BOOLEAN NOT NULL DEFAULT FALSE
-);
+O artigo apresenta o DDL da tabela `OutboxPrescricaoMedica`, com colunas como `aggregate_id`, `aggregate_type`, `event_type`, um `payload` em JSONB, um timestamp e um booleano `processed` que indica se o evento já foi publicado.
 
-```
+Em seguida, o texto mostra uma transação SQL que, entre `BEGIN` e `COMMIT`, insere os medicamentos da prescrição na tabela de escrita e, na mesma transação, grava na tabela de outbox um evento `PrescricaoCriada` cujo payload é montado com `jsonb_build_object`, agregando os dados de médico, paciente e a lista de medicamentos. Como ambas as escritas estão na mesma transação, o commit só ocorre se as duas tiverem sucesso.
 
+Comparado ao Dual-Write, o Outbox leva mais a sério a mediação da publicação dentro da abordagem transacional, apostando no sucesso da propagação pela simplicidade, mesmo que dependa de um processo adicional para ler e publicar os eventos.
 
-```sql
-CREATE TABLE IF NOT EXISTS OutboxPrescricaoMedica (
-    id SERIAL PRIMARY KEY,
-    aggregate_id INT NOT NULL,
-    aggregate_type VARCHAR(255) NOT NULL,
-    event_type VARCHAR(255) NOT NULL,
-    payload JSONB NOT NULL,
-    timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    processed BOOLEAN NOT NULL DEFAULT FALSE
-);
-
-```
-
-Agora vamos olhar abaixo para uma transação SQL que simula um fluxo transacional que agrupa a escrita da prescrição de medicamentos dentro de uma prescrição médica e o evento na tabela de Outbox dentro da mesma transação.
-
-```sql
--- Inicia uma transação SQL
-BEGIN
-
--- Insere as Prescrições de Medicamentos da Prescrição de id 1
-INSERT INTO Prescricao_Medicamentos (id_prescricao, id_medicamento, horario, dosagem)
-VALUES  (1, 1, '08:00', '100mg'),
-        (1, 2, '20:00', '500mg'),
-        (1, 1, '20:00', '500mg');
-
---- Insere os dados na tabela de outbox
-INSERT INTO OutboxPrescricaoMedica (aggregate_id, aggregate_type, event_type, payload)
-    VALUES (
-        1,
-        'Prescricao',
-        'PrescricaoCriada',
-        jsonb_build_object(
-            'id_prescricao', 1,
-            'data_prescricao', NOW(),
-            'medico', jsonb_build_object(
-                'id_medico', 1,
-                'nome', 'Dr. João Silva',
-                'especialidade', 'Cardiologia',
-                'crm', 'CRM123123'
-            ),
-            'paciente', jsonb_build_object(
-                'id_paciente', 1,
-                'nome', 'Maria Oliveira',
-                'data_nascimento', '1985-07-10',
-                'endereco', 'Rua das Flores, 123'
-            ),
-            'medicamentos', (
-                SELECT jsonb_agg(
-                    jsonb_build_object(
-                        'id_medicamento', Medicamentos.id,
-                        'nome', Medicamentos.nome,
-                        'horario', Prescricao_Medicamentos.horario,
-                        'dosagem', Prescricao_Medicamentos.dosagem
-                    )
-                )
-                FROM Prescricao_Medicamentos
-                JOIN Medicamentos ON Medicamentos.id = Prescricao_Medicamentos.id_medicamento
-                WHERE Prescricao_Medicamentos.id_prescricao = 1
-            )
-        )
-    );
-
--- Caso tudo dê certo, realiza o commit da transacao
-COMMIT;
-
-```
-
-
-```sql
--- Inicia uma transação SQL
-BEGIN
-
--- Insere as Prescrições de Medicamentos da Prescrição de id 1
-INSERT INTO Prescricao_Medicamentos (id_prescricao, id_medicamento, horario, dosagem)
-VALUES  (1, 1, '08:00', '100mg'),
-        (1, 2, '20:00', '500mg'),
-        (1, 1, '20:00', '500mg');
-
---- Insere os dados na tabela de outbox
-INSERT INTO OutboxPrescricaoMedica (aggregate_id, aggregate_type, event_type, payload)
-    VALUES (
-        1,
-        'Prescricao',
-        'PrescricaoCriada',
-        jsonb_build_object(
-            'id_prescricao', 1,
-            'data_prescricao', NOW(),
-            'medico', jsonb_build_object(
-                'id_medico', 1,
-                'nome', 'Dr. João Silva',
-                'especialidade', 'Cardiologia',
-                'crm', 'CRM123123'
-            ),
-            'paciente', jsonb_build_object(
-                'id_paciente', 1,
-                'nome', 'Maria Oliveira',
-                'data_nascimento', '1985-07-10',
-                'endereco', 'Rua das Flores, 123'
-            ),
-            'medicamentos', (
-                SELECT jsonb_agg(
-                    jsonb_build_object(
-                        'id_medicamento', Medicamentos.id,
-                        'nome', Medicamentos.nome,
-                        'horario', Prescricao_Medicamentos.horario,
-                        'dosagem', Prescricao_Medicamentos.dosagem
-                    )
-                )
-                FROM Prescricao_Medicamentos
-                JOIN Medicamentos ON Medicamentos.id = Prescricao_Medicamentos.id_medicamento
-                WHERE Prescricao_Medicamentos.id_prescricao = 1
-            )
-        )
-    );
-
--- Caso tudo dê certo, realiza o commit da transacao
-COMMIT;
-
-```
-
-O processo que ocorre durante a implementação do Outbox **leva mais a sério a mediação da publicação do evento dentro da abordagem transacional** do que o proposto no Dual-Write, apostando no sucesso da propagação do evento pela simplicidade, **mesmo que dependa de um processo adicional para ler e publicar**.
-
-Essa abordagem, apesar de oferecer alguns graus de segurança adicionais na garantia de publicação, **requer um custo computacional adicional na base de dados devido à leitura e escrita constante** na tabela de outbox. Esse cenário **pode se tornar um gargalo em caso de aumento de escala**. Entendemos que as capacidades de **leitura e escrita em concorrência podem ser comprometidas e afetar mais facilmente a performance do sistema** como um todo nesse tipo de cenário transacional, que tende a ser a parte mais difícil de se escalar em sistemas de grande escala.
-
-
+Apesar de oferecer mais garantias de publicação, o padrão exige custo computacional adicional no banco, devido à leitura e escrita constantes na tabela de outbox. Isso pode se tornar um gargalo conforme a escala aumenta: a concorrência entre leitura e escrita fica comprometida e tende a afetar a performance geral do sistema, justamente na parte mais difícil de escalar em sistemas transacionais de grande porte.
 
 # Referencias
 

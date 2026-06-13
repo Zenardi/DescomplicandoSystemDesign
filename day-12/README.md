@@ -40,57 +40,57 @@
   - [Convergência de Arquiteturas gRPC \& REST \& GraphQL](#convergência-de-arquiteturas-grpc--rest--graphql)
 - [Referências](#referências)
 
+> **Nota:** Este documento é um material de estudo baseado no artigo original
+> **"System Design - Padrões de Comunicação Síncronos"**, de **Matheus Fidelis**,
+> publicado em [fidelissauro.dev/padroes-de-comunicacao-sincronos](https://fidelissauro.dev/padroes-de-comunicacao-sincronos/).
+> As ilustrações pertencem ao autor original. Recomenda-se a leitura do artigo
+> completo na fonte.
 
-Este texto é uma continuação direta do capitulo onde falamos sobre [Protocolos e Comunicação de Redes](https://fidelissauro.dev/protocolos-de-rede/). A ideia é seguir com os conceitos direcionados anteriormente para aplicá-los em diferentes tipos de padrões de comunicação empregados na contrução de software em arquiteturas modernas e distribuídas. Nesse capítulo iremos falar sobre alguns padrões que podemos utilizar para construção de chamadas sincronas entre serviços, aproveitando os conhecimentos ofertados quando abordamos sobre o Protocolo HTTP, TCP/IP e UDP para detalhar conceitualmente com a visão de System Design outras tecnologias e padrões como o Padrão REST, Webhooks, gRPC, Websockets e GraphQL.
+---
 
 # Definindo Comunicações Sincronas
 
-Uma comunicação síncrona, de forma bem direta e simples, é um padrão de comunicação utilizados em sistemas distribuídos, ou não, onde o cliente espera por uma resposta do servidor antes de prosseguir a execução de outras tarefas. Por exemplo, em um ambiente de microserviços de um domínio de logística, um sistema que estima o preço de um frete precisa recuperar em um outro sistema responsável pelo cadastro de seus clientes as informações de endereço antes de prosseguir com o calculo de fato.
+Uma comunicação síncrona é o modelo em que o cliente que dispara uma chamada fica aguardando a resposta do servidor antes de seguir adiante com qualquer outra tarefa. É um padrão comum tanto em sistemas distribuídos quanto monolíticos. Um exemplo prático: em um cenário de logística, o serviço que calcula o preço do frete precisa primeiro buscar os dados de endereço em outro serviço de cadastro de clientes para só então concluir o cálculo.
 
-Este modelo de comunicação é caracterizado por sua natureza “bloqueante”, significando que o processo que inicia a chamada fica “bloqueado” até que a operação e a comunicação com o servidor seja concluída, o que causa uma “espera ativa” entre os dois componentes. Em outras palavras, a comunicação síncrona envolve uma interação direta e imediata entre as partes, facilitando um “diálogo” que precise ser concluído fim-a-fim em tempo de execução de uma tarefa.
+A característica que define esse modelo é a sua natureza **bloqueante**. O processo que originou a chamada permanece travado, em uma espécie de "espera ativa", até que toda a interação com o servidor termine. Trata-se de um diálogo direto e imediato entre as partes, que precisa ser resolvido de ponta a ponta dentro do tempo de execução da tarefa.
 
-Esse padrão é muito bem recebido onde a consistência dos dados é de extrema importância, pois as operações podem ser facilmente feitas em uma sequência específica, além de ser muito mais simples e intuitiva em quesitos de entendimento e implementação.
+A grande vantagem aparece em contextos onde a **consistência dos dados** é prioritária, já que as operações seguem uma ordem bem definida. Além disso, é um padrão mais simples e intuitivo de entender e implementar.
 
-Em quesito de desvantagens, a implementação de uma comunicação sincrona pode limitar a escalabilidade do sistema, uma vez que o bloqueio durante a espera por respostas pode reduzir a capacidade de processamento paralelo, além de afetar performance em cadeia, onde o mau funcionamento constante ou temporário de uma dependência específica entre uma série de chamadas pode acabar aumentando o tempo de resposta e processamento. O ponto mais crítico é que a indisponibilidade de um serviço que é dependente de um processo bloqueante pode invariávelmente degradar a disponibilidade geral de uma cadeia de processos.
-
-Nesse sentido, por mais simples que sejam a construção e manutenção de chamadas sincronas, é necessário o cuidado com questões de retentativas, timeouts e outras estratégias de resiliência construída de forma pragmática entre cliente-servidor.
+Por outro lado, há um custo. O bloqueio durante a espera reduz a capacidade de processamento paralelo, limitando a escalabilidade. Há também um efeito em cadeia: a lentidão ou instabilidade de uma única dependência pode degradar o tempo de resposta de toda a sequência de chamadas. O ponto mais sensível é que a indisponibilidade de um serviço dentro de um fluxo bloqueante pode comprometer a disponibilidade de toda a cadeia. Por isso, mesmo sendo relativamente simples de construir, chamadas síncronas exigem atenção a retentativas, timeouts e outras estratégias de resiliência entre cliente e servidor.
 
 # API’s REST - Representational State Transfer
 
-O REST, ou Representational State Transfer, é um estilo arquitetônico para sistemas distribuídos que presa pela simplicidade da comunicação entre componentes na internet ou em redes internas de microserviços, sendo a principal abordagem na construção de comunicação sincrona entre serviços. Definido por Roy Fielding em sua tese de doutorado em 2000, REST não é um protocolo ou padrão, mas um conjunto de princípios arquitetônicos usados para projetar sistemas distribuídos escaláveis, confiáveis e de fácil manutenção. Os serviços que seguem os princípios REST são conhecidos como RESTful em API’s.
+O REST (Representational State Transfer) é um estilo arquitetural para sistemas distribuídos que privilegia a simplicidade na comunicação entre componentes, seja na internet ou em redes internas de microserviços. É a abordagem dominante para comunicação síncrona entre serviços. Formulado por Roy Fielding em sua tese de doutorado em 2000, o REST não é um protocolo nem um padrão formal, mas sim um conjunto de princípios para projetar sistemas escaláveis, confiáveis e fáceis de manter. APIs que aderem a esses princípios são chamadas de RESTful.
 
-O REST é construído usando referências e recursos do protocolo HTTP, definindo papeis e responsabilidades de cliente-servidor e busca estabelecer uma interface de um cliente com os dados e ações de um sistema de forma intuitiva. Ele utiliza métodos HTTP para definir ações, como GET, POST, PUT, DELETE e PATCH, para realizar operações CRUD (Criar, Ler, Atualizar e Deletar) em recursos identificados por URI’s. Esses recursos são representações de entidades ou objetos do domínio da aplicação. Nesse tópico vamos abordar alguns dos principais componentes do estilo arquitetural REST, e detalhar as partes mais importantes conceitualmente.
+Ele se apoia fortemente nos recursos do protocolo HTTP, definindo papéis claros de cliente e servidor e oferecendo uma interface intuitiva para interagir com dados e ações de um sistema. Os métodos HTTP (GET, POST, PUT, DELETE, PATCH) expressam as operações CRUD sobre recursos identificados por URIs, que por sua vez representam entidades do domínio da aplicação.
 
 ## Componentes de uma requisição REST
 
-Uma requisição REST é composta por vários componentes que trabalham juntos para transmitir a intenção da solicitação do cliente para o servidor. Cada componente tem um papel específico no fornecimento de informações para que o servidor processe a requisição através de recursos expostos de maneira intuitiva. Vamos abordar alguns dos componentes presentes numa requisição HTTP e seu eventual uso dentro do REST:
+Uma requisição REST é montada a partir de vários componentes que, em conjunto, comunicam ao servidor a intenção do cliente. Cada um tem uma função específica e ajuda o servidor a processar a solicitação a partir de recursos expostos de forma clara. A seguir, exploramos os principais elementos presentes em uma requisição HTTP no contexto do REST.
 
 ### URI’s e URL’s
 
-Dentro do contexto REST, os conceitos de URI e URL têm papéis específicos quando se tratam de identificar e interagir com recursos expostos por API’s. Em REST, um “recurso” é uma abstração de qualquer informação ou dado que pode ser nomeado e identificado, como documentos, imagens, serviços ou coleções de outros recursos, e assim por diante.
+Dentro do REST, URIs e URLs têm papéis distintos na tarefa de identificar e interagir com os recursos expostos pelas APIs. Vale lembrar que, nesse contexto, um "recurso" é qualquer informação ou dado que possa receber um nome e ser identificado: documentos, imagens, serviços ou coleções de outros recursos.
 
 #### URI - Uniform Resource Identifier
 
-Um URI, ou Uniform Resource Identifier, é uma string de caracteres que identifica um recurso específico. Um recurso pode ser qualquer coisa que seja identificável através de um endereço, como um documento, uma imagem, um serviço de transmissão de vídeo, ou uma coleção de outros recursos como listas de vendas, produtos, dados de usuário e etc. URIs servem como um mecanismo de identificação universal, permitindo que recursos sejam localizados e referenciados de forma única. Dentro do REST, cada recurso é identificado de forma única por um URI. Isso permite que clientes e servidores se refiram a um recurso específico sem ambiguidade. Por exemplo, um URI pode ser usado para identificar um determinado livro em um sistema de biblioteca, um usuário em uma rede social, ou uma transação em um sistema financeiro.
+Uma URI é uma sequência de caracteres que identifica de forma única um recurso específico. Esse recurso pode ser qualquer coisa endereçável — um documento, uma imagem, um serviço de vídeo ou uma coleção como listas de vendas, produtos ou dados de usuários. As URIs funcionam como um mecanismo universal de identificação, permitindo que clientes e servidores se refiram a um recurso sem ambiguidade. No REST, cada recurso recebe uma URI única, o que possibilita identificar, por exemplo, um livro em uma biblioteca, um usuário em uma rede social ou uma transação financeira.
 
 #### URL - Uniform Resource Locator
 
-No REST, as URLs são o meio mais comum de expressar URIs, de forma direta, as URL’s são um subtipo de URI’s. Elas especificam não apenas a identidade de um recurso, mas também como acessá-lo. Por exemplo, a URL https://api.fidelissauro.dev/livro/1234 não apenas identifica um recurso de livro específico (1234) no domínio `api.fidelissauro.dev`, mas também indica como o recurso pode ser acessado usando o protocolo HTTPS.
-Uma vez que conseguimos identificar esses recursos de forma universal e padronizada, as URL’s que representam esses recursos podem ser usadas em conjunto com os métodos HTTP (GET, POST, PUT, DELETE, etc.) para realizar operações sobre os dados que fazemos gestão via API.
+No REST, as URLs são a forma mais comum de expressar URIs — na prática, toda URL é um subtipo de URI. A diferença é que a URL não apenas identifica o recurso, mas também informa **como acessá-lo**. A URL `https://api.fidelissauro.dev/livro/1234`, por exemplo, identifica o livro `1234` no domínio indicado e ainda explicita que ele é acessível via HTTPS. Uma vez que os recursos são identificáveis de forma padronizada, suas URLs podem ser combinadas com os métodos HTTP para realizar operações sobre os dados gerenciados pela API.
 
 ### Recursos e Paths
 
-Na arquitetura REST, os recursos são componentes que representam qualquer tipo de objeto, dado ou serviço que pode ser acessado pela rede em que o mesmo está disponível. Resumindo, um recurso é identificado por URIs, que são usados para localizar esses recursos na rede de forma explicita.
+Na arquitetura REST, recursos são os objetos, dados ou serviços acessíveis pela rede, sempre identificados por URIs. Os **paths**, por sua vez, são a parte da URI que indica o endereço exato onde o recurso está. Eles organizam os recursos de maneira hierárquica e lógica, tornando o acesso mais intuitivo.
 
-Os paths, por outro lado, fazem parte da URI, e especificam o endereço exato onde um recurso pode ser encontrado. Eles ajudam a organizar e a endereçar os recursos de forma hierárquica e lógica, facilitando o acesso e a manipulação destes. A estrutura de paths em uma API REST é projetada para ser intuitiva, refletindo a natureza e a relação entre os recursos. Por exemplo, em uma API que gerencia um sistema de blog, você pode ter um path `/articles` para acessar todos os artigos e `/articles/{id}` para acessar um artigo específico, e seguir com identificadores específicos para subrecursos como `/articles/{id}/comments` para comentários de um artigo específico.
-
-Os recursos são planejados para serem acessados utilizando os métodos HTTP padrão (GET, POST, PUT, DELETE, etc.), em cada recurso que possui seu próprio identificador único como veremos a seguir.
+Essa estrutura costuma refletir a relação natural entre os recursos. Em uma API de blog, por exemplo, `/articles` retorna todos os artigos, `/articles/{id}` aponta para um artigo específico e `/articles/{id}/comments` representa os comentários daquele artigo. Cada recurso, com seu identificador único, é acessado por meio dos métodos HTTP padrão.
 
 ### Headers
 
-Os Headers, ou cabeçalhos, são componentes do protocolo HTTP e que também são utilizados de forma informativa na arquitetura REST, e são usados tanto nas requisições quanto nas respostas para fornecer informações essenciais sobre a transação que foi realizada. Eles desempenham várias funções, como especificar o formato da mídia dos dados sendo transferidos, autenticar usuários, controlar o cache e etc. Em uma API REST, os headers permitem a comunicação de metadados entre cliente e servidor, facilitando a negociação de conteúdo e a implementação de segurança e outras funcionalidades importantes.
+Os headers (cabeçalhos) são elementos do protocolo HTTP usados tanto em requisições quanto em respostas para transportar informações essenciais sobre a transação. Eles cumprem funções variadas: indicar o formato dos dados, autenticar usuários, controlar cache, entre outras. Em uma API REST, os headers viabilizam a troca de metadados entre cliente e servidor, dando suporte à negociação de conteúdo, à segurança e a outras funcionalidades.
 
-Exemplificamos alguns dos headers mais comuns quando abordamos o protocolo HTTP, a seguir alguns headers que são comuns quando estamos trocando dados entre cliente-servidor utilizando o padrão REST e suas principais funcionalidades:
+A seguir, alguns dos headers mais frequentes na troca de dados via REST e suas funções:
 
 |  |  |
 |---|---|
@@ -105,24 +105,23 @@ Exemplificamos alguns dos headers mais comuns quando abordamos o protocolo HTTP,
 
 ### Query Strings
 
-Na arquitetura REST, query strings são mecanismos usados para passar informações adicionais ao servidor durante uma requisição HTTP. Eles permitem a filtragem, a paginação, a ordenação e a personalização de dados, entre outras funcionalidades, tornando as APIs RESTful mais flexíveis, principalmente em recursos que fazem exposição e listagem de dados com o método GET.
-Elas podem ser usadas para uma variedade de propósitos, como filtragem de dados, ordenação e paginação.
+As query strings são o mecanismo para enviar informações adicionais ao servidor durante uma requisição. Elas habilitam filtragem, paginação, ordenação e personalização dos dados, deixando as APIs RESTful mais flexíveis — especialmente em recursos de listagem com o método GET.
 
-As Query strings são utilizadas para fornecer informações adicionais que afetam a operação do servidor, mas que não fazem parte do path da URL. Elas são adicionadas ao final da URL com um `?` e seguidas de pares chave-valor, com cada par separado por `&`. Por exemplo, `/articles?author=fidelissauro&sort=date` pode ser usada para solicitar artigos escritos por “fidelissauro”, ordenados pela data. As query strings são extremamente úteis para construção de API’s.
+Diferente do path, as query strings não fazem parte do endereço do recurso. Elas são anexadas ao final da URL após um `?`, na forma de pares chave-valor separados por `&`. A URL `/articles?author=fidelissauro&sort=date`, por exemplo, solicita os artigos de "fidelissauro" ordenados por data. São um recurso extremamente útil na construção de APIs.
 
 ### Body e Formatos
 
-Na arquitetura REST, o body da requisição ou da resposta desempenha um papel de transportar dados entre o cliente e o servidor. Ele é usado principalmente em métodos HTTP como `POST`, `PUT` e `PATCH`, onde há a necessidade de enviar informações (como a criação ou atualização de recursos) em um formato estruturado. O conteúdo do body pode variar amplamente dependendo da operação realizada e dos dados sendo transmitidos, respeitando os contratos de request e response de comunicação definidos na API.
+O body (corpo) da requisição ou da resposta é o componente responsável por transportar os dados entre cliente e servidor. Ele é usado principalmente em métodos como `POST`, `PUT` e `PATCH`, quando há necessidade de enviar informações estruturadas, como na criação ou atualização de recursos. O conteúdo varia conforme a operação e os dados envolvidos, sempre respeitando os contratos de request e response definidos pela API.
 
 ### Utilização de Métodos HTTP para Representar Ações nos Paths
 
-Os métodos HTTP, também conhecidos como “verbos”, definem ações que podem ser realizadas sobre os recursos representados nos paths. Eles permitem uma interação semântica com os recursos, onde cada método tem um propósito específico. As operações disponíveis para um recurso são definidas, por exemplo, usar o método GET para obter a representação de um recurso, POST para criar um novo recurso, PUT para atualizar um recurso existente, e DELETE para remover um recurso.
+Os métodos HTTP, também chamados de "verbos", definem as ações possíveis sobre os recursos representados nos paths. Cada um carrega uma semântica própria: GET para obter a representação de um recurso, POST para criar, PUT para atualizar e DELETE para remover. Essa correspondência entre verbo e ação torna a interação com a API previsível e clara.
 
 #### Idempotência nas Requisições REST
 
-A idempotência é um conceito aplicado em vários lugares do desenvolvimento de software no geral, inclusive no design de APIs RESTful, e desempenha papeis importantes na construção de interfaces confiáveis e previsíveis.
+A idempotência é um conceito amplamente aplicado no desenvolvimento de software, incluindo o design de APIs RESTful, e é fundamental para construir interfaces confiáveis e previsíveis. Quando bem aplicada, ela garante que múltiplas chamadas idênticas a um mesmo endpoint produzam sempre o mesmo estado do recurso, sem efeitos colaterais após a primeira execução.
 
-Este conceito, quando aplicado corretamente, garante que múltiplas chamadas idênticas a um mesmo endpoint resultem sempre no mesmo estado do recurso, sem causar efeitos colaterais adicionais após a primeira aplicação. Isso garante com que tentativas de retry em uma chamada de um serviço, mesmo que por meio de erros, ou execuções parciais, tenha a capacidade de reproduzir os mesmos requests para nosso serviço evitando erros ou duplicidades. No REST alguns métodos HTTP devem ser implementados de forma naturalmente idempotente, outros devem implementar alguma lógica de composição de chaves de idempotência, checagem campos e outras estratégias para permitirem por exemplo, a criação de registros de forma idempotente. A seguir os métodos HTTP e suas possibilidades de idempotência:
+Esse comportamento é essencial para retentativas: mesmo diante de erros ou execuções parciais, repetir a requisição não gera duplicidades. Alguns métodos HTTP são naturalmente idempotentes; outros exigem lógica adicional, como chaves de idempotência ou checagem de campos, para permitir, por exemplo, criações idempotentes. O quadro abaixo resume cada método e sua relação com a idempotência:
 
 |  |  |
 |---|---|
@@ -134,15 +133,11 @@ Este conceito, quando aplicado corretamente, garante que múltiplas chamadas id�
 
 ### Métodos HTTP nas URI’s e Recursos
 
-As URIs, como abordamos, são utilizadas para identificar os recursos de forma única. Em uma API RESTful, as URIs são projetadas para serem intuitivas e descritivas, facilitando o entendimento e a navegação pelos recursos disponíveis. A estrutura de uma URI em REST reflete a organização dos recursos e suas relações.
+As URIs identificam recursos de forma única e, em uma API RESTful bem projetada, devem ser intuitivas e descritivas, facilitando a navegação. Um princípio importante é que as URIs apontem para **recursos e entidades, não para ações**. Prefira `/users` combinado com o método `GET` em vez de um path imperativo como `/getUsers`.
 
-As URIs quando olhadas no modelo REST, devem se referir a recursos e entidades, e não às ações que serão realizadas diretamente sobre eles. Por exemplo, o path `/users` para acessar recursos do usuário combinado com o método `GET`, e não um basepath imperativo como `/getUsers`.
+A estrutura das URIs deve refletir a hierarquia dos recursos — `/users/123/articles` representa os artigos do usuário de ID 123. Já as query strings entram como parâmetros de consulta para filtrar ou ajustar a saída, como em `/users?active=true` (somente usuários ativos) ou `/users/1/articles?tag=system-design`.
 
-A URI de determinadas entidades devem refletir a estrutura hierárquica dos recursos. Por exemplo, `/users/123/articles` pode representar os posts do usuário com ID 123.
-
-Devem se utilizar querystrings como parametros de consulta para filtrar recursos ou modificar a saída de uma chamada REST. Por exemplo, `/users?active=true` para filtrar apenas usuários ativos ou `/users/1/articles?tag=system-design` para filtrar os posts do usuário com a tag `system-design`.
-
-Considerando uma API para um portal de notícias ou blog, aqui estão exemplos de como os métodos HTTP e as URIs podem ser utilizados para interagir com os recursos:
+A tabela a seguir ilustra, para um portal de notícias ou blog, como combinar métodos HTTP e URIs:
 
 |  |  |  |
 |---|---|---|
@@ -155,9 +150,7 @@ Considerando uma API para um portal de notícias ou blog, aqui estão exemplos d
 
 #### Status Codes de Resposta e Padrões do REST
 
-Os códigos de status de resposta são recursos nativos do protocolo HTTP que são utilizados para implementações RESTful, pois são usados como convenção para indicar informações de estado das respostas de uma solicitação. Ele abre o leque das classes dando funcionalidades e representatividade a elas perante uma solicitação.
-
-Os status codes mais utilizados em implementações RESTFul são os seguintes:
+Os códigos de status são um recurso nativo do HTTP amplamente adotado em implementações RESTful para comunicar o estado de cada resposta. Eles organizam as respostas em classes que dão significado e representatividade a cada solicitação. Os mais comuns em APIs RESTful são:
 
 |  |  |
 |---|---|
@@ -176,56 +169,49 @@ Os status codes mais utilizados em implementações RESTFul são os seguintes:
 
 ## Principios do REST
 
-Os principios arquiteturais do REST estabelecem uma série de regras e bases de design para que times de engenharia projetem API’s de comunicação distribuida da melhor forma possível, prezando tanto pela experiência de consumo do cliente quanto do ciclo de vida e evolução saudável do projeto a médio e longo prazo. Nesta sessão vamos explorar alguns dos principios que podem ser esperados de implementações RESTFul.
+Os princípios arquiteturais do REST funcionam como um conjunto de regras e bases de design que orientam as equipes a construir APIs distribuídas de qualidade. Eles equilibram a boa experiência de consumo do cliente com a saúde e a evolução sustentável do projeto no médio e longo prazo. Nesta seção, exploramos os principais princípios esperados de uma implementação RESTful.
 
 ### Interface Uniforme
 
-A interface uniforme é o princípio central do REST e diz respeito à consistência na forma como as interfaces são expostas aos clientes. Esse principio preza que cada recurso deve ser identificável de forma única através de URIs e suas respostas sejam representadas por dados padronizados, como JSON ou XML, e enviados ao cliente respeitando esses formatos. Também é importante ressaltar que as requisições e respostas devem conter toda a informação necessária para serem compreendidas, incluindo metadados e hiperlinks de uma forma quase auto-descritiva. De forma resumida, esse princípio garante uma padronização formal na forma como os clientes interagem com o servidor e vice versa.
+A interface uniforme é o princípio central do REST e trata da consistência na forma como os recursos são expostos. Ele exige que cada recurso seja identificável de forma única por URIs e que as respostas sigam formatos padronizados, como JSON ou XML. Além disso, requisições e respostas devem ser quase autodescritivas, carregando toda a informação necessária para serem compreendidas, incluindo metadados e hiperlinks. O resultado é uma padronização formal na interação entre cliente e servidor.
 
-Garantindo uma interface uniforme, arbitrariamente garantimos a interoperabilidade, ou seja, compatibilidade entre diferentes sistemas e tecnologias, pois independente do ferramental escolhido para construção do cliente e do servidor, a comunicação possa ser respeitada e padronizada entre ambos, sem o conhecimento das necessidades de implementação. Quando trabalhamos em interfaces, é importante também projetá-las para promover cada vez mais um desacoplamento entre sistemas.
+Essa uniformidade garante **interoperabilidade**: independentemente das tecnologias escolhidas para cliente e servidor, a comunicação permanece padronizada, sem que um lado precise conhecer os detalhes de implementação do outro. Projetar boas interfaces também é uma forma de promover o desacoplamento entre sistemas.
 
 ### Comunicação Stateless
 
-No REST, cada requisição do cliente para o servidor deve conter todas as informações necessárias para entender e completar a requisição. O servidor não armazena nenhum estado da sessão do cliente. A comunicação stateless (sem estado) é um dos princípios que definem como os clientes e servidores interagem entre si. Esse princípio assegura que cada requisição de um cliente para um servidor deve conter todas as informações necessárias para o servidor compreender e responder à requisição. Em outras palavras, o servidor não armazena nenhum estado sobre o cliente entre as requisições. Cada uma delas é tratada como se fosse a primeira, sem qualquer conhecimento prévio ou memória das interações anteriores.
+No REST, cada requisição deve carregar todas as informações necessárias para ser compreendida e processada, pois o servidor **não armazena estado da sessão** entre as chamadas. Cada requisição é tratada como se fosse a primeira, sem memória das interações anteriores.
 
-A natureza stateless também aumenta os níveis de confiabilidade do sistema. Se um servidor falhar após processar uma requisição, o cliente pode simplesmente tentar novamente, possivelmente usando outro node de pool de servidores de uma arquitetura distribuída. Como nenhuma informação de estado é mantida entre as requisições, não há perda de continuidade. Esse é um dos principios que garante a [escalabilidade horizontal](https://fidelissauro.dev/performance-capacidade-escalabilidade/) de aplicações REST em ambientes sensíveis em demanda de forma transparente.
+Essa característica eleva a confiabilidade: se um servidor falhar após processar uma requisição, o cliente pode simplesmente tentar de novo, eventualmente em outro node do pool, sem perda de continuidade. É justamente esse princípio que viabiliza a [escalabilidade horizontal](https://fidelissauro.dev/performance-capacidade-escalabilidade/) de aplicações REST de forma transparente.
 
-Os desafios de uma arquitetura stateless giram principalmente em torno dos tópicos de autenticação. Usar tokens, como JWT (JSON Web Tokens) pode se tornar uma estratégia recomendada, pois os mesmos podem conter informações comuns do cliente que efetua a solicitação junto com meios de validar a integridade e validade dos mesmos sem a nacessidade de manter histórico entre as requisições.
+O principal desafio do modelo stateless gira em torno da autenticação. Tokens como o JWT (JSON Web Tokens) são uma estratégia recomendada, pois conseguem carregar informações do cliente e mecanismos de validação de integridade sem exigir que o servidor mantenha histórico entre as requisições.
 
 ### Camadas
 
-A arquitetura em camadas permite que intermediários (como proxies e gateways) facilitem ou melhorem a comunicação entre o cliente e o servidor de forma transparente, promovendo a segurança, o balanceamento de carga e a capacidade de cache. Combinando o conceito de viabilidade de camadas com o padrão stateless, o servidor se torna muito poderoso e escalável.
+A arquitetura em camadas permite que intermediários — como proxies e gateways — facilitem ou melhorem a comunicação entre cliente e servidor de forma transparente, contribuindo para segurança, balanceamento de carga e cache. Combinada com o modelo stateless, essa abordagem torna o servidor bastante escalável.
 
-O princípio de camadas, ou “Layered System”, é uma das restrições arquiteturais mais importantes do REST, pois influencia o design de sistemas distribuídos sensíveis a escala constante, especialmente APIs RESTful. Este princípio estabelece que a arquitetura de uma aplicação deve ser organizada em camadas hierárquicas, cada uma com uma função específica. A comunicação ocorre sequencialmente de uma camada para outra, mas cada camada não precisa conhecer os detalhes das camadas internas ou externas a ela, apenas interagir com as camadas imediatamente adjacentes.
-
-Entre essas camadas podem existir camadas de API gateways, camadas de autenticação e autorização, camadas de cacheamento das requisições e respostas, camadas de balanceadores de carga, camadas de proxy reversos, camada de roteamento, lógicas de negócios, acesso a dados e etc.
+O princípio de camadas ("Layered System") é uma das restrições arquiteturais mais relevantes do REST. Ele organiza a aplicação em camadas hierárquicas, cada uma com função específica, onde a comunicação flui sequencialmente entre camadas adjacentes sem que uma precise conhecer os detalhes internos das demais. Entre essas camadas podem existir API gateways, autenticação e autorização, cache, balanceadores de carga, proxies reversos, roteamento, lógica de negócio, acesso a dados e assim por diante.
 
 ### Cache
 
-As respostas do servidor devem ser explícitas quanto à sua cacheabilidade para evitar a reutilização de dados obsoletos ou inapropriados, melhorando a eficiência e a escalabilidade. O cache é uma técnica amplamente utilizada no desenvolvimento de software, especialmente em aplicações web e APIs, incluindo aquelas que seguem o estilo arquitetônico REST (Representational State Transfer). O objetivo do cache é melhorar a eficiência e a performance da aplicação, armazenando cópias de recursos ou resultados de operações que são caros para gerar ou buscar, permitindo que esses dados sejam reutilizados em requisições futuras.
+As respostas do servidor devem deixar explícito se podem ou não ser cacheadas, evitando a reutilização de dados obsoletos e melhorando eficiência e escalabilidade. O cache é uma técnica amplamente usada em aplicações web e APIs — inclusive nas RESTful — para armazenar cópias de recursos ou resultados custosos de gerar, permitindo reaproveitá-los em requisições futuras.
 
-No contexto de APIs REST, o cache pode ser implementado tanto no lado do cliente quanto no servidor, além de pontos intermediários na rede, como proxies e gateways de API. Isso ajuda a reduzir a latência, diminuir a carga no servidor e melhorar a experiência geral do usuário ao acessar a aplicação
-
-A dinamica do cache em transações HTTP e API’s RESTful depende de um gerenciamento cuidadoso para garantir que os dados armazenados sejam precisos, úteis e atualizados. Cabeçalhos HTTP, como `Cache-Control`, `Last-Modified`, e `ETag`, são utilizados para controlar o comportamento do cache, incluindo a validade, revalidação e a expiração do cache desses recursos.
+No contexto REST, o cache pode existir tanto no cliente quanto no servidor, além de pontos intermediários como proxies e gateways. Isso reduz a latência, alivia a carga sobre o servidor e melhora a experiência do usuário. Sua dinâmica depende de um gerenciamento cuidadoso para manter os dados precisos e atualizados, apoiado em cabeçalhos como `Cache-Control`, `Last-Modified` e `ETag`, que controlam validade, revalidação e expiração.
 
 # Webhooks
 
-Os Webhooks são recursos arquiteturais em que sua implementação se baseia em enviar dados para os clientes, ainda de forma sincrona, conforme determinadas ações acontecerem dentro do sistema. Ao contrário de uma API cliente-servidor em que o cliente notifica o servidor para tomar ações e lidar com determinados dados, os webhooks cumprem o papel inverso, onde através de URL’s previamente informadas, o sistema servidor envia notificações para os clientes sempre que algum dado for modificado, status atualizado ou determinada ação seja necessária da parte dele.
+Os Webhooks são um recurso arquitetural em que o **servidor envia dados ao cliente** de forma síncrona conforme determinadas ações ocorrem no sistema. É um papel invertido em relação à API tradicional: em vez de o cliente consultar o servidor, é o servidor que, através de URLs previamente cadastradas, notifica os clientes sempre que um dado é modificado, um status é atualizado ou uma ação precisa ser comunicada.
 
-Em cenários onde os clientes precisam de atualizações contínuas sobre o estado de um recurso de interesse no servidor, o polling HTTP síncrono, baseado em solicitações periódicas, aumenta a carga no servidor e no cliente, muitas vezes resultando em atrasos na detecção de mudanças e no desperdício de recursos com requisições desnecessárias. Esse é o principal problema que a implementação de sistemas de webhooks resolvem.
+Quando os clientes precisam de atualizações contínuas sobre o estado de um recurso, o polling HTTP — baseado em consultas periódicas — sobrecarrega cliente e servidor, atrasa a detecção de mudanças e desperdiça recursos com requisições desnecessárias. É exatamente esse problema que os webhooks resolvem.
 
 ### Pooling e a Diferença entre Webhooks e API’s
 
-Para explicar a diferença entre entre o pooling de API’s e Webhooks vamos propor um modelo lúdico: Imagine que você comprou um livro novo em algum e-commerce. Você fez as devidas solicitações, pagamentos e confirmações necessárias para isso e agora precisa esperar o produto ficar pronto. Você está bem ansioso pra chegada desse novo material, e de tempos em tempos você vai até sua caixa de correios para verificar se sua encomenda está lá. Esse modelo é diretamente associado ao padrão de comunicação sincrona, onde a partir do momento em que você espera manter o cliente atualizado com os estados observados do servidor, ele precisa de tempos em tempos checar o recurso através de requisições periódicas até recuperar o estado das informações necessárias.
+Uma boa analogia para diferenciar polling de webhooks: imagine que você comprou um livro em um e-commerce e está ansioso pela entrega. No modelo de polling, você vai de tempos em tempos até a caixa de correio verificar se a encomenda chegou. Isso equivale a um cliente que, para se manter atualizado, precisa checar o recurso repetidamente até obter o estado desejado.
 
-Agora imagine que você está esperando essa encomenda, mas ao invés de um sistema de caixa de correios a abordagem utilizada é a de um entregador que precisa da sua assinatura e confirmação de recebimento para te entregar o seu pacote. Você pode continuar com todas as suas tarefas normalmente até sua campainha tocar, e receber o seu pacote em mãos, assinando e confirmando o recebimento. Esse é um modelo que pode exemplificar o funcionamento de Webhooks comparado ao pooling de API’s.
-
-Imagine que você possui um e-commerce usa os métodos de pagamento de uma empresa parceira. Essa empresa oferece várias formas de pagamento para você oferecer aos seus clientes em suas compras, como Pix, Cartão de Crédito, Boleto e etc.
-Imagine que um código Pix é gerado, e você precisa ficar chegando de tempos em tempos na API desse parceiro se o pagamento foi o não concluído para dar sequencia ao processo de compra do cliente. Esse modelo é o pooling não recomendado.
+Agora imagine o cenário oposto: em vez da caixa de correio, há um entregador que toca a campainha e pede sua assinatura na entrega. Você segue com suas tarefas normalmente até ser notificado. Esse é o comportamento dos webhooks. Em um caso real, pense em um e-commerce integrado a um parceiro de pagamentos (Pix, cartão, boleto). No polling, ao gerar um código Pix, você ficaria consultando a API do parceiro repetidamente para saber se o pagamento foi concluído — algo não recomendado.
 
 ![HTTP Pooling](images/http-pooling.png)
 
-Agora imagine que junto as informações de pagamento, você fornece ao seu parceiro uma URL do seu sistema, onde ele poderá enviar uma requisição com os dados dessa solicitação sempre que houver uma atualização do lado do sistema dele, como por exemplo informando se o processo de pagamento foi concluído, cancelado, expirado ou recusado, evitando que você fique consultando o mesmo de forma desnecessária.
+A alternativa com webhook é fornecer ao parceiro uma URL do seu sistema. Sempre que houver uma atualização do lado dele — pagamento concluído, cancelado, expirado ou recusado — ele dispara uma requisição com esses dados, eliminando a necessidade de consultas desnecessárias.
 
 ![Webhook](images/webhook.png)
 
@@ -233,250 +219,95 @@ OBS: Utilizado para notificação passiva de eventos.
 
 # RPC - Remote Procedure Call
 
-O RPC (Remote Procedure Call) é um protocolo utilizado para executar chamadas de procedimento ou métodos em um sistema computacional diferente daquele em que o código está sendo executado. Este protocolo permite que um programa em um dispositivo cliente envie uma solicitação de execução de procedimento para um software em outro dispositivo servidor, que executa o procedimento e retorna o resultado. O RPC abstrai a complexidade da comunicação em rede, permitindo aos desenvolvedores se concentrarem na lógica de negócios, em vez dos detalhes de como os dados são transmitidos e recebidos. Existem vários tipos de protocolos RPC como por exemplo o SOAP, Thrift, CORBA entre outros. Mais a frente, iremos abordar uma alternativa moderna desse tipo de protocolo, o gRPC.
+O RPC (Remote Procedure Call) é um protocolo que permite executar procedimentos ou métodos em uma máquina diferente daquela onde o código roda. Um programa cliente envia uma solicitação de execução para um software servidor, que processa o procedimento e devolve o resultado. A grande proposta do RPC é abstrair a complexidade da comunicação em rede, deixando o desenvolvedor focado na lógica de negócio em vez dos detalhes de transmissão. Existem diversos protocolos RPC, como SOAP, Thrift e CORBA — e, mais adiante, abordaremos uma alternativa moderna: o gRPC.
 
 ### Exemplo de um Servidor RPC
 
-Ao contrário do gRPC que veremos a seguir, chamadas RPC convencionais não precisam necessariamente de um contrato forte, o que pode ser bom no caso de flexibilidade e velocidade de implementação quanto ruim para manter um padrão e consistência dos dados. Nesse exemplo vamos implementar uma chamada para um sistema que calcula a quantidade de ingestão diária de proteína recomendada baseada no peso informado.
-
-A implementação se baseia apenas em criar um método e registrá-lo em um rpc server alocado em uma porta do host, no caso do exemplo, a porta `1234`.
-
-```go
-package main
-
-import (
-	"fmt"
-	"net"
-	"net/rpc"
-)
-
-type Args struct {
-	Peso float64
-}
-
-// Calculo de Recomendação de Consumo de Proteínas
-// Baseado no peso informado
-type Proteinas float64
-
-func (p *Proteinas) Recomendacao(args Args, reply *float64) error {
-	// Calcula o o consumo de proteina recomendado e devolve para o objeto de resposta
-	*reply = args.Peso * 2
-	return nil
-}
-
-func main() {
-	// Registrando o serviço RPC na porta ...
-```
+Diferente do gRPC, chamadas RPC convencionais nem sempre exigem um contrato forte, o que traz flexibilidade e velocidade de implementação ao custo de menor padronização e consistência. O exemplo do artigo, escrito em Go, implementa um serviço que calcula a recomendação diária de ingestão de proteína a partir do peso informado. Em prosa, a ideia é definir um método que recebe o peso e devolve o valor recomendado, e então registrá-lo em um RPC server alocado em uma porta do host (no caso, a `1234`). O código completo está disponível no artigo original.
 
 ### Exemplo de um Client RPC
 
-A implementação de um cliente tende a ser bem mais simples. Basta criar uma conexão com a porta onde o servidor e o método RPC foi alocado, informando uma lista de argumentos do formato esperado do lado do servidor. Como ele não exige um contrato forte, os prós e contras tendem a ser os mesmos informados anteriormente, velocidade e flexibilidade em troca de consistência.
-
-```go
-package main
-
-import (
-	"fmt"
-	"net/rpc"
-)
-
-type Args struct {
-	Peso float64
-}
-
-func main() {
-	client, err := rpc.Dial("tcp", "0.0.0.0:1234")
-	if err != nil {
-		fmt.Println("Falha ao conectar:", err)
-		return
-	}
-
-	var reply float64
-	args := Args{Peso: 85.00}
-	fmt.Println("Iniciando a chamada RPC para o serviço Proteinas.Recomendacao")
-    //...
-}
-```
-
-```text
-Iniciando a chamada RPC para o serviço Proteinas.Recomendacao
-O consumo de proteínas adequado para o peso de 85 kg é de 170g por dia
-```
+O lado cliente tende a ser ainda mais simples. Basta abrir uma conexão com a porta onde o servidor e o método RPC foram registrados e enviar a lista de argumentos no formato esperado pelo servidor. Como não há contrato forte, valem os mesmos trade-offs já citados: ganha-se velocidade e flexibilidade, perde-se em consistência. No exemplo em Go, o cliente conecta no endereço `0.0.0.0:1234`, monta os argumentos com o peso (85 kg) e invoca o método `Proteinas.Recomendacao`, recebendo de volta a recomendação (170g por dia). O código completo está no artigo original.
 
 # gRPC - Google Remote Procedure Call
 
-O gRPC é um framework de chamada de procedimento remoto (RPC) de código aberto desenvolvido pelo Google. Ele permite que os desenvolvedores conectem serviços de maneira performática e escalável, possibilitando a comunicação entre serviços construídos de maneira distribuída. Seu design baseia-se no uso de HTTP/2 como protocolo de transporte, Protocol Buffers (ProtoBuf) como linguagem de interface de descrição de serviço (IDL), e além do conceito das chamadas RPC que já abordamos, ele oferece recursos como autenticação, balanceamento de carga e validações. Essa arquitetura é ideal para construir arquiteturas de microserviços, onde serviços leves e performáticos são críticos para o desempenho e a escalabilidade.
+O gRPC é um framework de RPC de código aberto criado pelo Google. Ele conecta serviços de forma performática e escalável, sendo especialmente adequado para arquiteturas distribuídas e de microserviços. Seu design se apoia em três pilares: HTTP/2 como protocolo de transporte, Protocol Buffers (ProtoBuf) como linguagem de descrição de interface (IDL) e os conceitos de chamada RPC já vistos, somados a recursos como autenticação, balanceamento de carga e validações.
 
 ![gRPC](images/grpc.png)
 
-Com o HTTP/2, é possível fazer múltiplas chamadas RPC em paralelo sobre uma única conexão TCP, o que é uma grande melhoria em termos de eficiência de rede e latência.
+Graças ao HTTP/2, é possível realizar múltiplas chamadas RPC em paralelo sobre uma única conexão TCP, o que melhora significativamente a eficiência de rede e a latência. O gRPC também oferece **streaming bidirecional**, permitindo que cliente e servidor troquem sequências de mensagens pela mesma conexão — ideal para chat em tempo real, monitoramento contínuo e cenários que demandam comunicação persistente.
 
-O gRPC suporta streaming bidirecional, permitindo que tanto o cliente quanto o servidor enviem uma sequência de mensagens para o outro usando uma única conexão. Isso é particularmente útil para casos de uso como chat em tempo real, monitoramento em tempo real e outros cenários que exigem comunicação contínua e persistente.
-
-Implementar e gerenciar um sistema baseado em gRPC pode ser mais complexo do que usar alternativas mais simples como REST, especialmente em projetos menores ou com requisitos menos rigorosos de desempenho. A característica de se utilizar contratos por ProtoBuf para manter um contrato de consistência, encontra-se a necessidade de distribuir e versionar esse contrato entre o cliente e o servidor. Uma vez que esse contrato precise ser mudado para adicionar, modificar ou remover alguma variável do mesmo, pode existir a problemática de garantir a atualização de todos os clientes desse serviço.
+Por outro lado, implementar e operar gRPC pode ser mais complexo do que recorrer a alternativas simples como REST, sobretudo em projetos menores ou com requisitos de desempenho menos rígidos. O uso de contratos via ProtoBuf, embora garanta consistência, traz o desafio de distribuir e versionar esse contrato entre cliente e servidor. Toda vez que o contrato muda — para adicionar, alterar ou remover um campo — surge a dificuldade de garantir que todos os clientes do serviço sejam atualizados.
 
 ## ProtoBufs
 
-O Protocol Buffers, ou ProtoBuf, é a linguagem de descrição de interface preferida pelo gRPC, é usada para definir os serviços e a estrutura de dados que serão compartilhados entre cliente e servidor por meio de um contrato forte. ProtoBuf é um sistema de serialização binária que não só é mais eficiente em termos de espaço do que formatos como JSON, mas também fornece uma maneira clara de especificar a interface do serviço de maneira agnóstica a linguagens e frameworks.
+O Protocol Buffers (ProtoBuf) é a linguagem de descrição de interface preferida do gRPC. Ele define os serviços e a estrutura de dados que cliente e servidor compartilham por meio de um contrato forte. É um sistema de serialização binária mais eficiente em espaço do que formatos como JSON e, ao mesmo tempo, oferece uma forma clara e agnóstica a linguagens e frameworks de especificar a interface do serviço.
 
 ### Exemplo de Protobuf
 
-Nesse contrato de exemplo escrevemos a assinatura/contrato de comunicação gRPC que deverá acontecer via client-server utilizando a sintaxe `proto3`. Descrevemos o service chamado `IMCService` que implementa um método chamado `Calcular`, que recebe um objeto de mensagem no padrão descrito no `IMCRequest` e retorna uma mensagem no padrão descrito no `IMCResponse`. A linguagem superficialmente é descritiva e bem simples.
-
-```protobuf
-syntax = "proto3";
-
-package imc;
-option go_package = "service/imc";
-
-// O serviço IMCService oferece a operação de calcular o quadrado de um número.
-service IMCService {
-  // IMC calcula o quadrado de um número.
-  rpc Calcular (IMCRequest) returns (IMCResponse) {}
-}
-
-// IMCRequest contém o a altura e peso para o qual queremos calcular o IMC.
-message IMCRequest {
-  double weight = 1;
-  double height = 2;
-}
-
-// IMCResponse contém o resultado do cálculo do IMC informado.
-message IMCResponse {
-  double result = 1;
-}
-```
-
-Após descrever o contrato, precisamos gerar os pacotes `.go` que implementam esse contrato. Para gerar esses pacotes normalmente usamos o pacote `protoc`. Quando estamos gerando esses arquivos em golang, dois pacotes devem ser gerados no padrão `imc_grpc.pb.go` e `imc.pb.go`. Esses pacotes precisam ser implementados tanto no client quanto no server.
-
-```bash
-protoc --go_out=. --go-grpc_out=. imc.proto
-```
+O contrato de exemplo do artigo, escrito na sintaxe `proto3`, descreve um service chamado `IMCService` com um método `Calcular`, que recebe uma mensagem no formato `IMCRequest` (com altura e peso) e retorna uma mensagem `IMCResponse` (com o resultado). A linguagem é declarativa e bastante enxuta. Depois de definir o contrato `.proto`, é necessário gerar os pacotes que o implementam — em Go, normalmente com a ferramenta `protoc`, que produz arquivos como `imc_grpc.pb.go` e `imc.pb.go`, importados tanto no cliente quanto no servidor. Os trechos completos de `.proto` e do comando de geração estão no artigo original.
 
 ### Exemplo de Server gRPC
 
-Tendo os contratos criados pelo protobuf importados, podemos iniciar a implementação de um gRPC Server de forma simplificada. Precisamos respeitar os contratos definidos, implementando um método chamado `Calcular` que recebe e responde os objetos com a assinatura definida. Após implementar as funções necessárias com as lógicas do serviço, só precisamos alocar uma porta, no caso, `50051` e registrar esse serviço no servidor gRPC.
-
-```go
-package main
-
-import (
-	"context"
-	"fmt"
-	imc "main/service/imc"
-	"math"
-	"net"
-
-	"google.golang.org/grpc"
-)
-
-// Cria um servico baseado no protobuf informado
-type service struct {
-	imc.IMCServiceServer
-}
-
-// Método utilizado para calcular o IMC com a altura e peso informados
-func (s *service) Calcular(ctx context.Context, in *imc.IMCRequest) (*imc.IMCResponse, error) {
-	fmt.Println("Iniciando Calc...
-```
+Com os pacotes gerados pelo protobuf importados, o servidor gRPC é implementado respeitando o contrato definido: cria-se um tipo que implementa o método `Calcular`, recebendo e respondendo com os objetos da assinatura acordada. Depois de codificar a lógica do serviço, basta alocar uma porta (no exemplo, `50051`) e registrar o serviço no servidor gRPC. O código Go completo está disponível no artigo original.
 
 ### Exemplo de Client gRPC
 
-Para implementar o client de um server gRPC, precisamos utilizar o mesmo contrato, criar uma conexão persistente com o endereço/porta do servidor e chamar a o método definido na assinatura `Calcular`, informando os dados no formato acordado, e recebendo a resposta em seguida.
-
-```go
-package main
-
-import (
-	"context"
-	"log"
-	"time"
-
-	imc "main/service/imc"
-
-	"google.golang.org/grpc"
-)
-
-func main() {
-	conn, err := grpc.Dial("0.0.0.0:50051", grpc.WithInsecure(), grpc.WithBlock())
-	if err != nil {
-		log.Fatalf("Falha ao conectar ao servidor gRPC: %v", err)
-	}
-	defer conn.Close()
-
-	client := imc.NewIMCServiceClient(conn)
-	ctx, cancel := //...
-    
-    //...
-    
-    // Registrando o serviço de Calculo de IMC no server gRPC
-    // Iniciando Calculo...
-}
-```
-
-```text
-❯ go run main.go
-2024/03/17 20:18:55 O IMC de uma pessoa com 90.5 de peso e 1.77 de altura é de: 28.89
-```
+O cliente reutiliza o mesmo contrato, estabelece uma **conexão persistente** com o endereço e a porta do servidor e invoca o método `Calcular`, enviando os dados no formato acordado e recebendo a resposta em seguida. No exemplo em Go, o cliente conecta em `0.0.0.0:50051` e calcula o IMC de uma pessoa (peso 90,5 e altura 1,77), obtendo o resultado 28,89. O código completo está no artigo original.
 
 # Websockets
 
-Uma comunicação baseada em Websockets são uma alternativa para solucionar problemas de comunicação em tempo real entre clientes e servidores em tecnologias de desenvolvimento web. Diferentemente do modelo tradicional de requisição e resposta HTTP, que é unidirecional e cria uma nova conexão TCP para cada requisição/resposta, o protocolo WebSocket estabelece uma conexão full-duplex sobre um único socket TCP. Isso permite uma comunicação bidirecional contínua entre o cliente e o servidor, ideal para aplicações web que necessitem de interações em tempo real de atualizações frequentes e instantâneas, como chats online, dashboards dinâmicos, graficos de dados financeiros, sistemas de notificações e jogos online.
+A comunicação baseada em Websockets é uma alternativa para resolver o problema de troca de dados em tempo real entre cliente e servidor na web. Diferentemente do modelo tradicional de requisição/resposta HTTP — unidirecional e que abre uma nova conexão TCP a cada interação — o protocolo WebSocket estabelece uma conexão **full-duplex sobre um único socket TCP**. Isso habilita comunicação bidirecional contínua, ideal para chats, dashboards dinâmicos, gráficos financeiros, sistemas de notificação e jogos online.
 
 ![Web Socket](images/websocket.png)
 
-A conexão WebSocket inicia-se como uma requisição HTTP padrão, mas solicita um “upgrade” para WebSockets através do cabeçalho `Upgrade`. Se o servidor suporta WebSockets, ele responde com uma confirmação do “upgrade” e a conexão HTTP é então elevada a uma conexão WebSocket. Uma vez estabelecida, a conexão WebSocket permanece aberta, permitindo que tanto o cliente quanto o servidor enviem dados a qualquer momento até que a conexão seja fechada por uma das partes. Ao manter uma conexão aberta, WebSockets eliminam a necessidade de estabelecer novas conexões HTTP para cada interação, reduzindo significativamente a latência.
+A conexão começa como uma requisição HTTP comum, mas solicita um "upgrade" para WebSocket por meio do cabeçalho `Upgrade`. Se o servidor suporta o protocolo, ele confirma o upgrade e a conexão HTTP é elevada a uma conexão WebSocket. A partir daí, a conexão permanece aberta, permitindo que ambas as partes enviem dados a qualquer momento. Manter a conexão aberta elimina a necessidade de reabrir conexões HTTP a cada interação, reduzindo drasticamente a latência.
 
-Qualquer uma das partes (cliente ou servidor) pode iniciar o fechamento da conexão WebSocket. A parte que deseja fechar a conexão envia uma solicitação de fechamento, e após a outra parte responder, a conexão é fechada.
-
-Embora a maioria dos navegadores modernos suporte WebSockets, pode haver problemas de compatibilidade com navegadores mais antigos ou em ambientes de rede restritivos que não permitem conexões WebSocket. Além de que gerenciar uma conexão WebSocket persistente e garantir a retransmissão de mensagens perdidas pode ser mais complexo do que usar requisições HTTP simples.
+Tanto o cliente quanto o servidor podem iniciar o encerramento: a parte interessada envia uma solicitação de fechamento e, após a resposta da outra parte, a conexão é fechada. É importante notar que, embora a maioria dos navegadores modernos suporte WebSockets, podem ocorrer problemas de compatibilidade com navegadores antigos ou redes restritivas. Além disso, gerenciar uma conexão persistente e garantir a retransmissão de mensagens perdidas tende a ser mais complexo do que usar requisições HTTP simples.
 
 # GraphQL
 
-O GraphQL pode ser visto tanto como uma linguagem de consulta para APIs do lado do cliente, quanto como um runtime para execução dessas consultas pelo lado do servidor. Desenvolvido pelo Facebook, o GraphQL oferece uma abordagem diferente para o desenvolvimento de APIs em comparação com a abordagem tradicional REST. Ele permite que os clientes definam a estrutura dos dados que desejam receber, e exatamente esses dados, nada mais, nada menos, são retornados como resposta.
-Isso não só torna as consultas mais objetivas, mas também resolve o problema de sobrecarga e subutilização de dados frequentemente encontrado em APIs REST.
-Esse problema em questão, pode ser encontrado em API’s REST que possuam payloads muito grandes, onde o cliente por exemplo, não faz uso de todos os campos. Esse problema em questão de trafegar e lidar com mais dados do que o necessário é conhecido como “ever-fetching”, e seguindo a mesma lógica, se o cliente não tem todos os dados necessários de forma objetiva, e precisa consultar outros vários recursos para compor todas as informações necessárias para prosseguir com seu objetivo é um problema conhecido como “under-fetching”.
+O GraphQL pode ser entendido de duas formas: como uma linguagem de consulta para APIs (do lado do cliente) e como um runtime que executa essas consultas (do lado do servidor). Desenvolvido pelo Facebook, ele propõe uma abordagem diferente do REST tradicional, permitindo que o cliente defina exatamente a estrutura dos dados que deseja receber — nem mais, nem menos.
 
-Diminuindo a complexidade de lidar com “under-fetching” e “over-fetching” através de um único ponto de consulta, ao invés de ter que implementar vários endpoints para lidar com vários tipos de demanda na API REST, é um cenário em que vale a pena levar em consideração o uso do GraphQL. Porém a falta de padrões pode se tornar um grande problema como consequencia da adoção desse tipo de abordagem.
+Isso ataca dois problemas comuns em APIs REST. O **over-fetching** (o artigo o cita como "ever-fetching") ocorre quando o payload é maior do que o necessário e o cliente recebe campos que não usa. Já o **under-fetching** acontece quando o cliente não obtém todos os dados de que precisa em uma única chamada e é forçado a consultar vários outros recursos para compor a informação completa.
+
+Ao concentrar tudo em um único ponto de consulta — em vez de exigir vários endpoints para atender demandas distintas —, o GraphQL reduz a complexidade de lidar com over e under-fetching, tornando-se atraente nesses cenários. Vale ressaltar, contudo, que a flexibilidade pode cobrar seu preço: a falta de padrões rígidos pode se tornar um problema relevante à medida que a adoção cresce.
 
 ## Componentes do GraphQL
 
-O GraphQL é construído sobre alguns conceitos que precisam ser compreendidos para garantir uma implementação adequada que faça sentido, sendo eles:
+O GraphQL se apoia em alguns conceitos fundamentais que precisam ser compreendidos para garantir uma implementação coerente. Os principais são apresentados a seguir.
 
 ### Schema
 
-Um schema é definido através da linguagem SDL (Schema Definition Language), que é uma sintaxe simples para definicão de estruturas de dados e é a particularidade mais importante do GraphQL, sendo compartilhado e acessado entre todos os outros componentes. Um schema funciona como um contrato entre o cliente e o servidor e define e limita dos dados que podem ser consultados e modificados através do que for disponibilizado, e principalmente a forma como os clientes podem interagir com esses dados.
+O schema é definido pela SDL (Schema Definition Language), uma sintaxe simples para descrever estruturas de dados, e é a peça mais importante do GraphQL — compartilhada entre todos os demais componentes. Ele funciona como um **contrato entre cliente e servidor**, delimitando quais dados podem ser consultados ou modificados e como os clientes podem interagir com eles.
 
-O grande motivador da tecnologia é reduzir o over-fetching e under-fetching, pois permite que os clientes solicitem exatamente os dados de que precisam sem a necessidade de lidar com payloads gigantescos.
-
-Um schema é construído para que seja possível definir quais serão as entidades, objetos e suas relações entre si, quais serão seus campos e seus tipos de dados dos mesmos, além de habilitar quais serão as queries, mutations e subscriptions disponibilizadas para o cliente.
+Seu grande motivador é justamente reduzir over e under-fetching, permitindo que o cliente solicite exatamente o que precisa. No schema definem-se as entidades, seus campos e tipos, as relações entre objetos e quais queries, mutations e subscriptions ficam disponíveis para o cliente.
 
 ### Query
 
-Uma Query é um request de aplicação feito pelo cliente do GraphQL usada para ler e recuperar valores do servidor. Essa operação de query precisa respeitar os valores definidos no schema, podendo escolher quais deles ele quer recurperar e definir o formato do payload ideal para responder a solicitação em questão.
+Uma Query é a operação de leitura feita pelo cliente para recuperar valores do servidor. Ela precisa respeitar o que está definido no schema, mas dá ao cliente a liberdade de escolher quais campos quer obter e qual o formato ideal do payload de resposta para aquela solicitação específica.
 
 ### Mutations
 
-Enquanto as queries são usadas para buscar dados, as mutations são utilizadas para modificar dados no servidor, incluindo criação, atualização, e deleção de dados. As mutations no GraphQL são explicitamente feitas para operações que causam efeitos colaterais, podendo também escrever em várias fontes de dados se assim for definido no schema e suas integrações.
+Enquanto as queries leem dados, as mutations os modificam — criando, atualizando ou removendo informações no servidor. Elas são explicitamente destinadas a operações que causam efeitos colaterais e, conforme o que estiver definido no schema e em suas integrações, podem inclusive escrever em múltiplas fontes de dados.
 
 ### Resolvers e Data Sources
 
-Como podemos entender, o GraphQL não é de fato um banco de dados, apenas uma interface flexível entre o cliente e as fontes disponíveis, e ele pode recuperar dados de várias fontes de dados simultâneamente, incluindo bancos SQL, NoSQL, API’s REST e servicos RPC se assim for definido, e os resolvers são funções que fornecem as instruções e integrações necessárias para transformar uma operação do GraphQL em dados reais de fato.
+O GraphQL não é um banco de dados, e sim uma interface flexível entre o cliente e as fontes de dados disponíveis. Ele pode buscar informações simultaneamente em várias origens — bancos SQL, NoSQL, APIs REST, serviços RPC — conforme definido no schema. Os **resolvers** são as funções que fornecem as instruções e integrações necessárias para transformar uma operação GraphQL em dados reais.
 
 ![Resolvers](images/resolvers.png)
 
 > Exemplo da utilização de vários resolvers dentro de uma query
 
-Os resolver são responsáveis em buscar esses dados em suas fontes originais. Cada campo que é definido e configurado dentro de um schema é diretamente associado a um resolver, que é estimulado sempre que aquele campo é solicitado.
+Cada campo configurado no schema está diretamente associado a um resolver, que é acionado sempre que aquele campo é solicitado. São eles os responsáveis por buscar os dados em suas fontes originais.
 
 ## Convergência de Arquiteturas gRPC & REST & GraphQL
 
-Expor diretamente endpoints gRPC para clientes em escala pode ser uma tarefa trabalhosa, principalmente em arquiteturas corporativas de grande granularidade. Nesse sentido, se olharmos nossa arquitetura com uma ótica de [domínios de software](https://fidelissauro.dev/monolitos-microservicos/), podemos fazer uso de uma convergência de mais de um protocolo de comunicação dentro de uma malha de serviços.
+Expor diretamente endpoints gRPC para clientes em escala pode ser trabalhoso, sobretudo em arquiteturas corporativas de grande granularidade. Olhando a arquitetura sob a ótica de [domínios de software](https://fidelissauro.dev/monolitos-microservicos/), é possível combinar mais de um protocolo de comunicação dentro de uma mesma malha de serviços.
 
-Uma vez que o problema de distribuir e versionar arquivos de protobufs são uma tarefa complicada, e os contrato REST são mais simples de ser interpretados, podemos pensar em acordos onde o domínio de software pode ser exposto dentro de um contrato REST e a comunicação interna entre os microserviços desse domínio possam falar um protocolo mais leve em comunicação como o gRPC. Essa tarefa pode ser extendida para instâncias de GraphQL da mesma forma.
+Como distribuir e versionar arquivos ProtoBuf é complicado, enquanto contratos REST são mais simples de interpretar, uma estratégia viável é expor o domínio de software externamente via REST e usar o gRPC — mais leve — na comunicação interna entre os microserviços daquele domínio. A mesma lógica pode ser estendida a instâncias de GraphQL.
 
 ![gRPC Misc](images/grpc-misc.png)
-
 
 # Referências
 
