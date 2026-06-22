@@ -978,7 +978,6 @@
 
 # Book de Cases e Exercícios Livres 
 
-
 | Case | Nível | Link |
 |------|-------|------|
 | DDD - Core Banking | Basico | [Link](/cases/BASICO_DDD_CORE_BANKING.md) |
@@ -1000,6 +999,10 @@
 | Ingestão e Telemetria | Avançado | [Link](/cases/AVANCADO_TELEMETRIA_LOGISTICA.md) |
 | Gestão de Vagas   | Avançado  | [Link](/cases/AVANCADO_CADASTRO_VAGAS.md) |
 | Controle de Ponto | Intermediário  | [Link](/cases/INTERMEDIARIO_GESTAO_DE_PONTO.md) | 
+| Push Notification | Intermediário  | [Link](/cases/INTERMEDIARIO_PUSH_NOTIFICATION.md) | 
+| Sistemas de Reservas Online | Avançado  | [Link](/cases/AVANCADO_RESERVA_ONLINE.md) | 
+| Formulários OCR | Avançado  | [Link](/cases/AVANCADO_FORMULARIOS_OCR.md) | 
+| Chats Imobiliários | Avançado  | [Link](/cases/AVANCADO_CHATS_IMOB.md) | 
 
 
 ## Cases Resolvidos 
