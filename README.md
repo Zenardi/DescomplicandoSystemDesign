@@ -894,8 +894,55 @@
 
 &nbsp;
 
+<details>
+<summary>DAY-28 - Observabilidade e Monitoramento</summary>
+
+- [System Design - Observabilidade e Monitoramento](day-28/README.md#system-design---observabilidade-e-monitoramento)
+- [Definindo Confiabilidade](day-28/README.md#definindo-confiabilidade)
+- [Observabilidade](day-28/README.md#observabilidade)
+  - [Monitoramento e Observabilidade](day-28/README.md#monitoramento-e-observabilidade)
+    - [Monitoramento como Detecção de Sintomas](day-28/README.md#monitoramento-como-detecção-de-sintomas)
+    - [Observabilidade como Comportamento](day-28/README.md#observabilidade-como-comportamento)
+- [Três Pilares da Observabilidade](day-28/README.md#três-pilares-da-observabilidade)
+  - [Métricas](day-28/README.md#métricas)
+    - [Contadores](day-28/README.md#contadores)
+    - [Gauges](day-28/README.md#gauges)
+    - [Histogramas](day-28/README.md#histogramas)
+  - [Traces](day-28/README.md#traces)
+  - [Logs](day-28/README.md#logs)
+    - [Níveis de Severidade](day-28/README.md#níveis-de-severidade)
+    - [Correlação de Logs](day-28/README.md#correlação-de-logs)
+    - [Estruturação e Indexação de Logs](day-28/README.md#estruturação-e-indexação-de-logs)
+  - [Agregados dos Pilares](day-28/README.md#agregados-dos-pilares)
+    - [Alerting](day-28/README.md#alerting)
+    - [APM](day-28/README.md#apm)
+- [Service Levels](day-28/README.md#service-levels)
+  - [SLI - Service Level Indicator](day-28/README.md#sli---service-level-indicator)
+  - [SLA - Service Level Agreement](day-28/README.md#sla---service-level-agreement)
+  - [SLO - Service Level Objective](day-28/README.md#slo---service-level-objective)
+  - [Error Budget](day-28/README.md#error-budget)
+- [Frameworks de Mercado](day-28/README.md#frameworks-de-mercado)
+  - [USE Method](day-28/README.md#use-method)
+    - [Utilization (Utilização)](day-28/README.md#utilization-utilização)
+    - [Saturation (Saturação)](day-28/README.md#saturation-saturação)
+    - [Errors (Erros)](day-28/README.md#errors-erros)
+  - [RED Method](day-28/README.md#red-method)
+    - [Rate (Request Rate / Throughput)](day-28/README.md#rate-request-rate--throughput)
+    - [Errors (Error Rate)](day-28/README.md#errors-error-rate)
+    - [Duration (Request Duration / Latency)](day-28/README.md#duration-request-duration--latency)
+  - [Four Golden Signals](day-28/README.md#four-golden-signals)
+    - [Latency](day-28/README.md#latency)
+    - [Traffic](day-28/README.md#traffic)
+    - [Errors](day-28/README.md#errors)
+    - [Saturation](day-28/README.md#saturation)
+- [Referências](day-28/README.md#referências)
+
+</details>
+
+&nbsp;
+
 # Materiais
-| Aula | Slides | Artigo Original |
+| Aula | Slides | Artigo |
 | --- | --- | --- |
 | Protocolos de Rede | [Slides](./day-01/01%20-%20System%20Design%20-%20Protocolos%20de%20Rede.pdf) | [Artigo](https://fidelissauro.dev/protocolos-de-rede/) |
 | Raid e Storage     | [Slides](./day-02/02%20-%20System%20Design%20-%20Raid%20e%20Storage.pdf) | [Artigo](https://fidelissauro.dev/storage/) |
@@ -919,11 +966,13 @@
 | Event Sourcing | [Slides](./day-20/20%20-%20System%20Design%20-%20Event%20Sourcing.pdf) | [Artigo](https://fidelissauro.dev/event-sourcing/) |
 | Patterns de Resiliência | [Slides](./day-21/21%20-%20System%20Design%20-%20Patterns%20de%20Resiliência.pdf) | [Artigo](https://fidelissauro.dev/resiliencia/) |
 | Estratégias de Deploy | [Slides](./day-22/22%20-%20System%20Design%20-%20Estratégias%20de%20Deploy.pdf) | [Artigo](https://fidelissauro.dev/deployment-strategies/) |
-| Capacity Planning e Teoria das Filas | - | [Artigo](https://fidelissauro.dev/capacity-planning/) |
+| Capacity Planning e Teoria das Filas | [Slides](./day-23/23%20-%20System%20Design%20-%20Capacity%20Planning.pdf) | [Artigo](https://fidelissauro.dev/capacity-planning/) |
 | Testes de Carga e Estresse | [Slides](./day-24/24%20-%20System%20Design%20-%20Load%20Tests%20.pdf) | [Artigo](https://fidelissauro.dev/load-testing/) |
 | Bulkhead Pattern | [Slides](./day-25/25%20-%20System%20Design%20-%20Bulkhead.pdf) | [Artigo](https://fidelissauro.dev/bulkheads/) |
 | Cell Based Pattern | [Slides](./day-26/26%20-%20System%20Design%20-%20Cell%20Based%20Pattern.pdf) | [Artigo](https://fidelissauro.dev/cell-based/) |
-| Single Point of Failure e Disaster Recovery | - | [Artigo](https://fidelissauro.dev/single-point-of-failure/) |
+| Single Point of Failure e Disaster Recovery | [Slides](./day-27/27%20-%20System%20Design%20-%20Single%20Point%20of%20Failure.pdf) | [Artigo](https://fidelissauro.dev/single-point-of-failure/) |
+| Observabilidade e Monitoramento | [Slides](./day-28/28-%20System%20Design%20-%20Observabilidade%20e%20Monitoramento.pdf) | [Artigo](https://fidelissauro.dev/observabilidade/) | 
+
 
 
 
@@ -961,5 +1010,7 @@
 | Busca e Catalogo      | [Draw.io](/cases/resolucao/T1-Case-Busca-Ecommerce.drawio)               |
 | Notificação Omnichannel | [Draw.io](/cases/resolucao/T1-Case-Omnichannel.drawio)                 |
 | Sistema de Votação    | [Draw.io](/cases/resolucao/T1-Case-Vota-AI.drawio.xml)                  |
-| Sistema de Votação    | [Draw.io](/cases/resolucao/T1-Case-Vota-AI.drawio.xml)                  |
 | Orquestrador de Notificações Omnichannel para E-commerce | [Draw.io](/cases/resolucao/T2-Case-Busca-Ecommerce.drawio.xml) |
+
+
+
